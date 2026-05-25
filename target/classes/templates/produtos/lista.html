@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Produtos — Sistema Páscoa</title>
+</head>
+<body>
+<div id="pageContent">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0"><i class="bi bi-box-seam me-2 text-success"></i>Produtos</h2>
+        <a th:href="@{/produtos/novo}" class="btn btn-success">
+            <i class="bi bi-plus-lg me-1"></i>Novo Produto
+        </a>
+    </div>
+
+    <!-- Busca -->
+    <div class="card mb-3">
+        <div class="card-body py-2">
+            <form th:action="@{/produtos}" method="get" class="d-flex gap-2">
+                <input type="text" name="busca" class="form-control" placeholder="Buscar por nome..."
+                       th:value="${busca}">
+                <button type="submit" class="btn btn-outline-secondary">
+                    <i class="bi bi-search"></i>
+                </button>
+                <a th:href="@{/produtos}" class="btn btn-outline-danger"
+                   th:if="${busca != null and !#strings.isEmpty(busca)}">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-3">Nome</th>
+                        <th>Categoria</th>
+                        <th class="text-end">Preço de Venda</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-center pe-3">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="p : ${produtos}">
+                        <td class="ps-3">
+                            <div class="fw-semibold" th:text="${p.nome}"></div>
+                            <div class="text-muted small" th:text="${p.descricao}" th:if="${p.descricao != null and !#strings.isEmpty(p.descricao)}"></div>
+                        </td>
+                        <td>
+                            <span class="badge text-white"
+                                  th:classappend="'badge-' + ${p.categoria.name()}"
+                                  th:text="${p.categoria.descricao}"></span>
+                        </td>
+                        <td class="text-end fw-semibold">
+                            R$ <span th:text="${#numbers.formatDecimal(p.precoVenda, 1, 'POINT', 2, 'COMMA')}"></span>
+                        </td>
+                        <td class="text-center">
+                            <span th:if="${p.ativo}" class="badge bg-success">Ativo</span>
+                            <span th:unless="${p.ativo}" class="badge bg-secondary">Inativo</span>
+                        </td>
+                        <td class="text-center pe-3">
+                            <a th:href="@{/fichas/{id}(id=${p.id})}"
+                               class="btn btn-sm btn-outline-success me-1" title="Ficha Técnica">
+                                <i class="bi bi-journal-text"></i>
+                            </a>
+                            <a th:href="@{/produtos/{id}/editar(id=${p.id})}"
+                               class="btn btn-sm btn-outline-primary me-1" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form th:action="@{/produtos/{id}/ativar(id=${p.id})}" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary me-1"
+                                        th:title="${p.ativo ? 'Desativar' : 'Ativar'}">
+                                    <i class="bi" th:classappend="${p.ativo ? 'bi-toggle-on' : 'bi-toggle-off'}"></i>
+                                </button>
+                            </form>
+                            <form th:action="@{/produtos/{id}/excluir(id=${p.id})}" method="post"
+                                  class="d-inline"
+                                  onsubmit="return confirm('Confirma a exclusão deste produto?')">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(produtos)}">
+                        <td colspan="5" class="text-center text-muted py-5">
+                            <i class="bi bi-box-seam fs-3 d-block mb-2 opacity-50"></i>
+                            Nenhum produto encontrado.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer text-muted small" th:if="${!#lists.isEmpty(produtos)}">
+            <span th:text="${#lists.size(produtos)}"></span> produto(s) encontrado(s).
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

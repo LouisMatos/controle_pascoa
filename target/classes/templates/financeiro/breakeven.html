@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head><title>Ponto de Equilíbrio</title></head>
+<body>
+<div id="pageContent">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0"><i class="bi bi-bullseye me-2 text-warning"></i>Ponto de Equilíbrio</h2>
+    <span class="text-muted small">Base: mês atual</span>
+  </div>
+
+  <!-- Status gauge -->
+  <div class="card mb-4" th:classappend="${breakeven.acimaEquilibrio} ? 'border-success' : 'border-danger'">
+    <div class="card-body text-center py-4">
+      <div th:if="${breakeven.acimaEquilibrio}">
+        <i class="bi bi-check-circle-fill text-success" style="font-size:3rem"></i>
+        <div class="fs-4 fw-bold text-success mt-2">Acima do Ponto de Equilíbrio</div>
+        <div class="text-muted">Você vendeu <strong th:text="${breakeven.unidadesVendidasMes}"></strong> unidades este mês — acima das
+          <strong th:text="${breakeven.pontoEquilibrio}"></strong> necessárias para cobrir os custos fixos.</div>
+      </div>
+      <div th:unless="${breakeven.acimaEquilibrio}">
+        <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size:3rem"></i>
+        <div class="fs-4 fw-bold text-danger mt-2">Abaixo do Ponto de Equilíbrio</div>
+        <div class="text-muted">Você vendeu <strong th:text="${breakeven.unidadesVendidasMes}"></strong> unidades este mês — faltam
+          <strong th:text="${breakeven.unidadesFaltando}"></strong> para cobrir os custos fixos.</div>
+      </div>
+      <!-- Barra de progresso -->
+      <div class="progress mt-3" style="height:20px; max-width:600px; margin:0 auto">
+        <div class="progress-bar"
+             th:classappend="${breakeven.acimaEquilibrio} ? 'bg-success' : 'bg-danger'"
+             role="progressbar"
+             th:style="'width:' + (${breakeven.percentualAtingido} > 100 ? 100 : ${breakeven.percentualAtingido}) + '%'"
+             th:text="${breakeven.percentualAtingido} + '%'">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+      <div class="card">
+        <div class="card-body text-center">
+          <div class="text-muted small fw-semibold text-uppercase">Despesas Fixas/Mês</div>
+          <div class="fs-4 fw-bold mt-1">R$ <span th:text="${#numbers.formatDecimal(breakeven.totalDespesasFixasMensais,1,'POINT',2,'COMMA')}"></span></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="card">
+        <div class="card-body text-center">
+          <div class="text-muted small fw-semibold text-uppercase">Preço Médio de Venda</div>
+          <div class="fs-4 fw-bold mt-1">R$ <span th:text="${#numbers.formatDecimal(breakeven.precoMedioVenda,1,'POINT',2,'COMMA')}"></span></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="card">
+        <div class="card-body text-center">
+          <div class="text-muted small fw-semibold text-uppercase">Custo Médio Variável</div>
+          <div class="fs-4 fw-bold mt-1">R$ <span th:text="${#numbers.formatDecimal(breakeven.custoMedioVariavel,1,'POINT',2,'COMMA')}"></span></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="card">
+        <div class="card-body text-center">
+          <div class="text-muted small fw-semibold text-uppercase">Margem de Contribuição</div>
+          <div class="fs-4 fw-bold mt-1">R$ <span th:text="${#numbers.formatDecimal(breakeven.margemContribuicao,1,'POINT',2,'COMMA')}"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fórmula -->
+  <div class="card">
+    <div class="card-header bg-light fw-semibold">Cálculo</div>
+    <div class="card-body">
+      <div class="bg-light rounded p-3 font-monospace text-center mb-3">
+        Ponto de Equilíbrio = Despesas Fixas / Margem de Contribuição<br>
+        <strong th:text="${breakeven.pontoEquilibrio}"></strong> un. =
+        R$ <span th:text="${#numbers.formatDecimal(breakeven.totalDespesasFixasMensais,1,'POINT',2,'COMMA')}"></span> ÷
+        R$ <span th:text="${#numbers.formatDecimal(breakeven.margemContribuicao,1,'POINT',2,'COMMA')}"></span>
+      </div>
+      <div class="alert alert-info mb-0 small">
+        <i class="bi bi-info-circle me-1"></i>
+        O custo médio variável é calculado a partir dos pedidos com <code>custoRealCalculado</code> preenchido no mês atual.
+        Execute <a th:href="@{/financeiro/custo-real/1}">Custo Real</a> nos pedidos para obter valores mais precisos.
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head><title>Kanban de Produção</title></head>
+<body>
+<div id="pageContent">
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0"><i class="bi bi-kanban me-2 text-primary"></i>Kanban de Produção</h2>
+    <div class="d-flex gap-2">
+      <a th:href="@{/producao}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-list-ul me-1"></i>Ver em lista
+      </a>
+    </div>
+  </div>
+
+  <style>
+    .kanban-board   { display:grid; grid-template-columns: repeat(3,1fr); gap:1rem; align-items:start; }
+    .kanban-col     { border-radius:.5rem; padding:.75rem; background:#f8f9fa; min-height:200px; }
+    .kanban-col-header { font-weight:700; font-size:.85rem; text-transform:uppercase;
+                         letter-spacing:.5px; margin-bottom:.75rem;
+                         display:flex; align-items:center; gap:.5rem; }
+    .kanban-card    { background:#fff; border-radius:.375rem; padding:.75rem;
+                      box-shadow:0 1px 3px rgba(0,0,0,.08); margin-bottom:.6rem;
+                      border-left:4px solid transparent; }
+    .kanban-card.pendente    { border-left-color:#6c757d; }
+    .kanban-card.em-andamento{ border-left-color:#0d6efd; }
+    .kanban-card.concluida   { border-left-color:#198754; opacity:.85; }
+    .kanban-card-title  { font-weight:600; font-size:.9rem; }
+    .kanban-card-sub    { font-size:.78rem; color:#6c757d; }
+    .kanban-actions     { display:flex; gap:.35rem; flex-wrap:wrap; margin-top:.5rem; }
+    .kanban-empty       { text-align:center; color:#adb5bd; font-size:.85rem; padding:1.5rem 0; }
+    @media(max-width:768px){ .kanban-board{ grid-template-columns:1fr; } }
+  </style>
+
+  <div class="kanban-board">
+
+    <!-- ============================================================
+         COLUNA 1 — PENDENTE
+         ============================================================ -->
+    <div class="kanban-col">
+      <div class="kanban-col-header">
+        <span class="badge bg-secondary" th:text="${#lists.size(pendentes)}">0</span>
+        <i class="bi bi-hourglass-split text-secondary"></i>Pendente
+      </div>
+
+      <div th:if="${#lists.isEmpty(pendentes)}" class="kanban-empty">
+        <i class="bi bi-inbox d-block fs-4 mb-1"></i>Nenhuma ordem pendente
+      </div>
+
+      <div th:each="o : ${pendentes}" class="kanban-card pendente">
+        <div class="kanban-card-title" th:text="${o.produto.nome}"></div>
+        <div class="kanban-card-sub">
+          <i class="bi bi-box-seam me-1"></i><span th:text="${o.quantidade}"></span> unid.
+          <span th:if="${o.pedido != null}">
+            &nbsp;·&nbsp;<i class="bi bi-cart3 me-1"></i>
+            <a th:href="@{/pedidos/{id}(id=${o.pedido.id})}"
+               th:text="'Pedido #' + ${o.pedido.id}"
+               class="text-decoration-none"></a>
+          </span>
+        </div>
+        <div class="kanban-card-sub mt-1">
+          <i class="bi bi-calendar3 me-1"></i>
+          <span th:text="${#temporals.format(o.dataAbertura,'dd/MM HH:mm')}"></span>
+        </div>
+        <div class="kanban-card-sub mt-1" th:if="${o.pedido != null and o.pedido.dataEntrega != null}">
+          <i class="bi bi-truck me-1 text-warning"></i>Entrega:
+          <strong th:text="${#temporals.format(o.pedido.dataEntrega,'dd/MM/yyyy')}"></strong>
+        </div>
+
+        <div class="kanban-actions">
+          <form th:action="@{/producao/{id}/iniciar-kanban(id=${o.id})}" method="post">
+            <button type="submit" class="btn btn-primary btn-sm">
+              <i class="bi bi-play-fill me-1"></i>Iniciar
+            </button>
+          </form>
+          <a th:href="@{/producao/{id}(id=${o.id})}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-eye"></i>
+          </a>
+          <form th:action="@{/producao/{id}/cancelar-kanban(id=${o.id})}" method="post"
+                onsubmit="return confirm('Cancelar esta ordem?')">
+            <button type="submit" class="btn btn-outline-danger btn-sm">
+              <i class="bi bi-x"></i>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         COLUNA 2 — EM ANDAMENTO
+         ============================================================ -->
+    <div class="kanban-col" style="background:#e8f0ff;">
+      <div class="kanban-col-header">
+        <span class="badge bg-primary" th:text="${#lists.size(emAndamento)}">0</span>
+        <i class="bi bi-gear-fill text-primary"></i>Em Andamento
+      </div>
+
+      <div th:if="${#lists.isEmpty(emAndamento)}" class="kanban-empty">
+        <i class="bi bi-inbox d-block fs-4 mb-1"></i>Nenhuma ordem em andamento
+      </div>
+
+      <div th:each="o : ${emAndamento}" class="kanban-card em-andamento">
+        <div class="kanban-card-title" th:text="${o.produto.nome}"></div>
+        <div class="kanban-card-sub">
+          <i class="bi bi-box-seam me-1"></i><span th:text="${o.quantidade}"></span> unid.
+          <span th:if="${o.pedido != null}">
+            &nbsp;·&nbsp;<i class="bi bi-cart3 me-1"></i>
+            <a th:href="@{/pedidos/{id}(id=${o.pedido.id})}"
+               th:text="'Pedido #' + ${o.pedido.id}"
+               class="text-decoration-none"></a>
+          </span>
+        </div>
+        <div class="kanban-card-sub mt-1">
+          <i class="bi bi-calendar3 me-1"></i>Iniciado:
+          <span th:text="${#temporals.format(o.dataAbertura,'dd/MM HH:mm')}"></span>
+        </div>
+        <div class="kanban-card-sub mt-1" th:if="${o.pedido != null and o.pedido.dataEntrega != null}">
+          <i class="bi bi-truck me-1 text-warning"></i>Entrega:
+          <strong th:text="${#temporals.format(o.pedido.dataEntrega,'dd/MM/yyyy')}"></strong>
+        </div>
+
+        <div class="kanban-actions">
+          <form th:action="@{/producao/{id}/concluir-kanban(id=${o.id})}" method="post">
+            <button type="submit" class="btn btn-success btn-sm">
+              <i class="bi bi-check-lg me-1"></i>Concluir
+            </button>
+          </form>
+          <a th:href="@{/producao/{id}(id=${o.id})}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-eye"></i>
+          </a>
+          <form th:action="@{/producao/{id}/cancelar-kanban(id=${o.id})}" method="post"
+                onsubmit="return confirm('Cancelar esta ordem?')">
+            <button type="submit" class="btn btn-outline-danger btn-sm">
+              <i class="bi bi-x"></i>
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================
+         COLUNA 3 — CONCLUÍDA (últimas 20)
+         ============================================================ -->
+    <div class="kanban-col" style="background:#e8f5ed;">
+      <div class="kanban-col-header">
+        <span class="badge bg-success" th:text="${#lists.size(concluidas)}">0</span>
+        <i class="bi bi-check-circle-fill text-success"></i>Concluída
+        <small class="text-muted fw-normal">(últimas 20)</small>
+      </div>
+
+      <div th:if="${#lists.isEmpty(concluidas)}" class="kanban-empty">
+        <i class="bi bi-inbox d-block fs-4 mb-1"></i>Nenhuma ordem concluída
+      </div>
+
+      <div th:each="o : ${concluidas}" class="kanban-card concluida">
+        <div class="kanban-card-title" th:text="${o.produto.nome}"></div>
+        <div class="kanban-card-sub">
+          <i class="bi bi-box-seam me-1"></i><span th:text="${o.quantidade}"></span> unid.
+          <span th:if="${o.pedido != null}">
+            &nbsp;·&nbsp;<i class="bi bi-cart3 me-1"></i>
+            <a th:href="@{/pedidos/{id}(id=${o.pedido.id})}"
+               th:text="'Pedido #' + ${o.pedido.id}"
+               class="text-decoration-none"></a>
+          </span>
+        </div>
+        <div class="kanban-card-sub mt-1" th:if="${o.dataConclusao != null}">
+          <i class="bi bi-check2 me-1 text-success"></i>
+          <span th:text="${#temporals.format(o.dataConclusao,'dd/MM HH:mm')}"></span>
+        </div>
+        <div class="kanban-actions">
+          <a th:href="@{/producao/{id}(id=${o.id})}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-eye me-1"></i>Ver
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- fim kanban-board -->
+
+</div>
+</body>
+</html>

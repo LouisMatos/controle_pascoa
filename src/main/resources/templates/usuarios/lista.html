@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Usuários — Sistema Páscoa</title>
+</head>
+<body>
+<div id="pageContent">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">
+            <i class="bi bi-people me-2 text-primary"></i>Usuários do Sistema
+        </h2>
+        <a th:href="@{/usuarios/novo}" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-lg me-1"></i>Novo Usuário
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-3">Nome</th>
+                        <th>Login</th>
+                        <th class="text-center">Perfil</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-end pe-3">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="u : ${usuarios}">
+                        <td class="ps-3 fw-semibold" th:text="${u.nome}"></td>
+                        <td class="text-muted" th:text="${u.login}"></td>
+                        <td class="text-center">
+                            <span class="badge"
+                                  th:classappend="${u.role.name() == 'ADMIN'} ? 'bg-danger' :
+                                                  (${u.role.name() == 'FINANCEIRO'} ? 'bg-success' :
+                                                  (${u.role.name() == 'CONFEITEIRO'} ? 'bg-warning text-dark' : 'bg-info text-dark'))"
+                                  th:text="${u.role.descricao}"></span>
+                        </td>
+                        <td class="text-center">
+                            <span th:if="${u.ativo}" class="badge bg-success">Ativo</span>
+                            <span th:unless="${u.ativo}" class="badge bg-secondary">Inativo</span>
+                        </td>
+                        <td class="text-end pe-3">
+                            <a th:href="@{/usuarios/{id}/editar(id=${u.id})}"
+                               class="btn btn-sm btn-outline-secondary me-1">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form th:action="@{/usuarios/{id}/toggle(id=${u.id})}" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-sm"
+                                        th:classappend="${u.ativo} ? 'btn-outline-warning' : 'btn-outline-success'"
+                                        th:title="${u.ativo} ? 'Desativar' : 'Ativar'">
+                                    <i class="bi" th:classappend="${u.ativo} ? 'bi-toggle-on' : 'bi-toggle-off'"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(usuarios)}">
+                        <td colspan="5" class="text-center text-muted py-5">
+                            <i class="bi bi-people fs-3 d-block mb-2 opacity-50"></i>
+                            Nenhum usuário cadastrado.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+          </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

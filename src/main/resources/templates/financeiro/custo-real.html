@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head><title>Custo Real do Pedido</title></head>
+<body>
+<div id="pageContent">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0"><i class="bi bi-calculator me-2 text-primary"></i>Custo Real — Pedido #<span th:text="${custo.pedidoId}"></span></h2>
+    <a th:href="@{/pedidos/{id}(id=${custo.pedidoId})}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left me-1"></i>Voltar ao Pedido
+    </a>
+  </div>
+
+  <!-- KPIs -->
+  <div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+      <div class="card border-primary">
+        <div class="card-body text-center">
+          <div class="text-muted small fw-semibold text-uppercase">Total Pedido</div>
+          <div class="fs-4 fw-bold text-primary mt-1">R$ <span th:text="${#numbers.formatDecimal(custo.totalPedido,1,'POINT',2,'COMMA')}"></span></div>
+          <div class="text-muted small" th:text="${custo.clienteNome}"></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="card border-danger">
+        <div class="card-body text-center">
+          <div class="text-muted small fw-semibold text-uppercase">Custo Real</div>
+          <div class="fs-4 fw-bold text-danger mt-1">R$ <span th:text="${#numbers.formatDecimal(custo.custoReal,1,'POINT',2,'COMMA')}"></span></div>
+          <div class="text-muted small">MP + Fixos + Variáveis</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div th:class="${custo.margemReal >= custo.margemDesejada} ? 'card border-success' : 'card border-warning'">
+        <div class="card-body text-center">
+          <div class="text-muted small fw-semibold text-uppercase">Margem Real</div>
+          <div th:class="${custo.margemReal >= custo.margemDesejada} ? 'fs-4 fw-bold text-success mt-1' : 'fs-4 fw-bold text-warning mt-1'">
+            <span th:text="${#numbers.formatDecimal(custo.margemReal,1,'POINT',1,'COMMA')}"></span>%
+          </div>
+          <div class="text-muted small">Meta: <span th:text="${custo.margemDesejada}"></span>%</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="card border-info">
+        <div class="card-body text-center">
+          <div class="text-muted small fw-semibold text-uppercase">Lucro Bruto</div>
+          <div class="fs-4 fw-bold text-info mt-1">R$ <span th:text="${#numbers.formatDecimal(custo.totalPedido - custo.custoReal,1,'POINT',2,'COMMA')}"></span></div>
+          <div class="text-muted small">Antes de impostos</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detalhe das 3 camadas -->
+  <div class="row g-4">
+
+    <!-- Custo MP -->
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header bg-light fw-semibold">
+          <i class="bi bi-box-seam me-1 text-warning"></i>Camada 1 — Custo de Matéria-Prima
+          <span class="float-end text-danger fw-bold">R$ <span th:text="${#numbers.formatDecimal(custo.custoMP,1,'POINT',2,'COMMA')}"></span></span>
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-sm table-hover mb-0">
+            <thead class="table-light"><tr><th>Produto</th><th class="text-center">Qtd</th><th class="text-end">Custo Unit.</th><th class="text-end">Subtotal</th></tr></thead>
+            <tbody>
+              <tr th:each="linha : ${custo.linhasMP}">
+                <td th:text="${linha.produto}"></td>
+                <td class="text-center" th:text="${linha.quantidade}"></td>
+                <td class="text-end">R$ <span th:text="${#numbers.formatDecimal(linha.custoUnitario,1,'POINT',2,'COMMA')}"></span></td>
+                <td class="text-end fw-semibold">R$ <span th:text="${#numbers.formatDecimal(linha.subtotal,1,'POINT',2,'COMMA')}"></span></td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(custo.linhasMP)}">
+                <td colspan="4" class="text-muted text-center small py-3">Sem fichas técnicas cadastradas</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rateio Fixo + Despesas Variáveis -->
+    <div class="col-lg-6">
+      <div class="card mb-3">
+        <div class="card-header bg-light fw-semibold">
+          <i class="bi bi-building me-1 text-secondary"></i>Camada 2 — Rateio de Despesas Fixas
+          <span class="float-end text-danger fw-bold">R$ <span th:text="${#numbers.formatDecimal(custo.rateioFixo,1,'POINT',2,'COMMA')}"></span></span>
+        </div>
+        <div class="card-body py-2">
+          <small class="text-muted">Despesas fixas mensais rateadas proporcionalmente à quantidade produzida.</small>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header bg-light fw-semibold">
+          <i class="bi bi-truck me-1 text-info"></i>Camada 3 — Despesas Variáveis
+          <span class="float-end text-danger fw-bold">R$ <span th:text="${#numbers.formatDecimal(custo.despesasVariaveis,1,'POINT',2,'COMMA')}"></span></span>
+        </div>
+        <div class="card-body p-0">
+          <table class="table table-sm table-hover mb-0">
+            <thead class="table-light"><tr><th>Descrição</th><th>Categoria</th><th class="text-end">Valor</th></tr></thead>
+            <tbody>
+              <tr th:each="d : ${custo.despesasDetalhadas}">
+                <td th:text="${d.descricao}"></td>
+                <td><span class="badge bg-info text-dark" th:text="${d.categoria}"></span></td>
+                <td class="text-end">R$ <span th:text="${#numbers.formatDecimal(d.valor,1,'POINT',2,'COMMA')}"></span></td>
+              </tr>
+              <tr th:if="${#lists.isEmpty(custo.despesasDetalhadas)}">
+                <td colspan="3" class="text-muted text-center small py-3">Sem despesas variáveis</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

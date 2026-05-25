@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="'Pedido #' + ${pedido.id} + ' — Sistema Páscoa'">Pedido</title>
+</head>
+<body>
+<div id="pageContent">
+
+    <!-- Cabeçalho -->
+    <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a th:href="@{/pedidos}">Pedidos</a></li>
+                    <li class="breadcrumb-item active" th:text="'#' + ${pedido.id}"></li>
+                </ol>
+            </nav>
+            <h2 class="mb-1 d-flex align-items-center gap-2">
+                <i class="bi bi-cart3 text-warning"></i>
+                Pedido <span th:text="'#' + ${pedido.id}"></span>
+                <span class="badge fs-6"
+                      th:classappend="${pedido.status.name() == 'NOVO'        ? 'bg-primary'          :
+                                        pedido.status.name() == 'CONFIRMADO'   ? 'bg-info text-dark'   :
+                                        pedido.status.name() == 'EM_PRODUCAO'  ? 'bg-warning text-dark':
+                                        pedido.status.name() == 'PRONTO'       ? 'bg-success'          :
+                                        pedido.status.name() == 'ENTREGUE'     ? 'bg-dark'             :
+                                                                                  'bg-danger'}"
+                      th:text="${pedido.status.descricao}"></span>
+            </h2>
+            <div class="text-muted">
+                Cliente: <strong th:text="${pedido.cliente.nome}"></strong>
+                <span th:if="${pedido.cliente.telefone != null and !#strings.isEmpty(pedido.cliente.telefone)}"
+                      th:text="' — ' + ${pedido.cliente.telefone}"></span>
+            </div>
+        </div>
+
+        <!-- Botões de ação da máquina de estados + exportação -->
+        <div class="d-flex flex-wrap gap-2">
+            <a th:href="@{/export/pedido/{id}/pdf(id=${pedido.id})}"
+               class="btn btn-outline-danger btn-sm" title="Baixar comprovante PDF">
+                <i class="bi bi-file-earmark-pdf me-1"></i>PDF
+            </a>
+            <a th:href="@{/financeiro/custo-real/{id}(id=${pedido.id})}"
+               class="btn btn-outline-primary btn-sm" title="Analisar custo real do pedido">
+                <i class="bi bi-calculator me-1"></i>Custo Real
+            </a>
+            <a th:if="${pedido.status.podeAdicionarItens()}"
+               th:href="@{/pedidos/{id}/editar(id=${pedido.id})}"
+               class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-pencil me-1"></i>Editar
+            </a>
+            <form th:if="${pedido.status.podeConfirmar()}"
+                  th:action="@{/pedidos/{id}/confirmar(id=${pedido.id})}" method="post" class="d-inline">
+                <button type="submit" class="btn btn-success btn-sm"
+                        onclick="return confirm('Confirmar o pedido? Isso gerará as ordens de produção.')">
+                    <i class="bi bi-check2-circle me-1"></i>Confirmar Pedido
+                </button>
+            </form>
+            <form th:if="${pedido.status.podePronto()}"
+                  th:action="@{/pedidos/{id}/pronto(id=${pedido.id})}" method="post" class="d-inline">
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="bi bi-star me-1"></i>Marcar como Pronto
+                </button>
+            </form>
+            <form th:if="${pedido.status.podeEntregar()}"
+                  th:action="@{/pedidos/{id}/entrega(id=${pedido.id})}" method="post" class="d-inline">
+                <button type="submit" class="btn btn-dark btn-sm"
+                        onclick="return confirm('Confirmar a entrega do pedido?')">
+                    <i class="bi bi-truck me-1"></i>Registrar Entrega
+                </button>
+            </form>
+            <form th:if="${pedido.status.podeCancelar()}"
+                  th:action="@{/pedidos/{id}/cancelar(id=${pedido.id})}" method="post" class="d-inline">
+                <button type="submit" class="btn btn-outline-danger btn-sm"
+                        onclick="return confirm('Tem certeza que deseja cancelar este pedido?')">
+                    <i class="bi bi-x-circle me-1"></i>Cancelar
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Resumo do pedido -->
+    <div class="row g-3 mb-3">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-body py-2 px-3">
+                    <div class="text-muted small">Data do Pedido</div>
+                    <div class="fw-semibold" th:text="${#temporals.format(pedido.dataPedido, 'dd/MM/yyyy HH:mm')}"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-body py-2 px-3">
+                    <div class="text-muted small">Data de Entrega</div>
+                    <div class="fw-semibold"
+                         th:text="${pedido.dataEntrega != null ? #temporals.format(pedido.dataEntrega,'dd/MM/yyyy') : '—'}"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-2">
+            <div class="card h-100">
+                <div class="card-body py-2 px-3">
+                    <div class="text-muted small">Total do Pedido</div>
+                    <div class="fw-bold text-primary">
+                        R$ <span th:text="${#numbers.formatDecimal(pedido.totalPedido, 1, 'POINT', 2, 'COMMA')}"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-2">
+            <div class="card h-100">
+                <div class="card-body py-2 px-3">
+                    <div class="text-muted small">Total Pago</div>
+                    <div class="fw-bold text-success">
+                        R$ <span th:text="${#numbers.formatDecimal(totalPago, 1, 'POINT', 2, 'COMMA')}"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-2">
+            <div class="card h-100">
+                <div class="card-body py-2 px-3">
+                    <div class="text-muted small">Saldo Devedor</div>
+                    <div class="fw-bold"
+                         th:classappend="${saldo.compareTo(T(java.math.BigDecimal).ZERO) > 0} ? 'text-danger' : 'text-success'">
+                        R$ <span th:text="${#numbers.formatDecimal(saldo, 1, 'POINT', 2, 'COMMA')}"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:if="${pedido.observacoes != null and !#strings.isEmpty(pedido.observacoes)}"
+         class="alert alert-light border mb-3">
+        <i class="bi bi-chat-left-text me-2 text-muted"></i>
+        <span th:text="${pedido.observacoes}"></span>
+    </div>
+
+    <div class="row g-3">
+
+        <!-- Coluna Itens -->
+        <div class="col-lg-7">
+            <div class="card">
+                <div class="card-header bg-white fw-semibold d-flex justify-content-between">
+                    <span><i class="bi bi-bag me-2"></i>Itens do Pedido</span>
+                    <span class="badge bg-secondary"
+                          th:text="${#lists.size(pedido.itens)} + ' item(ns)'"></span>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-3">Produto</th>
+                                <th class="text-center">Qtd.</th>
+                                <th class="text-end">Preço Unit.</th>
+                                <th class="text-end">Subtotal</th>
+                                <th th:if="${pedido.status.podeAdicionarItens()}" class="text-center pe-3">Rem.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(pedido.itens)}">
+                                <td colspan="5" class="text-center text-muted py-4">
+                                    <i class="bi bi-bag-x fs-3 d-block mb-2 opacity-50"></i>
+                                    Nenhum produto adicionado.
+                                </td>
+                            </tr>
+                            <tr th:each="item : ${pedido.itens}">
+                                <td class="ps-3">
+                                    <div class="fw-semibold" th:text="${item.produto.nome}"></div>
+                                    <div class="small text-muted">
+                                        <span class="badge text-white"
+                                              th:classappend="'badge-' + ${item.produto.categoria.name()}"
+                                              th:text="${item.produto.categoria.descricao}"></span>
+                                    </div>
+                                </td>
+                                <td class="text-center" th:text="${item.quantidade}"></td>
+                                <td class="text-end">
+                                    R$ <span th:text="${#numbers.formatDecimal(item.precoUnitario, 1, 'POINT', 2, 'COMMA')}"></span>
+                                </td>
+                                <td class="text-end fw-semibold">
+                                    R$ <span th:text="${#numbers.formatDecimal(item.subtotal, 1, 'POINT', 2, 'COMMA')}"></span>
+                                </td>
+                                <td th:if="${pedido.status.podeAdicionarItens()}" class="text-center pe-3">
+                                    <form th:action="@{/pedidos/{pid}/item/{iid}/excluir(pid=${pedido.id}, iid=${item.id})}"
+                                          method="post"
+                                          onsubmit="return confirm('Remover este item?')">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot th:if="${!#lists.isEmpty(pedido.itens)}">
+                            <tr class="table-light fw-bold">
+                                <td colspan="3" class="ps-3 text-end">Total:</td>
+                                <td class="text-end text-primary">
+                                    R$ <span th:text="${#numbers.formatDecimal(pedido.totalPedido, 1, 'POINT', 2, 'COMMA')}"></span>
+                                </td>
+                                <td th:if="${pedido.status.podeAdicionarItens()}"></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <!-- Formulário de adição de item (somente status NOVO) -->
+                <div th:if="${pedido.status.podeAdicionarItens()}" class="card-footer bg-light">
+                    <form th:action="@{/pedidos/{id}/item(id=${pedido.id})}"
+                          th:object="${itemForm}" method="post">
+                        <div class="row g-2 align-items-end">
+                            <div class="col-md-7">
+                                <label class="form-label small fw-semibold mb-1">Produto *</label>
+                                <select class="form-select form-select-sm" th:field="*{produtoId}">
+                                    <option value="">Selecione...</option>
+                                    <option th:each="p : ${produtos}"
+                                            th:value="${p.id}"
+                                            th:text="${p.nome} + ' — R$ ' + ${#numbers.formatDecimal(p.precoVenda, 1, 'POINT', 2, 'COMMA')}"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-semibold mb-1">Quantidade *</label>
+                                <input type="number" class="form-control form-control-sm"
+                                       th:field="*{quantidade}" min="1" placeholder="1">
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-success btn-sm w-100">
+                                    <i class="bi bi-plus-lg"></i> Add
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coluna Pagamentos -->
+        <div class="col-lg-5">
+            <div class="card">
+                <div class="card-header bg-white fw-semibold">
+                    <i class="bi bi-cash-stack me-2 text-success"></i>Pagamentos
+                </div>
+                <div class="card-body p-0">
+                    <div th:if="${#lists.isEmpty(pagamentos)}" class="text-center text-muted py-4">
+                        <i class="bi bi-cash fs-3 d-block mb-2 opacity-50"></i>
+                        Nenhum pagamento registrado.
+                    </div>
+                    <table th:unless="${#lists.isEmpty(pagamentos)}"
+                           class="table table-sm align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-3">Data</th>
+                                <th>Tipo</th>
+                                <th class="text-end pe-3">Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="pg : ${pagamentos}">
+                                <td class="ps-3 small"
+                                    th:text="${#temporals.format(pg.dataPagamento, 'dd/MM/yyyy')}"></td>
+                                <td class="small" th:text="${pg.tipoPagamento.descricao}"></td>
+                                <td class="text-end pe-3 fw-semibold text-success">
+                                    R$ <span th:text="${#numbers.formatDecimal(pg.valor, 1, 'POINT', 2, 'COMMA')}"></span>
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-light fw-bold">
+                                <td colspan="2" class="ps-3">Total Pago:</td>
+                                <td class="text-end pe-3 text-success">
+                                    R$ <span th:text="${#numbers.formatDecimal(totalPago, 1, 'POINT', 2, 'COMMA')}"></span>
+                                </td>
+                            </tr>
+                            <tr th:if="${saldo.compareTo(T(java.math.BigDecimal).ZERO) > 0}">
+                                <td colspan="2" class="ps-3 text-danger fw-bold">Saldo Devedor:</td>
+                                <td class="text-end pe-3 fw-bold text-danger">
+                                    R$ <span th:text="${#numbers.formatDecimal(saldo, 1, 'POINT', 2, 'COMMA')}"></span>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                <!-- Formulário de pagamento -->
+                <div th:if="${pedido.status.podeAdicionarPagamento()}" class="card-footer bg-light">
+                    <div class="fw-semibold small mb-2">
+                        <i class="bi bi-plus-circle me-1 text-success"></i>Registrar Pagamento
+                    </div>
+                    <form th:action="@{/pedidos/{id}/pagamento(id=${pedido.id})}"
+                          th:object="${pagForm}" method="post">
+                        <div class="row g-2">
+                            <div class="col-7">
+                                <label class="form-label small mb-1">Valor (R$) *</label>
+                                <input type="number" class="form-control form-control-sm"
+                                       th:field="*{valor}" min="0.01" step="0.01"
+                                       placeholder="0,00">
+                            </div>
+                            <div class="col-5">
+                                <label class="form-label small mb-1">Data</label>
+                                <input type="date" class="form-control form-control-sm"
+                                       th:field="*{dataPagamento}">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small mb-1">Tipo *</label>
+                                <select class="form-select form-select-sm" th:field="*{tipoPagamento}">
+                                    <option value="">Selecione...</option>
+                                    <option th:each="t : ${tiposPagamento}"
+                                            th:value="${t.name()}"
+                                            th:text="${t.descricao}"></option>
+                                </select>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small mb-1">Observações</label>
+                                <input type="text" class="form-control form-control-sm"
+                                       th:field="*{observacoes}" placeholder="Ex: Pago 50% antecipado">
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-success btn-sm w-100">
+                                    <i class="bi bi-check-lg me-1"></i>Salvar Pagamento
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Ordens de Produção -->
+    <div class="card mt-3" th:if="${!#lists.isEmpty(ordens)}">
+        <div class="card-header bg-white fw-semibold">
+            <i class="bi bi-gear me-2 text-primary"></i>Ordens de Produção
+            <span class="badge bg-secondary ms-1" th:text="${#lists.size(ordens)}"></span>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-hover align-middle mb-0" style="font-size:0.9rem">
+                <thead>
+                    <tr>
+                        <th class="ps-3">#</th>
+                        <th>Produto</th>
+                        <th class="text-center">Qtd</th>
+                        <th class="text-center">Status</th>
+                        <th>Abertura</th>
+                        <th class="text-end pe-3"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="o : ${ordens}">
+                        <td class="ps-3 text-muted small" th:text="${o.id}"></td>
+                        <td class="fw-semibold" th:text="${o.produto.nome}"></td>
+                        <td class="text-center" th:text="${o.quantidade}"></td>
+                        <td class="text-center">
+                            <span class="badge" th:classappend="${o.status.badgeCss}"
+                                  th:text="${o.status.descricao}"></span>
+                        </td>
+                        <td class="text-muted small"
+                            th:text="${#temporals.format(o.dataAbertura, 'dd/MM/yyyy HH:mm')}"></td>
+                        <td class="text-end pe-3">
+                            <a th:href="@{/producao/{id}(id=${o.id})}"
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-gear me-1"></i>Ver Ordem
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

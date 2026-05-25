@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head><title>Fluxo de Caixa</title></head>
+<body>
+<div id="pageContent">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0"><i class="bi bi-arrow-left-right me-2 text-primary"></i>Fluxo de Caixa</h2>
+    <form method="get" class="d-flex gap-2 align-items-center">
+      <label class="small text-muted">De</label>
+      <input type="date" name="inicio" class="form-control form-control-sm" style="width:150px"
+             th:value="${#temporals.format(fluxo.inicio,'yyyy-MM-dd')}"/>
+      <label class="small text-muted">Até</label>
+      <input type="date" name="fim" class="form-control form-control-sm" style="width:150px"
+             th:value="${#temporals.format(fluxo.fim,'yyyy-MM-dd')}"/>
+      <button class="btn btn-primary btn-sm" type="submit"><i class="bi bi-funnel me-1"></i>Filtrar</button>
+    </form>
+  </div>
+
+  <!-- Saldos -->
+  <div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+      <div class="card border-success">
+        <div class="card-body text-center">
+          <div class="text-muted small fw-semibold text-uppercase">Entradas Reais</div>
+          <div class="fs-4 fw-bold text-success mt-1">R$ <span th:text="${#numbers.formatDecimal(fluxo.recebidoReal,1,'POINT',2,'COMMA')}"></span></div>
+          <div class="text-muted small">Pagamentos recebidos</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div class="card border-danger">
+        <div class="card-body text-center">
+          <div class="text-muted small fw-semibold text-uppercase">Saídas Reais</div>
+          <div class="fs-4 fw-bold text-danger mt-1">R$ <span th:text="${#numbers.formatDecimal(fluxo.saidaMP.add(fluxo.saidaDespesasFixas),1,'POINT',2,'COMMA')}"></span></div>
+          <div class="text-muted small">MP + Despesas fixas</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div th:class="${fluxo.saldoRealizado.compareTo(T(java.math.BigDecimal).ZERO) >= 0} ? 'card border-success' : 'card border-danger'">
+        <div class="card-body text-center">
+          <div class="text-muted small fw-semibold text-uppercase">Saldo Realizado</div>
+          <div th:class="${fluxo.saldoRealizado.compareTo(T(java.math.BigDecimal).ZERO) >= 0} ? 'fs-4 fw-bold text-success mt-1' : 'fs-4 fw-bold text-danger mt-1'">
+            R$ <span th:text="${#numbers.formatDecimal(fluxo.saldoRealizado,1,'POINT',2,'COMMA')}"></span>
+          </div>
+          <div class="text-muted small">Entradas − Saídas reais</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+      <div th:class="${fluxo.saldoProjetado.compareTo(T(java.math.BigDecimal).ZERO) >= 0} ? 'card border-info' : 'card border-warning'">
+        <div class="card-body text-center">
+          <div class="text-muted small fw-semibold text-uppercase">Saldo Projetado</div>
+          <div class="fs-4 fw-bold text-info mt-1">R$ <span th:text="${#numbers.formatDecimal(fluxo.saldoProjetado,1,'POINT',2,'COMMA')}"></span></div>
+          <div class="text-muted small">Incluindo previsões</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabela detalhada -->
+  <div class="card">
+    <div class="card-header fw-semibold bg-light">Composição do Fluxo</div>
+    <div class="card-body p-0">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr><th>Tipo</th><th>Descrição</th><th class="text-end">Valor</th></tr>
+        </thead>
+        <tbody>
+          <tr class="table-success">
+            <td><span class="badge bg-success">ENTRADA</span></td>
+            <td>Pagamentos recebidos no período</td>
+            <td class="text-end fw-semibold text-success">R$ <span th:text="${#numbers.formatDecimal(fluxo.recebidoReal,1,'POINT',2,'COMMA')}"></span></td>
+          </tr>
+          <tr class="table-success bg-opacity-50">
+            <td><span class="badge bg-success opacity-75">PREVISTO</span></td>
+            <td>Contas a receber com vencimento no período</td>
+            <td class="text-end text-success">R$ <span th:text="${#numbers.formatDecimal(fluxo.previstoEntrada,1,'POINT',2,'COMMA')}"></span></td>
+          </tr>
+          <tr class="table-danger">
+            <td><span class="badge bg-danger">SAÍDA</span></td>
+            <td>Compras de matéria-prima no período</td>
+            <td class="text-end fw-semibold text-danger">R$ <span th:text="${#numbers.formatDecimal(fluxo.saidaMP,1,'POINT',2,'COMMA')}"></span></td>
+          </tr>
+          <tr class="table-danger bg-opacity-50">
+            <td><span class="badge bg-danger">SAÍDA</span></td>
+            <td>Despesas fixas proporcionais ao período</td>
+            <td class="text-end fw-semibold text-danger">R$ <span th:text="${#numbers.formatDecimal(fluxo.saidaDespesasFixas,1,'POINT',2,'COMMA')}"></span></td>
+          </tr>
+          <tr class="table-warning">
+            <td><span class="badge bg-warning text-dark">PREVISTO</span></td>
+            <td>Contas a pagar com vencimento no período</td>
+            <td class="text-end text-warning">R$ <span th:text="${#numbers.formatDecimal(fluxo.saidaPrevista,1,'POINT',2,'COMMA')}"></span></td>
+          </tr>
+        </tbody>
+        <tfoot class="table-dark">
+          <tr>
+            <td colspan="2" class="fw-bold">Total Entradas</td>
+            <td class="text-end fw-bold text-success">R$ <span th:text="${#numbers.formatDecimal(fluxo.totalEntradas,1,'POINT',2,'COMMA')}"></span></td>
+          </tr>
+          <tr>
+            <td colspan="2" class="fw-bold">Total Saídas</td>
+            <td class="text-end fw-bold text-danger">R$ <span th:text="${#numbers.formatDecimal(fluxo.totalSaidas,1,'POINT',2,'COMMA')}"></span></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

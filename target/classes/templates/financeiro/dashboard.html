@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Dashboard Financeiro — Sistema Páscoa</title>
+</head>
+<body>
+<div id="pageContent">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">
+            <i class="bi bi-graph-up me-2 text-success"></i>Dashboard Financeiro
+        </h2>
+        <span class="text-muted small">
+            <i class="bi bi-clock me-1"></i>Dados em tempo real
+        </span>
+    </div>
+
+    <!-- KPIs principais -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-success">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small fw-semibold text-uppercase">Faturamento Entregue</div>
+                            <div class="fs-4 fw-bold text-success mt-1">
+                                R$ <span th:text="${#numbers.formatDecimal(relatorio.faturamentoEntregues, 1, 'POINT', 2, 'COMMA')}"></span>
+                            </div>
+                            <div class="text-muted small mt-1">
+                                <span th:text="${relatorio.pedidosEntregues}"></span> pedido(s) entregue(s)
+                            </div>
+                        </div>
+                        <i class="bi bi-cash-coin fs-1 text-success opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-primary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small fw-semibold text-uppercase">Total Recebido</div>
+                            <div class="fs-4 fw-bold text-primary mt-1">
+                                R$ <span th:text="${#numbers.formatDecimal(relatorio.totalRecebido, 1, 'POINT', 2, 'COMMA')}"></span>
+                            </div>
+                            <div class="text-muted small mt-1">Pagamentos registrados</div>
+                        </div>
+                        <i class="bi bi-wallet2 fs-1 text-primary opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-warning">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small fw-semibold text-uppercase">Pipeline</div>
+                            <div class="fs-4 fw-bold text-warning mt-1">
+                                R$ <span th:text="${#numbers.formatDecimal(relatorio.pipeline, 1, 'POINT', 2, 'COMMA')}"></span>
+                            </div>
+                            <div class="text-muted small mt-1">Confirmados + Em produção + Prontos</div>
+                        </div>
+                        <i class="bi bi-hourglass-split fs-1 text-warning opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-secondary">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small fw-semibold text-uppercase">Total de Pedidos</div>
+                            <div class="fs-4 fw-bold text-dark mt-1" th:text="${relatorio.totalPedidos}"></div>
+                            <div class="text-muted small mt-1">
+                                <span th:text="${relatorio.pedidosCancelados}"></span> cancelado(s)
+                            </div>
+                        </div>
+                        <i class="bi bi-cart3 fs-1 text-secondary opacity-25"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pedidos por status e Alertas de estoque -->
+    <div class="row g-3 mb-4">
+
+        <!-- Pedidos por status -->
+        <div class="col-lg-7">
+            <div class="card h-100">
+                <div class="card-header fw-semibold">
+                    <i class="bi bi-pie-chart me-2"></i>Pedidos por Status
+                </div>
+                <div class="card-body">
+                    <div class="row g-3 text-center">
+                        <div class="col-4 col-sm-2">
+                            <a th:href="@{/pedidos(status='NOVO')}" class="text-decoration-none">
+                                <div class="badge bg-primary w-100 py-2 fs-6 mb-1"
+                                     th:text="${relatorio.pedidosNovos}"></div>
+                                <div class="small text-muted">Novo</div>
+                            </a>
+                        </div>
+                        <div class="col-4 col-sm-2">
+                            <a th:href="@{/pedidos(status='CONFIRMADO')}" class="text-decoration-none">
+                                <div class="badge bg-info text-dark w-100 py-2 fs-6 mb-1"
+                                     th:text="${relatorio.pedidosConfirmados}"></div>
+                                <div class="small text-muted">Confirmado</div>
+                            </a>
+                        </div>
+                        <div class="col-4 col-sm-2">
+                            <a th:href="@{/pedidos(status='EM_PRODUCAO')}" class="text-decoration-none">
+                                <div class="badge bg-warning text-dark w-100 py-2 fs-6 mb-1"
+                                     th:text="${relatorio.pedidosEmProducao}"></div>
+                                <div class="small text-muted">Em Produção</div>
+                            </a>
+                        </div>
+                        <div class="col-4 col-sm-2">
+                            <a th:href="@{/pedidos(status='PRONTO')}" class="text-decoration-none">
+                                <div class="badge bg-success w-100 py-2 fs-6 mb-1"
+                                     th:text="${relatorio.pedidosProntos}"></div>
+                                <div class="small text-muted">Pronto</div>
+                            </a>
+                        </div>
+                        <div class="col-4 col-sm-2">
+                            <a th:href="@{/pedidos(status='ENTREGUE')}" class="text-decoration-none">
+                                <div class="badge bg-dark w-100 py-2 fs-6 mb-1"
+                                     th:text="${relatorio.pedidosEntregues}"></div>
+                                <div class="small text-muted">Entregue</div>
+                            </a>
+                        </div>
+                        <div class="col-4 col-sm-2">
+                            <a th:href="@{/pedidos(status='CANCELADO')}" class="text-decoration-none">
+                                <div class="badge bg-danger w-100 py-2 fs-6 mb-1"
+                                     th:text="${relatorio.pedidosCancelados}"></div>
+                                <div class="small text-muted">Cancelado</div>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Barra de progresso visual -->
+                    <div th:if="${relatorio.totalPedidos > 0}" class="mt-3">
+                        <div class="progress" style="height: 8px; border-radius: 4px;">
+                            <div class="progress-bar bg-primary"
+                                 th:style="'width:' + ${(relatorio.pedidosNovos * 100 / relatorio.totalPedidos)} + '%'"></div>
+                            <div class="progress-bar bg-info"
+                                 th:style="'width:' + ${(relatorio.pedidosConfirmados * 100 / relatorio.totalPedidos)} + '%'"></div>
+                            <div class="progress-bar bg-warning"
+                                 th:style="'width:' + ${(relatorio.pedidosEmProducao * 100 / relatorio.totalPedidos)} + '%'"></div>
+                            <div class="progress-bar bg-success"
+                                 th:style="'width:' + ${(relatorio.pedidosProntos * 100 / relatorio.totalPedidos)} + '%'"></div>
+                            <div class="progress-bar bg-dark"
+                                 th:style="'width:' + ${(relatorio.pedidosEntregues * 100 / relatorio.totalPedidos)} + '%'"></div>
+                            <div class="progress-bar bg-danger"
+                                 th:style="'width:' + ${(relatorio.pedidosCancelados * 100 / relatorio.totalPedidos)} + '%'"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alertas de estoque crítico -->
+        <div class="col-lg-5">
+            <div class="card h-100"
+                 th:classappend="${!#lists.isEmpty(relatorio.materiaPrimasCriticas)} ? 'border-danger' : 'border-success'">
+                <div class="card-header fw-semibold"
+                     th:classappend="${!#lists.isEmpty(relatorio.materiaPrimasCriticas)} ? 'bg-danger-subtle text-danger-emphasis' : 'bg-success-subtle text-success-emphasis'">
+                    <i class="bi me-2"
+                       th:classappend="${!#lists.isEmpty(relatorio.materiaPrimasCriticas)} ? 'bi-exclamation-triangle-fill' : 'bi-check-circle-fill'"></i>
+                    Alertas de Estoque
+                    <span th:if="${!#lists.isEmpty(relatorio.materiaPrimasCriticas)}"
+                          class="badge bg-danger ms-1"
+                          th:text="${#lists.size(relatorio.materiaPrimasCriticas)}"></span>
+                </div>
+                <div class="card-body p-0">
+                    <div th:if="${#lists.isEmpty(relatorio.materiaPrimasCriticas)}"
+                         class="text-center text-success py-4">
+                        <i class="bi bi-check-circle-fill fs-3 d-block mb-2"></i>
+                        Todos os estoques estão em dia!
+                    </div>
+                    <ul th:unless="${#lists.isEmpty(relatorio.materiaPrimasCriticas)}"
+                        class="list-group list-group-flush">
+                        <li th:each="mp : ${relatorio.materiaPrimasCriticas}"
+                            class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="fw-semibold" th:text="${mp.nome}"></span>
+                                <div class="text-danger small">
+                                    <i class="bi bi-arrow-down me-1"></i>
+                                    Atual:
+                                    <strong th:text="${#numbers.formatDecimal(mp.quantidadeAtual, 1, 'POINT', 3, 'COMMA')}"></strong>
+                                    <span th:text="${mp.unidade.simbolo}"></span>
+                                    — Mín:
+                                    <span th:text="${#numbers.formatDecimal(mp.quantidadeMinima, 1, 'POINT', 3, 'COMMA')}"></span>
+                                    <span th:text="${mp.unidade.simbolo}"></span>
+                                </div>
+                            </div>
+                            <a th:href="@{/estoque/entrada(mpId=${mp.id})}"
+                               class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-box-arrow-in-down"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Produtos e Margens -->
+    <div class="row g-3">
+
+        <!-- Top 5 produtos -->
+        <div class="col-lg-5">
+            <div class="card">
+                <div class="card-header fw-semibold">
+                    <i class="bi bi-trophy me-2 text-warning"></i>Top 5 Produtos Vendidos
+                </div>
+                <div class="card-body p-0">
+                    <div th:if="${#lists.isEmpty(relatorio.topProdutos)}"
+                         class="text-center text-muted py-4">
+                        <i class="bi bi-box fs-3 d-block mb-2 opacity-50"></i>
+                        Nenhum produto vendido ainda.
+                    </div>
+                    <table th:unless="${#lists.isEmpty(relatorio.topProdutos)}"
+                           class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-3">#</th>
+                                <th>Produto</th>
+                                <th class="text-center">Unid.</th>
+                                <th class="text-end pe-3">Faturamento</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="tp, i : ${relatorio.topProdutos}">
+                                <td class="ps-3">
+                                    <span th:text="${i.index + 1}"
+                                          th:classappend="${i.index == 0 ? 'fw-bold text-warning' : (i.index == 1 ? 'fw-bold text-secondary' : (i.index == 2 ? 'fw-bold text-danger' : 'text-muted'))}"></span>
+                                </td>
+                                <td class="fw-semibold" th:text="${tp.nome}"></td>
+                                <td class="text-center" th:text="${tp.quantidadeVendida}"></td>
+                                <td class="text-end pe-3 text-success fw-semibold">
+                                    R$ <span th:text="${#numbers.formatDecimal(tp.faturamento, 1, 'POINT', 2, 'COMMA')}"></span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Margens por produto -->
+        <div class="col-lg-7">
+            <div class="card">
+                <div class="card-header fw-semibold">
+                    <i class="bi bi-percent me-2 text-primary"></i>Margem por Produto
+                    <span class="text-muted small fw-normal ms-2">baseada na ficha técnica atual</span>
+                </div>
+                <div class="card-body p-0">
+                    <div th:if="${#lists.isEmpty(relatorio.margens)}"
+                         class="text-center text-muted py-4">
+                        <i class="bi bi-file-earmark-text fs-3 d-block mb-2 opacity-50"></i>
+                        Nenhum produto com ficha técnica cadastrada.
+                        <div class="mt-2">
+                            <a th:href="@{/produtos}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-box-seam me-1"></i>Ir para Produtos
+                            </a>
+                        </div>
+                    </div>
+                    <table th:unless="${#lists.isEmpty(relatorio.margens)}"
+                           class="table table-hover align-middle mb-0" style="font-size:0.9rem">
+                        <thead>
+                            <tr>
+                                <th class="ps-3">Produto</th>
+                                <th class="text-end">Preço Venda</th>
+                                <th class="text-end">Custo Unit.</th>
+                                <th class="text-end pe-3">Margem</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="m : ${relatorio.margens}">
+                                <td class="ps-3 fw-semibold" th:text="${m.nome}"></td>
+                                <td class="text-end">
+                                    R$ <span th:text="${#numbers.formatDecimal(m.precoVenda, 1, 'POINT', 2, 'COMMA')}"></span>
+                                </td>
+                                <td class="text-end text-muted">
+                                    R$ <span th:text="${#numbers.formatDecimal(m.custoUnitario, 1, 'POINT', 2, 'COMMA')}"></span>
+                                </td>
+                                <td class="text-end pe-3 fw-bold">
+                                    <span th:classappend="${m.margemPct.compareTo(T(java.math.BigDecimal).valueOf(40L)) >= 0 ? 'text-success' : (m.margemPct.compareTo(T(java.math.BigDecimal).valueOf(20L)) >= 0 ? 'text-warning' : 'text-danger')}"
+                                          th:text="${#numbers.formatDecimal(m.margemPct, 1, 'POINT', 1, 'COMMA')} + '%'"></span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer text-muted small" th:unless="${#lists.isEmpty(relatorio.margens)}">
+                    <span class="text-success fw-semibold">■</span> ≥ 40% &nbsp;
+                    <span class="text-warning fw-semibold">■</span> 20–39% &nbsp;
+                    <span class="text-danger fw-semibold">■</span> &lt; 20%
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

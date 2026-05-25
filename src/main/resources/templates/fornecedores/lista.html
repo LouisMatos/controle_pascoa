@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Fornecedores — Sistema Páscoa</title>
+</head>
+<body>
+<div id="pageContent">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0"><i class="bi bi-truck me-2 text-dark"></i>Fornecedores</h2>
+        <a th:href="@{/fornecedores/novo}" class="btn btn-success">
+            <i class="bi bi-plus-lg me-1"></i>Novo Fornecedor
+        </a>
+    </div>
+
+    <!-- Busca -->
+    <div class="card mb-3">
+        <div class="card-body py-2">
+            <form th:action="@{/fornecedores}" method="get" class="d-flex gap-2">
+                <input type="text" name="busca" class="form-control" placeholder="Buscar por nome..."
+                       th:value="${busca}">
+                <button type="submit" class="btn btn-outline-secondary">
+                    <i class="bi bi-search"></i>
+                </button>
+                <a th:href="@{/fornecedores}" class="btn btn-outline-danger"
+                   th:if="${busca != null and !#strings.isEmpty(busca)}">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-3">Nome</th>
+                        <th>CNPJ</th>
+                        <th>Telefone</th>
+                        <th>E-mail</th>
+                        <th>Observações</th>
+                        <th class="text-center pe-3">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="f : ${fornecedores}">
+                        <td class="ps-3 fw-semibold" th:text="${f.nome}"></td>
+                        <td th:text="${f.cnpj}"></td>
+                        <td th:text="${f.telefone}"></td>
+                        <td th:text="${f.email}"></td>
+                        <td class="text-muted small" th:text="${f.observacoes}"></td>
+                        <td class="text-center pe-3">
+                            <a th:href="@{/fornecedores/{id}/editar(id=${f.id})}"
+                               class="btn btn-sm btn-outline-primary me-1" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <form th:action="@{/fornecedores/{id}/excluir(id=${f.id})}" method="post"
+                                  class="d-inline"
+                                  onsubmit="return confirm('Confirma a exclusão?')">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(fornecedores)}">
+                        <td colspan="6" class="text-center text-muted py-5">
+                            <i class="bi bi-truck fs-3 d-block mb-2 opacity-50"></i>
+                            Nenhum fornecedor encontrado.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card-footer text-muted small" th:if="${!#lists.isEmpty(fornecedores)}">
+            <span th:text="${#lists.size(fornecedores)}"></span> fornecedor(es) encontrado(s).
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

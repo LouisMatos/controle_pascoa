@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Entrada de Matéria-Prima — Sistema Páscoa</title>
+</head>
+<body>
+<div id="pageContent">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">
+            <i class="bi bi-box-arrow-in-down me-2 text-success"></i>Entrada de Matéria-Prima
+        </h2>
+        <a th:href="@{/estoque/movimentacoes}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Voltar
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-7">
+            <div class="card">
+                <div class="card-body">
+                    <form th:action="@{/estoque/entrada/salvar}" th:object="${form}" method="post">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Matéria-Prima *</label>
+                            <select id="mpSelect" class="form-select"
+                                    th:field="*{materiaPrimaId}"
+                                    th:classappend="${#fields.hasErrors('materiaPrimaId')} ? 'is-invalid'"
+                                    onchange="atualizarInfoMP()">
+                                <option value="">Selecione...</option>
+                                <option th:each="mp : ${materiasPrimas}"
+                                        th:value="${mp.id}"
+                                        th:text="${mp.nome}"
+                                        th:attr="data-saldo=${mp.quantidadeAtual},
+                                                 data-unidade=${mp.unidade.simbolo},
+                                                 data-custo=${mp.custoUnitario}"></option>
+                            </select>
+                            <div class="invalid-feedback" th:errors="*{materiaPrimaId}"></div>
+
+                            <!-- Info do estoque atual -->
+                            <div id="infoMP" class="mt-2 p-2 bg-light rounded border d-none">
+                                <span class="text-muted small">Estoque atual:</span>
+                                <strong id="saldoAtual" class="ms-1"></strong>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Quantidade Recebida *</label>
+                                <div class="input-group">
+                                    <input type="number" id="qtdInput" class="form-control"
+                                           th:field="*{quantidade}"
+                                           th:classappend="${#fields.hasErrors('quantidade')} ? 'is-invalid'"
+                                           min="0.001" step="0.001" placeholder="0,000">
+                                    <span class="input-group-text" id="unidadeLabel">—</span>
+                                </div>
+                                <div class="invalid-feedback" th:errors="*{quantidade}"></div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Custo Unitário (R$) *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">R$</span>
+                                    <input type="number" id="custoInput" class="form-control"
+                                           th:field="*{custoUnitario}"
+                                           th:classappend="${#fields.hasErrors('custoUnitario')} ? 'is-invalid'"
+                                           min="0.0001" step="0.0001" placeholder="0,0000">
+                                </div>
+                                <div class="invalid-feedback" th:errors="*{custoUnitario}"></div>
+                                <div class="form-text">Preço pago por unidade nesta compra.</div>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Observações (Fornecedor, NF, etc.)</label>
+                                <input type="text" class="form-control"
+                                       th:field="*{motivo}"
+                                       placeholder="Ex: Compra na Cacau Show – NF 12345">
+                            </div>
+                        </div>
+
+                        <!-- Preview do total -->
+                        <div id="previewTotal" class="alert alert-success mt-3 d-none">
+                            <div class="row text-center">
+                                <div class="col">
+                                    <div class="small text-muted">Saldo atual</div>
+                                    <strong id="prevSaldoAtual">—</strong>
+                                </div>
+                                <div class="col-auto align-self-center text-muted fs-5">+</div>
+                                <div class="col">
+                                    <div class="small text-muted">Entrada</div>
+                                    <strong id="prevEntrada">—</strong>
+                                </div>
+                                <div class="col-auto align-self-center text-muted fs-5">=</div>
+                                <div class="col">
+                                    <div class="small text-muted">Novo saldo</div>
+                                    <strong id="prevNovoSaldo" class="text-success">—</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success px-4">
+                                <i class="bi bi-check-lg me-1"></i>Registrar Entrada
+                            </button>
+                            <a th:href="@{/estoque/movimentacoes}" class="btn btn-outline-secondary">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dicas -->
+        <div class="col-lg-5">
+            <div class="card border-success-subtle">
+                <div class="card-header bg-success-subtle fw-semibold text-success-emphasis">
+                    <i class="bi bi-info-circle me-2"></i>O que acontece ao registrar
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            O estoque da matéria-prima é <strong>incrementado</strong> pela quantidade informada.
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            O <strong>custo unitário</strong> da MP é atualizado para o valor desta compra.
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            Um registro de <strong>movimentação</strong> é criado para rastreabilidade.
+                        </li>
+                        <li>
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            O novo custo refletirá no <strong>cálculo das fichas técnicas</strong>.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const mpSelect = document.getElementById('mpSelect');
+    const qtdInput = document.getElementById('qtdInput');
+
+    function atualizarInfoMP() {
+        const opt = mpSelect.options[mpSelect.selectedIndex];
+        if (!opt.value) {
+            document.getElementById('infoMP').classList.add('d-none');
+            document.getElementById('previewTotal').classList.add('d-none');
+            document.getElementById('unidadeLabel').textContent = '—';
+            return;
+        }
+        const saldo  = parseFloat(opt.dataset.saldo  || 0);
+        const unidade = opt.dataset.unidade || '';
+        const custo  = parseFloat(opt.dataset.custo  || 0);
+
+        document.getElementById('unidadeLabel').textContent = unidade;
+        document.getElementById('saldoAtual').textContent   = saldo.toFixed(3) + ' ' + unidade;
+        document.getElementById('infoMP').classList.remove('d-none');
+
+        // Pre-fill custo
+        if (!document.getElementById('custoInput').value) {
+            document.getElementById('custoInput').value = custo.toFixed(4);
+        }
+
+        atualizarPreview();
+    }
+
+    function atualizarPreview() {
+        const opt = mpSelect.options[mpSelect.selectedIndex];
+        if (!opt.value) return;
+
+        const saldo   = parseFloat(opt.dataset.saldo || 0);
+        const unidade = opt.dataset.unidade || '';
+        const entrada = parseFloat(qtdInput.value || 0);
+
+        if (entrada > 0) {
+            document.getElementById('prevSaldoAtual').textContent = saldo.toFixed(3) + ' ' + unidade;
+            document.getElementById('prevEntrada').textContent    = entrada.toFixed(3) + ' ' + unidade;
+            document.getElementById('prevNovoSaldo').textContent  = (saldo + entrada).toFixed(3) + ' ' + unidade;
+            document.getElementById('previewTotal').classList.remove('d-none');
+        } else {
+            document.getElementById('previewTotal').classList.add('d-none');
+        }
+    }
+
+    qtdInput.addEventListener('input', atualizarPreview);
+
+    // Aplica ao carregar caso já haja valor (ex: retorno de validação)
+    if (mpSelect.value) atualizarInfoMP();
+</script>
+</body>
+</html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Ajuste de Inventário — Sistema Páscoa</title>
+</head>
+<body>
+<div id="pageContent">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">
+            <i class="bi bi-pencil-square me-2 text-warning"></i>Ajuste de Inventário
+        </h2>
+        <a th:href="@{/estoque/movimentacoes}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Voltar
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-7">
+            <div class="card">
+                <div class="card-body">
+                    <form th:action="@{/estoque/ajuste/salvar}" th:object="${form}" method="post">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Matéria-Prima *</label>
+                            <select id="mpSelect" class="form-select"
+                                    th:field="*{materiaPrimaId}"
+                                    th:classappend="${#fields.hasErrors('materiaPrimaId')} ? 'is-invalid'"
+                                    onchange="atualizarInfoMP()">
+                                <option value="">Selecione...</option>
+                                <option th:each="mp : ${materiasPrimas}"
+                                        th:value="${mp.id}"
+                                        th:text="${mp.nome}"
+                                        th:attr="data-saldo=${mp.quantidadeAtual},
+                                                 data-unidade=${mp.unidade.simbolo}"></option>
+                            </select>
+                            <div class="invalid-feedback" th:errors="*{materiaPrimaId}"></div>
+
+                            <div id="infoMP" class="mt-2 p-2 bg-light rounded border d-none">
+                                <span class="text-muted small">Estoque atual:</span>
+                                <strong id="saldoAtual" class="ms-1"></strong>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Nova Quantidade *</label>
+                                <div class="input-group">
+                                    <input type="number" id="novaQtdInput" class="form-control"
+                                           th:field="*{novaQuantidade}"
+                                           th:classappend="${#fields.hasErrors('novaQuantidade')} ? 'is-invalid'"
+                                           min="0" step="0.001" placeholder="0,000"
+                                           oninput="atualizarPreview()">
+                                    <span class="input-group-text" id="unidadeLabel">—</span>
+                                </div>
+                                <div class="invalid-feedback" th:errors="*{novaQuantidade}"></div>
+                                <div class="form-text">Informe o saldo real contado no estoque físico.</div>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label fw-semibold">Justificativa *</label>
+                                <input type="text" class="form-control"
+                                       th:field="*{motivo}"
+                                       th:classappend="${#fields.hasErrors('motivo')} ? 'is-invalid'"
+                                       placeholder="Ex: Contagem física mensal – discrepância de embalagem">
+                                <div class="invalid-feedback" th:errors="*{motivo}"></div>
+                            </div>
+                        </div>
+
+                        <!-- Preview do ajuste -->
+                        <div id="previewAjuste" class="alert mt-3 d-none">
+                            <div class="row text-center">
+                                <div class="col">
+                                    <div class="small text-muted">Saldo atual</div>
+                                    <strong id="prevSaldoAtual">—</strong>
+                                </div>
+                                <div class="col-auto align-self-center text-muted fs-5">→</div>
+                                <div class="col">
+                                    <div class="small text-muted">Novo saldo</div>
+                                    <strong id="prevNovoSaldo">—</strong>
+                                </div>
+                                <div class="col-auto align-self-center text-muted fs-5">(</div>
+                                <div class="col">
+                                    <div class="small text-muted">Delta</div>
+                                    <strong id="prevDelta">—</strong>
+                                </div>
+                                <div class="col-auto align-self-center text-muted fs-5">)</div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-warning px-4">
+                                <i class="bi bi-check-lg me-1"></i>Registrar Ajuste
+                            </button>
+                            <a th:href="@{/estoque/movimentacoes}" class="btn btn-outline-secondary">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dicas -->
+        <div class="col-lg-5">
+            <div class="card border-warning-subtle">
+                <div class="card-header bg-warning-subtle fw-semibold text-warning-emphasis">
+                    <i class="bi bi-info-circle me-2"></i>O que é um ajuste de inventário
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="bi bi-arrow-right-circle-fill text-warning me-2"></i>
+                            Use quando a quantidade <strong>física</strong> no estoque diverge do sistema.
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-arrow-right-circle-fill text-warning me-2"></i>
+                            Informe o <strong>saldo real contado</strong>, não a diferença.
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-arrow-right-circle-fill text-warning me-2"></i>
+                            A <strong>diferença</strong> é calculada automaticamente e registrada na movimentação.
+                        </li>
+                        <li>
+                            <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+                            A <strong>justificativa é obrigatória</strong> para rastreabilidade da correção.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const mpSelect      = document.getElementById('mpSelect');
+    const novaQtdInput  = document.getElementById('novaQtdInput');
+    const previewEl     = document.getElementById('previewAjuste');
+
+    function atualizarInfoMP() {
+        const opt = mpSelect.options[mpSelect.selectedIndex];
+        if (!opt.value) {
+            document.getElementById('infoMP').classList.add('d-none');
+            previewEl.classList.add('d-none');
+            document.getElementById('unidadeLabel').textContent = '—';
+            return;
+        }
+        const saldo   = parseFloat(opt.dataset.saldo  || 0);
+        const unidade = opt.dataset.unidade || '';
+
+        document.getElementById('unidadeLabel').textContent = unidade;
+        document.getElementById('saldoAtual').textContent   = saldo.toFixed(3) + ' ' + unidade;
+        document.getElementById('infoMP').classList.remove('d-none');
+
+        atualizarPreview();
+    }
+
+    function atualizarPreview() {
+        const opt = mpSelect.options[mpSelect.selectedIndex];
+        if (!opt.value) return;
+
+        const saldo   = parseFloat(opt.dataset.saldo || 0);
+        const unidade = opt.dataset.unidade || '';
+        const nova    = parseFloat(novaQtdInput.value);
+
+        if (novaQtdInput.value === '' || isNaN(nova)) {
+            previewEl.classList.add('d-none');
+            return;
+        }
+
+        const delta = nova - saldo;
+        const isAumento = delta >= 0;
+
+        document.getElementById('prevSaldoAtual').textContent = saldo.toFixed(3) + ' ' + unidade;
+        document.getElementById('prevNovoSaldo').textContent  = nova.toFixed(3) + ' ' + unidade;
+
+        const deltaEl = document.getElementById('prevDelta');
+        deltaEl.textContent = (isAumento ? '+' : '') + delta.toFixed(3) + ' ' + unidade;
+        deltaEl.className   = isAumento ? 'text-success' : 'text-danger';
+
+        previewEl.classList.remove('d-none');
+        previewEl.className = previewEl.className.replace(/alert-\w+/, '');
+        previewEl.classList.add(isAumento ? 'alert-success' : (delta < 0 ? 'alert-danger' : 'alert-secondary'));
+    }
+
+    // Aplica ao carregar caso já haja valor (retorno de validação)
+    if (mpSelect.value) atualizarInfoMP();
+</script>
+</body>
+</html>

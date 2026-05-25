@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Dashboard — Sistema Páscoa</title>
+</head>
+<body>
+<div id="pageContent">
+
+    <div class="d-flex align-items-center mb-4">
+        <i class="bi bi-egg-fill text-success me-2 fs-3"></i>
+        <h2 class="mb-0">Dashboard</h2>
+    </div>
+
+    <!-- ── Linha 1: KPIs principais ─────────────────────────────────────── -->
+    <div class="row g-3 mb-3">
+        <div class="col-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="rounded-3 bg-primary bg-opacity-10 p-3">
+                        <i class="bi bi-people-fill fs-3 text-primary"></i>
+                    </div>
+                    <div>
+                        <div class="fs-4 fw-bold" th:text="${totalClientes}">0</div>
+                        <div class="text-muted small">Clientes</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="rounded-3 bg-success bg-opacity-10 p-3">
+                        <i class="bi bi-box-seam-fill fs-3 text-success"></i>
+                    </div>
+                    <div>
+                        <div class="fs-4 fw-bold" th:text="${totalProdutos}">0</div>
+                        <div class="text-muted small">Produtos Ativos</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="rounded-3 bg-warning bg-opacity-10 p-3">
+                        <i class="bi bi-cart3 fs-3 text-warning"></i>
+                    </div>
+                    <div>
+                        <div class="fs-4 fw-bold" th:text="${pedidosAbertos}">0</div>
+                        <div class="text-muted small">Pedidos Abertos</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="rounded-3 bg-danger bg-opacity-10 p-3">
+                        <i class="bi bi-exclamation-triangle-fill fs-3 text-danger"></i>
+                    </div>
+                    <div>
+                        <div class="fs-4 fw-bold" th:text="${alertasEstoque}">0</div>
+                        <div class="text-muted small">Alertas de Estoque</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Linha 2: KPIs financeiros e produção ──────────────────────────── -->
+    <div class="row g-3 mb-4">
+        <!-- Faturamento em aberto -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <i class="bi bi-cash-coin text-warning fs-5"></i>
+                        <span class="text-muted small fw-semibold text-uppercase">Em Aberto</span>
+                    </div>
+                    <div class="fs-5 fw-bold">
+                        R$ <span th:text="${#numbers.formatDecimal(faturamentoAberto,1,'POINT',2,'COMMA')}">0,00</span>
+                    </div>
+                    <div class="text-muted" style="font-size:.75rem">Valor total dos pedidos ativos</div>
+                </div>
+            </div>
+        </div>
+        <!-- Total recebido / Meta -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                        <span class="text-muted small fw-semibold text-uppercase">Total Recebido</span>
+                    </div>
+                    <div class="fs-5 fw-bold text-success">
+                        R$ <span th:text="${#numbers.formatDecimal(totalRecebido,1,'POINT',2,'COMMA')}">0,00</span>
+                    </div>
+                    <!-- % da meta -->
+                    <div th:if="${pctMeta != null}">
+                        <div class="progress mt-1" style="height:5px;">
+                            <div class="progress-bar bg-success" role="progressbar"
+                                 th:style="'width:' + ${pctMeta} + '%'"></div>
+                        </div>
+                        <div class="text-muted" style="font-size:.75rem">
+                            <span th:text="${pctMeta}">0</span>% da meta mensal
+                        </div>
+                    </div>
+                    <div th:unless="${pctMeta != null}" class="text-muted" style="font-size:.75rem">
+                        Meta não configurada — <a th:href="@{/financeiro/dashboard}" class="text-decoration-none">definir</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Ordens pendentes -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <i class="bi bi-hourglass-split text-secondary fs-5"></i>
+                        <span class="text-muted small fw-semibold text-uppercase">Ordens Pendentes</span>
+                    </div>
+                    <div class="fs-5 fw-bold" th:text="${ordensPendentes}">0</div>
+                    <div class="text-muted" style="font-size:.75rem">
+                        <span th:text="${ordensEmAndamento}">0</span> em andamento
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Meta mensal (quando definida) -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <i class="bi bi-bullseye text-info fs-5"></i>
+                        <span class="text-muted small fw-semibold text-uppercase">Meta Mensal</span>
+                    </div>
+                    <div class="fs-5 fw-bold" th:if="${metaDefinida}">
+                        R$ <span th:text="${#numbers.formatDecimal(metaMensal,1,'POINT',2,'COMMA')}">0,00</span>
+                    </div>
+                    <div class="fs-5 fw-bold text-muted" th:unless="${metaDefinida}">
+                        —
+                    </div>
+                    <div class="text-muted" style="font-size:.75rem">
+                        <a th:href="@{/financeiro/dashboard}" class="text-decoration-none">
+                            <i class="bi bi-pencil me-1"></i>Ajustar meta
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <!-- Alertas de estoque crítico -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-white fw-semibold">
+                    <i class="bi bi-exclamation-triangle text-warning me-2"></i>Estoque Crítico
+                </div>
+                <div class="card-body p-0">
+                    <div th:if="${#lists.isEmpty(mpsCriticas)}" class="text-center text-muted py-4">
+                        <i class="bi bi-check-circle text-success fs-4 d-block mb-1"></i>
+                        Nenhuma matéria-prima abaixo do mínimo.
+                    </div>
+                    <ul class="list-group list-group-flush" th:unless="${#lists.isEmpty(mpsCriticas)}">
+                        <li class="list-group-item d-flex justify-content-between align-items-center"
+                            th:each="mp : ${mpsCriticas}">
+                            <span th:text="${mp.nome}"></span>
+                            <span class="badge bg-danger">
+                                <span th:text="${mp.quantidadeAtual}"></span>
+                                <span th:text="${mp.unidade.simbolo}"></span>
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Atalhos -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-white fw-semibold">
+                    <i class="bi bi-lightning-charge me-2 text-primary"></i>Acesso Rápido
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a th:href="@{/pedidos/wizard}" class="btn btn-outline-success">
+                            <i class="bi bi-magic me-2"></i>Novo Pedido (Wizard)
+                        </a>
+                        <a th:href="@{/clientes/novo}" class="btn btn-outline-primary">
+                            <i class="bi bi-person-plus me-2"></i>Novo Cliente
+                        </a>
+                        <a th:href="@{/producao/kanban}" class="btn btn-outline-warning">
+                            <i class="bi bi-kanban me-2"></i>Kanban de Produção
+                        </a>
+                        <a th:href="@{/estoque/entrada}" class="btn btn-outline-secondary">
+                            <i class="bi bi-box-arrow-in-down me-2"></i>Entrada de Matéria-Prima
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="${materiaPrima.id == null ? 'Nova Matéria-Prima' : 'Editar Matéria-Prima'} + ' — Sistema Páscoa'">Formulário</title>
+</head>
+<body>
+<div id="pageContent">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">
+            <i class="bi bi-stack me-2 text-secondary"></i>
+            <span th:text="${materiaPrima.id == null ? 'Nova Matéria-Prima' : 'Editar Matéria-Prima'}"></span>
+        </h2>
+        <a th:href="@{/materias-primas}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Voltar
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form th:action="@{/materias-primas/salvar}" th:object="${materiaPrima}" method="post">
+                <input type="hidden" th:field="*{id}">
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Nome *</label>
+                        <input type="text" class="form-control"
+                               th:field="*{nome}"
+                               th:classappend="${#fields.hasErrors('nome')} ? 'is-invalid'"
+                               placeholder="Ex: Chocolate ao Leite, Manteiga...">
+                        <div class="invalid-feedback" th:errors="*{nome}"></div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Unidade *</label>
+                        <select class="form-select"
+                                th:field="*{unidade}"
+                                th:classappend="${#fields.hasErrors('unidade')} ? 'is-invalid'">
+                            <option value="">Selecione...</option>
+                            <option th:each="un : ${unidades}"
+                                    th:value="${un.name()}"
+                                    th:text="${un.name()} + ' (' + ${un.simbolo} + ')'"></option>
+                        </select>
+                        <div class="invalid-feedback" th:errors="*{unidade}"></div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Custo Unitário (R$) *</label>
+                        <input type="number" class="form-control"
+                               th:field="*{custoUnitario}"
+                               th:classappend="${#fields.hasErrors('custoUnitario')} ? 'is-invalid'"
+                               min="0" step="0.0001" placeholder="0,0000">
+                        <div class="invalid-feedback" th:errors="*{custoUnitario}"></div>
+                        <div class="form-text">Custo por unidade cadastrada acima.</div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Quantidade em Estoque *</label>
+                        <input type="number" class="form-control"
+                               th:field="*{quantidadeAtual}"
+                               th:classappend="${#fields.hasErrors('quantidadeAtual')} ? 'is-invalid'"
+                               min="0" step="0.001" placeholder="0,000">
+                        <div class="invalid-feedback" th:errors="*{quantidadeAtual}"></div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Quantidade Mínima *</label>
+                        <input type="number" class="form-control"
+                               th:field="*{quantidadeMinima}"
+                               th:classappend="${#fields.hasErrors('quantidadeMinima')} ? 'is-invalid'"
+                               min="0" step="0.001" placeholder="0,000">
+                        <div class="invalid-feedback" th:errors="*{quantidadeMinima}"></div>
+                        <div class="form-text">Alerta é disparado abaixo deste valor.</div>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success px-4">
+                        <i class="bi bi-check-lg me-1"></i>Salvar
+                    </button>
+                    <a th:href="@{/materias-primas}" class="btn btn-outline-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

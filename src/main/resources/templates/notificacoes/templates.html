@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head><title>Templates de Notificação</title></head>
+<body>
+<div id="pageContent">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0"><i class="bi bi-bell me-2 text-primary"></i>Templates de Notificação</h2>
+    <div class="d-flex gap-2">
+      <a th:href="@{/notificacoes/configuracao}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-gear me-1"></i>Configurar Canais
+      </a>
+      <a th:href="@{/notificacoes/historico}" class="btn btn-outline-info btn-sm">
+        <i class="bi bi-clock-history me-1"></i>Histórico de Envios
+      </a>
+    </div>
+  </div>
+
+  <!-- Variáveis disponíveis -->
+  <div class="alert alert-info small mb-4">
+    <i class="bi bi-info-circle me-1"></i>
+    <strong>Variáveis disponíveis no corpo:</strong>
+    <code>{nome}</code> — nome do cliente &nbsp;|&nbsp;
+    <code>{numeroPedido}</code> — ID do pedido &nbsp;|&nbsp;
+    <code>{dataEntrega}</code> — data de entrega formatada &nbsp;|&nbsp;
+    <code>{link}</code> — link de acompanhamento &nbsp;|&nbsp;
+    <code>{valor}</code> — valor total do pedido
+  </div>
+
+  <!-- Tabela de templates -->
+  <div class="card mb-4">
+    <div class="card-header bg-light fw-semibold">Templates Cadastrados</div>
+    <div class="card-body p-0">
+      <table class="table table-hover mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Evento</th>
+            <th>Canal</th>
+            <th>Assunto (e-mail)</th>
+            <th>Corpo</th>
+            <th class="text-center">Ativo</th>
+            <th class="text-end">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:if="${templates.empty}">
+            <td colspan="6" class="text-center text-muted py-3">Nenhum template cadastrado. Execute o script SQL v2_item4_notificacoes.sql para inserir os templates padrão.</td>
+          </tr>
+          <tr th:each="t : ${templates}">
+            <td>
+              <span class="badge bg-secondary" th:text="${t.eventoGatilho.name().replace('_',' ')}"></span>
+            </td>
+            <td>
+              <span th:if="${t.canal.name() == 'WHATSAPP'}" class="badge bg-success">
+                <i class="bi bi-whatsapp me-1"></i>WhatsApp
+              </span>
+              <span th:unless="${t.canal.name() == 'WHATSAPP'}" class="badge bg-primary">
+                <i class="bi bi-envelope me-1"></i>E-mail
+              </span>
+            </td>
+            <td class="small text-muted" th:text="${t.assunto ?: '—'}"></td>
+            <td class="small" style="max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"
+                th:text="${t.corpo}"></td>
+            <td class="text-center">
+              <a th:href="@{/notificacoes/templates/{id}/ativar(id=${t.id})}"
+                 th:class="${t.ativo} ? 'badge bg-success text-decoration-none' : 'badge bg-secondary text-decoration-none'"
+                 th:text="${t.ativo} ? 'Sim' : 'Não'">
+              </a>
+            </td>
+            <td class="text-end">
+              <button type="button" class="btn btn-outline-primary btn-sm"
+                      data-bs-toggle="modal" data-bs-target="#modalEditarTemplate"
+                      th:attr="data-id=${t.id}, data-evento=${t.eventoGatilho}, data-canal=${t.canal},
+                               data-assunto=${t.assunto}, data-corpo=${t.corpo}, data-variaveis=${t.variaveis}">
+                <i class="bi bi-pencil"></i>
+              </button>
+              <a th:href="@{/notificacoes/templates/{id}/excluir(id=${t.id})}"
+                 class="btn btn-outline-danger btn-sm"
+                 onclick="return confirm('Excluir este template?')">
+                <i class="bi bi-trash"></i>
+              </a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Botão novo template -->
+  <button class="btn btn-success btn-sm mb-4" data-bs-toggle="modal" data-bs-target="#modalNovoTemplate">
+    <i class="bi bi-plus-circle me-1"></i>Novo Template
+  </button>
+
+  <!-- Modal: Novo Template -->
+  <div class="modal fade" id="modalNovoTemplate" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <form th:action="@{/notificacoes/templates/salvar}" method="post">
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Novo Template</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Evento Gatilho</label>
+                <select name="eventoGatilho" class="form-select" required>
+                  <option value="">Selecione...</option>
+                  <option th:each="e : ${eventos}" th:value="${e}" th:text="${e.name().replace('_',' ')}"></option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Canal</label>
+                <select name="canal" class="form-select" required>
+                  <option value="">Selecione...</option>
+                  <option th:each="c : ${canais}" th:value="${c}" th:text="${c.name()}"></option>
+                </select>
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-semibold">Assunto (apenas e-mail)</label>
+                <input type="text" name="assunto" class="form-control" placeholder="Assunto do e-mail (opcional para WhatsApp)"/>
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-semibold">Corpo <span class="text-danger">*</span></label>
+                <textarea name="corpo" class="form-control font-monospace" rows="5" required
+                          placeholder="Use {nome}, {numeroPedido}, {dataEntrega}, {link}, {valor}"></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-success"><i class="bi bi-save me-1"></i>Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Editar Template -->
+  <div class="modal fade" id="modalEditarTemplate" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <form th:action="@{/notificacoes/templates/salvar}" method="post">
+          <input type="hidden" name="id" id="editId"/>
+          <div class="modal-header">
+            <h5 class="modal-title"><i class="bi bi-pencil me-2"></i>Editar Template</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Evento Gatilho</label>
+                <select name="eventoGatilho" id="editEvento" class="form-select" required>
+                  <option th:each="e : ${eventos}" th:value="${e}" th:text="${e.name().replace('_',' ')}"></option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Canal</label>
+                <select name="canal" id="editCanal" class="form-select" required>
+                  <option th:each="c : ${canais}" th:value="${c}" th:text="${c.name()}"></option>
+                </select>
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-semibold">Assunto (apenas e-mail)</label>
+                <input type="text" name="assunto" id="editAssunto" class="form-control"/>
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-semibold">Corpo <span class="text-danger">*</span></label>
+                <textarea name="corpo" id="editCorpo" class="form-control font-monospace" rows="5" required></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Preenche modal de edição
+  document.getElementById('modalEditarTemplate').addEventListener('show.bs.modal', function(event) {
+    const btn = event.relatedTarget;
+    document.getElementById('editId').value = btn.dataset.id;
+    document.getElementById('editAssunto').value = btn.dataset.assunto || '';
+    document.getElementById('editCorpo').value = btn.dataset.corpo || '';
+
+    const selEvento = document.getElementById('editEvento');
+    for (let opt of selEvento.options) opt.selected = (opt.value === btn.dataset.evento);
+
+    const selCanal = document.getElementById('editCanal');
+    for (let opt of selCanal.options) opt.selected = (opt.value === btn.dataset.canal);
+  });
+</script>
+</body>
+</html>

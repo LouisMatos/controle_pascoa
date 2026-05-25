@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Pedidos — Sistema Páscoa</title>
+</head>
+<body>
+<div id="pageContent">
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h2 class="mb-0"><i class="bi bi-cart3 me-2 text-warning"></i>Pedidos</h2>
+        <div class="d-flex gap-2 flex-wrap">
+            <a th:href="@{/pedidos/wizard}" class="btn btn-success">
+                <i class="bi bi-magic me-1"></i>Novo Pedido (Wizard)
+            </a>
+            <a th:href="@{/pedidos/novo}" class="btn btn-outline-success btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>Formulário simples
+            </a>
+            <!-- Exportar Excel — preserva o filtro de status ativo -->
+            <a th:href="${statusFiltro != null}
+                        ? @{/export/pedidos/excel(status=${statusFiltro.name()})}
+                        : @{/export/pedidos/excel}"
+               class="btn btn-outline-secondary btn-sm" title="Exportar para Excel">
+                <i class="bi bi-file-earmark-excel me-1 text-success"></i>Excel
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtro por status -->
+    <div class="card mb-3">
+        <div class="card-body py-2">
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+                <span class="text-muted small fw-semibold">Filtrar:</span>
+                <a th:href="@{/pedidos}" class="btn btn-sm"
+                   th:classappend="${statusFiltro == null} ? 'btn-dark' : 'btn-outline-dark'">Todos</a>
+                <a th:each="s : ${statusValues}"
+                   th:href="@{/pedidos(status=${s.name()})}"
+                   class="btn btn-sm"
+                   th:classappend="${statusFiltro == s} ? 'btn-secondary' : 'btn-outline-secondary'"
+                   th:text="${s.descricao}"></a>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-3">#</th>
+                        <th>Cliente</th>
+                        <th>Data Pedido</th>
+                        <th>Entrega</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-end">Total</th>
+                        <th class="text-center pe-3">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="p : ${pedidos}">
+                        <td class="ps-3 fw-bold text-muted" th:text="'#' + ${p.id}"></td>
+                        <td class="fw-semibold" th:text="${p.cliente.nome}"></td>
+                        <td th:text="${#temporals.format(p.dataPedido, 'dd/MM/yyyy HH:mm')}"></td>
+                        <td>
+                            <span th:if="${p.dataEntrega != null}"
+                                  th:text="${#temporals.format(p.dataEntrega, 'dd/MM/yyyy')}"></span>
+                            <span th:if="${p.dataEntrega == null}" class="text-muted">—</span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge"
+                                  th:classappend="${p.status.name() == 'NOVO'        ? 'bg-primary'         :
+                                                   p.status.name() == 'CONFIRMADO'   ? 'bg-info text-dark'  :
+                                                   p.status.name() == 'EM_PRODUCAO'  ? 'bg-warning text-dark':
+                                                   p.status.name() == 'PRONTO'       ? 'bg-success'         :
+                                                   p.status.name() == 'ENTREGUE'     ? 'bg-dark'            :
+                                                                                        'bg-danger'}"
+                                  th:text="${p.status.descricao}"></span>
+                        </td>
+                        <td class="text-end fw-semibold">
+                            R$ <span th:text="${#numbers.formatDecimal(p.totalPedido, 1, 'POINT', 2, 'COMMA')}"></span>
+                        </td>
+                        <td class="text-center pe-3">
+                            <a th:href="@{/pedidos/{id}(id=${p.id})}"
+                               class="btn btn-sm btn-outline-primary" title="Ver detalhes">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(pedidos)}">
+                        <td colspan="7" class="text-center text-muted py-5">
+                            <i class="bi bi-cart3 fs-3 d-block mb-2 opacity-50"></i>
+                            Nenhum pedido encontrado.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card-footer text-muted small" th:if="${!#lists.isEmpty(pedidos)}">
+            <span th:text="${#lists.size(pedidos)}"></span> pedido(s).
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

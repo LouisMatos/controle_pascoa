@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  db:
+    # Use official Postgres image that supports ARM64 (works well on M1)
+    image: postgres:14
+    # Force linux/arm64 platform on M1 to avoid architecture mismatch
+    platform: linux/arm64
+    restart: unless-stopped
+    environment:
+      # Valores retirados do application.properties
+      - POSTGRES_DB=pascoa_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=sua_senha
+      # Opcional: descomente/alterar para ajustar local do dados
+      # - PGDATA=/var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      # Use named volume (recomendado no macOS para melhor desempenho que bind-mount)
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # Memory limit hint (only used by swarm or certain orchestrators; left as guidance)
+    # deploy:
+    #   resources:
+    #     limits:
+    #       memory: 1024M
+
+volumes:
+  postgres_data:
+    # Use 'local' driver; on Docker Desktop for Mac this creates a volume optimized for the VM
+    driver: local
+
+# Observações:
+# - Este compose expõe o Postgres na porta 5432 do host. A aplicação pode continuar usando
+#   spring.datasource.url=jdbc:postgresql://localhost:5432/pascoa_db (conforme seu application.properties).
+# - Se preferir conectar pelo nome do serviço na mesma rede Docker (sem expor porta), altere a URL
+#   para jdbc:postgresql://db:5432/pascoa_db e remova a linha de ports.
+# - A imagem usada (postgres:14) tem suporte para ARM64/M1. Caso queira versão diferente,
+#   prefira imagens oficiais que suportem linux/arm64 ou mantenha a linha 'platform: linux/arm64'.
+

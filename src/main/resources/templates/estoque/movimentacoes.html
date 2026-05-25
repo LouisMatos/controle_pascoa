@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Movimentações de Estoque — Sistema Páscoa</title>
+</head>
+<body>
+<div id="pageContent">
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h2 class="mb-0"><i class="bi bi-clipboard-data me-2 text-secondary"></i>Movimentações de Estoque</h2>
+        <div class="d-flex gap-2">
+            <a th:href="@{/estoque/entrada}" class="btn btn-success btn-sm">
+                <i class="bi bi-box-arrow-in-down me-1"></i>Registrar Entrada
+            </a>
+            <a th:href="@{/estoque/ajuste}" class="btn btn-outline-warning btn-sm">
+                <i class="bi bi-pencil-square me-1"></i>Ajuste de Inventário
+            </a>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-3">
+        <div class="card-body py-2">
+            <form th:action="@{/estoque/movimentacoes}" method="get"
+                  class="d-flex flex-wrap gap-2 align-items-end">
+                <div>
+                    <label class="form-label small mb-1 fw-semibold">Matéria-Prima</label>
+                    <select name="mpId" class="form-select form-select-sm" style="min-width:200px">
+                        <option value="">Todas</option>
+                        <option th:each="mp : ${materiasPrimas}"
+                                th:value="${mp.id}"
+                                th:text="${mp.nome}"
+                                th:selected="${mpIdFiltro != null and mpIdFiltro == mp.id}"></option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label small mb-1 fw-semibold">Tipo</label>
+                    <select name="tipo" class="form-select form-select-sm">
+                        <option value="">Todos</option>
+                        <option th:each="t : ${tipos}"
+                                th:value="${t.name()}"
+                                th:text="${t.descricao}"
+                                th:selected="${tipoFiltro != null and tipoFiltro == t}"></option>
+                    </select>
+                </div>
+                <div class="d-flex gap-2 align-self-end">
+                    <button type="submit" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-search me-1"></i>Filtrar
+                    </button>
+                    <a th:href="@{/estoque/movimentacoes}" class="btn btn-outline-danger btn-sm"
+                       th:if="${mpIdFiltro != null or tipoFiltro != null}">
+                        <i class="bi bi-x-lg"></i>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <table class="table table-hover align-middle mb-0" style="font-size:0.9rem">
+                <thead>
+                    <tr>
+                        <th class="ps-3">Data/Hora</th>
+                        <th>Matéria-Prima</th>
+                        <th class="text-center">Tipo</th>
+                        <th class="text-end">Quantidade</th>
+                        <th class="text-end">Saldo Após</th>
+                        <th class="text-end">Custo Unit.</th>
+                        <th>Motivo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="m : ${movimentacoes}">
+                        <td class="ps-3 text-muted small"
+                            th:text="${#temporals.format(m.data, 'dd/MM/yyyy HH:mm')}"></td>
+                        <td class="fw-semibold" th:text="${m.materiaPrima.nome}"></td>
+                        <td class="text-center">
+                            <span class="badge" th:classappend="${m.tipo.badgeCss}"
+                                  th:text="${m.tipo.descricao}"></span>
+                        </td>
+                        <td class="text-end fw-semibold"
+                            th:classappend="${m.tipo.name() == 'SAIDA' or (m.tipo.name() == 'AJUSTE' and m.quantidade.compareTo(T(java.math.BigDecimal).ZERO) < 0)} ? 'text-danger' : 'text-success'">
+                            <span th:if="${m.tipo.name() == 'ENTRADA'}">+</span>
+                            <span th:if="${m.tipo.name() == 'SAIDA'}">−</span>
+                            <span th:if="${m.tipo.name() == 'AJUSTE' and m.quantidade.compareTo(T(java.math.BigDecimal).ZERO) >= 0}">+</span>
+                            <span th:if="${m.tipo.name() == 'AJUSTE' and m.quantidade.compareTo(T(java.math.BigDecimal).ZERO) < 0}">−</span>
+                            <span th:text="${#numbers.formatDecimal(m.quantidade.abs(), 1, 'POINT', 3, 'COMMA')}"></span>
+                            <span class="text-muted small" th:text="${m.materiaPrima.unidade.simbolo}"></span>
+                        </td>
+                        <td class="text-end"
+                            th:text="${#numbers.formatDecimal(m.saldoApos, 1, 'POINT', 3, 'COMMA')} + ' ' + ${m.materiaPrima.unidade.simbolo}"></td>
+                        <td class="text-end text-muted small">
+                            <span th:if="${m.custoUnitario != null}">
+                                R$ <span th:text="${#numbers.formatDecimal(m.custoUnitario, 1, 'POINT', 4, 'COMMA')}"></span>
+                            </span>
+                            <span th:if="${m.custoUnitario == null}">—</span>
+                        </td>
+                        <td class="text-muted small" style="max-width:250px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+                            th:text="${m.motivo}"></td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(movimentacoes)}">
+                        <td colspan="7" class="text-center text-muted py-5">
+                            <i class="bi bi-clipboard-x fs-3 d-block mb-2 opacity-50"></i>
+                            Nenhuma movimentação encontrada.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer text-muted small" th:if="${!#lists.isEmpty(movimentacoes)}">
+            <span th:text="${#lists.size(movimentacoes)}"></span> registro(s).
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

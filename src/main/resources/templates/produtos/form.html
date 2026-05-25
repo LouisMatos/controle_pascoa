@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="${produto.id == null ? 'Novo Produto' : 'Editar Produto'} + ' — Sistema Páscoa'">Formulário</title>
+</head>
+<body>
+<div id="pageContent">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">
+            <i class="bi bi-box-seam me-2 text-success"></i>
+            <span th:text="${produto.id == null ? 'Novo Produto' : 'Editar Produto'}"></span>
+        </h2>
+        <a th:href="@{/produtos}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Voltar
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form th:action="@{/produtos/salvar}" th:object="${produto}" method="post">
+                <input type="hidden" th:field="*{id}">
+
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label class="form-label fw-semibold">Nome *</label>
+                        <input type="text" class="form-control"
+                               th:field="*{nome}"
+                               th:classappend="${#fields.hasErrors('nome')} ? 'is-invalid'"
+                               placeholder="Nome do produto">
+                        <div class="invalid-feedback" th:errors="*{nome}"></div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Categoria *</label>
+                        <select class="form-select"
+                                th:field="*{categoria}"
+                                th:classappend="${#fields.hasErrors('categoria')} ? 'is-invalid'">
+                            <option value="">Selecione...</option>
+                            <option th:each="cat : ${categorias}"
+                                    th:value="${cat.name()}"
+                                    th:text="${cat.descricao}"></option>
+                        </select>
+                        <div class="invalid-feedback" th:errors="*{categoria}"></div>
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label fw-semibold">Descrição</label>
+                        <textarea class="form-control" th:field="*{descricao}"
+                                  rows="2" placeholder="Descrição do produto (opcional)"></textarea>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold">Preço de Venda (R$) *</label>
+                        <input type="number" class="form-control"
+                               th:field="*{precoVenda}"
+                               th:classappend="${#fields.hasErrors('precoVenda')} ? 'is-invalid'"
+                               min="0.01" step="0.01" placeholder="0,00">
+                        <div class="invalid-feedback" th:errors="*{precoVenda}"></div>
+                    </div>
+
+                    <div class="col-md-4 d-flex align-items-end">
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="checkbox"
+                                   th:field="*{ativo}" id="ativo">
+                            <label class="form-check-label fw-semibold" for="ativo">Produto Ativo</label>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success px-4">
+                        <i class="bi bi-check-lg me-1"></i>Salvar
+                    </button>
+                    <a th:href="@{/produtos}" class="btn btn-outline-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

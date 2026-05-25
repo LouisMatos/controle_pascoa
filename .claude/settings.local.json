@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -n \"DespesaFixa\\\\|DespesaVariavel\\\\|ConfiguracaoFinanceira\\\\|ContaReceber\\\\|ContaPagar\" /tmp/pascoa_docx_unpacked/word/document.xml | head -40)"
+    ]
+  }
+}

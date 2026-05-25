@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head><title>Contas a Pagar</title></head>
+<body>
+<div id="pageContent">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0"><i class="bi bi-cash-stack me-2 text-danger"></i>Contas a Pagar</h2>
+    <div class="d-flex gap-2">
+      <a th:href="@{/financeiro/contas-pagar}" class="btn btn-sm"
+         th:classappend="${statusAtual == null} ? 'btn-dark' : 'btn-outline-secondary'">Todas</a>
+      <a th:each="s : ${statusValues}"
+         th:href="@{/financeiro/contas-pagar(status=${s})}"
+         th:text="${s}"
+         class="btn btn-sm"
+         th:classappend="${statusAtual == s} ? 'btn-dark' : 'btn-outline-secondary'"></a>
+    </div>
+  </div>
+
+  <!-- Totais rápidos -->
+  <div class="row g-3 mb-4" th:if="${!#lists.isEmpty(contas)}">
+    <div class="col-sm-4">
+      <div class="card bg-light">
+        <div class="card-body text-center py-2">
+          <div class="text-muted small">Total listado</div>
+          <div class="fw-bold fs-5">R$ <span th:text="${#numbers.formatDecimal(totalValor,1,'POINT',2,'COMMA')}"></span></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div class="card border-danger">
+        <div class="card-body text-center py-2">
+          <div class="text-muted small">Vencidas</div>
+          <div class="fw-bold fs-5 text-danger" th:text="${qtdVencidas} + ' conta(s)'"></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-sm-4">
+      <div class="card border-warning">
+        <div class="card-body text-center py-2">
+          <div class="text-muted small">Vencem em 7 dias</div>
+          <div class="fw-bold fs-5 text-warning" th:text="${qtdVence7Dias} + ' conta(s)'"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabela -->
+  <div class="card">
+    <div class="card-body p-0">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-dark">
+          <tr>
+            <th>Descrição</th>
+            <th>Fornecedor</th>
+            <th>Categoria</th>
+            <th>Vencimento</th>
+            <th class="text-end">Valor</th>
+            <th class="text-center">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr th:each="c : ${contas}" th:classappend="${c.vencida} ? 'table-danger' : ''">
+            <td th:text="${c.descricao}"></td>
+            <td th:text="${c.fornecedor != null ? c.fornecedor.nome : '—'}"></td>
+            <td>
+              <span class="badge bg-secondary" th:text="${c.categoria}"></span>
+            </td>
+            <td>
+              <span th:text="${#temporals.format(c.vencimento,'dd/MM/yyyy')}"></span>
+              <span th:if="${c.vencida}" class="badge bg-danger ms-1">Vencida</span>
+              <span th:if="${!c.vencida and c.status.name() == 'ABERTA' and c.vencimento.isBefore(T(java.time.LocalDate).now().plusDays(7))}"
+                    class="badge bg-warning text-dark ms-1">7 dias</span>
+            </td>
+            <td class="text-end fw-semibold">R$ <span th:text="${#numbers.formatDecimal(c.valor,1,'POINT',2,'COMMA')}"></span></td>
+            <td class="text-center">
+              <span th:text="${c.status}"
+                    th:class="${c.status.name() == 'PAGA'} ? 'badge bg-success' :
+                               (${c.status.name() == 'VENCIDA'} ? 'badge bg-danger' : 'badge bg-warning text-dark')"></span>
+            </td>
+          </tr>
+          <tr th:if="${#lists.isEmpty(contas)}">
+            <td colspan="6" class="text-center text-muted py-4">Nenhuma conta encontrada.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

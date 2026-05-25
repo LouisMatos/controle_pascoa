@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="${form.id == null ? 'Novo Pedido' : 'Editar Pedido'} + ' — Sistema Páscoa'">Pedido</title>
+</head>
+<body>
+<div id="pageContent">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">
+            <i class="bi bi-cart3 me-2 text-warning"></i>
+            <span th:text="${form.id == null ? 'Novo Pedido' : 'Editar Pedido'}"></span>
+        </h2>
+        <a th:href="@{/pedidos}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Voltar
+        </a>
+    </div>
+
+    <div class="card" style="max-width: 700px;">
+        <div class="card-body">
+            <form th:action="@{/pedidos/salvar}" th:object="${form}" method="post">
+                <input type="hidden" th:field="*{id}">
+
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Cliente *</label>
+                        <input type="text" id="buscaCliente" class="form-control mb-1"
+                               placeholder="Digite para filtrar por nome ou telefone...">
+                        <select id="clienteSelect"
+                                class="form-select"
+                                th:field="*{clienteId}"
+                                th:classappend="${#fields.hasErrors('clienteId')} ? 'is-invalid'"
+                                size="1">
+                            <option value="">Selecione um cliente...</option>
+                            <option th:each="c : ${clientes}"
+                                    th:value="${c.id}"
+                                    th:text="${c.nome} + (${c.telefone != null and !#strings.isEmpty(c.telefone)} ? ' — ' + ${c.telefone} : '')"></option>
+                        </select>
+                        <div class="invalid-feedback" th:errors="*{clienteId}"></div>
+                        <div class="form-text">
+                            Cliente não cadastrado?
+                            <a th:href="@{/clientes/novo}" target="_blank">Cadastrar agora</a>
+                        </div>
+                    </div>
+
+                    <div class="col-md-5">
+                        <label class="form-label fw-semibold">Data de Entrega</label>
+                        <input type="date" class="form-control" th:field="*{dataEntrega}">
+                        <div class="form-text">Deixe em branco se ainda não definida.</div>
+                    </div>
+
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Observações</label>
+                        <textarea class="form-control" th:field="*{observacoes}"
+                                  rows="3"
+                                  placeholder="Sabores, embalagens, endereço de entrega..."></textarea>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success px-4">
+                        <i class="bi bi-check-lg me-1"></i>
+                        <span th:text="${form.id == null ? 'Criar Pedido' : 'Salvar'}"></span>
+                    </button>
+                    <a th:href="@{/pedidos}" class="btn btn-outline-secondary">Cancelar</a>
+                </div>
+
+                <div class="alert alert-info mt-3 mb-0 py-2 small" th:if="${form.id == null}">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Após criar o pedido, você poderá adicionar os produtos e quantidades.
+                </div>
+            </form>
+        </div>
+    </div>
+
+  <script>
+    (function () {
+      const buscaInput  = document.getElementById('buscaCliente');
+      const selectEl    = document.getElementById('clienteSelect');
+      if (!buscaInput || !selectEl) return;
+
+      // Snapshot all options on page-load (including the empty placeholder)
+      const allOptions = Array.from(selectEl.options).map(o => ({
+        value: o.value,
+        text:  o.text
+      }));
+
+      buscaInput.addEventListener('input', function () {
+        const q       = this.value.trim().toLowerCase();
+        const current = selectEl.value;
+
+        // Rebuild visible options: always keep placeholder; filter the rest
+        selectEl.innerHTML = '';
+        allOptions.forEach(o => {
+          if (o.value === '' || !q || o.text.toLowerCase().includes(q)) {
+            selectEl.add(new Option(o.text, o.value));
+          }
+        });
+
+        // Restore selection when it is still visible
+        if (current) selectEl.value = current;
+
+        // Auto-open as a list when filtering, collapse when empty
+        selectEl.size = q ? Math.min(allOptions.length, 8) : 1;
+      });
+
+      // Collapse when user selects
+      selectEl.addEventListener('change', function () {
+        buscaInput.value = '';
+        selectEl.size    = 1;
+      });
+    })();
+  </script>
+
+</div>
+</body>
+</html>

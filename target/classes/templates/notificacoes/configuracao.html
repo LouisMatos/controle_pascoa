@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head><title>Configuração de Canais</title></head>
+<body>
+<div id="pageContent">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0"><i class="bi bi-gear me-2 text-secondary"></i>Configuração de Canais</h2>
+    <a th:href="@{/notificacoes/templates}" class="btn btn-outline-secondary btn-sm">
+      <i class="bi bi-arrow-left me-1"></i>Voltar aos Templates
+    </a>
+  </div>
+
+  <!-- Resultados do teste de conexão / envio -->
+  <div th:if="${testeOk}" class="alert alert-success alert-dismissible fade show">
+    <i class="bi bi-check-circle-fill me-2"></i>
+    <span th:text="${testeOk}"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+  <div th:if="${testeErro}" class="alert alert-danger alert-dismissible fade show">
+    <i class="bi bi-x-circle-fill me-2"></i>
+    <span th:text="${testeErro}"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+
+  <div class="alert alert-warning small mb-4">
+    <i class="bi bi-exclamation-triangle me-1"></i>
+    <strong>Atenção:</strong> Enquanto <strong>Modo de Teste</strong> estiver ativo, nenhuma mensagem real é enviada —
+    os disparos são apenas registrados no log da aplicação.
+    Use o painel de teste abaixo para validar a integração antes de desativar o modo de teste.
+  </div>
+
+  <!-- Configuração de cada canal -->
+  <div class="row g-4 mb-4">
+    <div class="col-md-6" th:each="canal : ${canais}">
+      <div class="card">
+        <div class="card-header bg-light fw-semibold d-flex align-items-center gap-2">
+          <i th:if="${canal.tipo.name() == 'WHATSAPP'}" class="bi bi-whatsapp text-success fs-5"></i>
+          <i th:unless="${canal.tipo.name() == 'WHATSAPP'}" class="bi bi-envelope text-primary fs-5"></i>
+          <span th:text="${canal.tipo.name()}"></span>
+          <span th:if="${canal.testMode}" class="badge bg-warning text-dark ms-auto">
+            <i class="bi bi-flask me-1"></i>Modo Teste
+          </span>
+          <span th:if="${!canal.testMode and canal.ativo}" class="badge bg-success ms-auto">
+            <i class="bi bi-check-circle me-1"></i>Ativo
+          </span>
+          <span th:if="${!canal.testMode and !canal.ativo}" class="badge bg-secondary ms-auto">Inativo</span>
+        </div>
+        <div class="card-body">
+          <form th:action="@{/notificacoes/configuracao/salvar}" method="post">
+            <input type="hidden" name="id" th:value="${canal.id}"/>
+            <input type="hidden" name="tipo" th:value="${canal.tipo}"/>
+
+            <div class="mb-2">
+              <label class="form-label fw-semibold small mb-1">
+                <span th:if="${canal.tipo.name() == 'WHATSAPP'}">URL da Evolution API</span>
+                <span th:unless="${canal.tipo.name() == 'WHATSAPP'}">SMTP Host (configurado em application.properties)</span>
+              </label>
+              <input type="text" name="apiUrl" class="form-control form-control-sm"
+                     th:value="${canal.apiUrl}"
+                     th:placeholder="${canal.tipo.name() == 'WHATSAPP'} ? 'http://localhost:8080' : 'smtp.gmail.com'"/>
+              <div th:if="${canal.tipo.name() == 'WHATSAPP'}" class="form-text">
+                Exemplo: <code>http://localhost:8080</code> ou <code>https://sua-evolution-api.com</code>
+              </div>
+            </div>
+
+            <div class="mb-2" th:if="${canal.tipo.name() == 'WHATSAPP'}">
+              <label class="form-label fw-semibold small mb-1">API Key (Evolution)</label>
+              <input type="text" name="apiKey" class="form-control form-control-sm"
+                     th:value="${canal.apiKey}" placeholder="sua-api-key"/>
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label fw-semibold small mb-1">
+                <span th:if="${canal.tipo.name() == 'WHATSAPP'}">Nome da Instância</span>
+                <span th:unless="${canal.tipo.name() == 'WHATSAPP'}">E-mail Remetente</span>
+              </label>
+              <input type="text" name="remetente" class="form-control form-control-sm"
+                     th:value="${canal.remetente}"
+                     th:placeholder="${canal.tipo.name() == 'WHATSAPP'} ? 'pascoa' : 'noreply@seudominio.com'"/>
+            </div>
+
+            <div class="mb-2 form-check">
+              <input type="checkbox" class="form-check-input" name="ativo"
+                     th:id="'ativo_' + ${canal.id}" value="true" th:checked="${canal.ativo}"/>
+              <label class="form-check-label small" th:for="'ativo_' + ${canal.id}">Canal ativo</label>
+            </div>
+
+            <div class="mb-3 form-check">
+              <input type="checkbox" class="form-check-input" name="testMode"
+                     th:id="'test_' + ${canal.id}" value="true" th:checked="${canal.testMode}"/>
+              <label class="form-check-label small text-warning fw-semibold" th:for="'test_' + ${canal.id}">
+                <i class="bi bi-flask me-1"></i>Modo de Teste (não envia de verdade)
+              </label>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-sm">
+              <i class="bi bi-save me-1"></i>Salvar
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       Painel de Validação da Evolution API (Item 5)
+       ==================================================================== -->
+  <div class="card border-primary">
+    <div class="card-header bg-primary text-white fw-semibold">
+      <i class="bi bi-whatsapp me-2"></i>Validação da Evolution API
+    </div>
+    <div class="card-body">
+
+      <div class="row g-4">
+
+        <!-- Verificar conectividade -->
+        <div class="col-md-6">
+          <h6 class="fw-semibold mb-1"><i class="bi bi-wifi me-1 text-primary"></i>1. Verificar Conexão</h6>
+          <p class="small text-muted mb-3">
+            Consulta o estado da instância WhatsApp na Evolution API
+            (<code>GET /instance/connectionState/{instancia}</code>).
+            A instância precisa estar com o QR Code escaneado para retornar <strong>open</strong>.
+          </p>
+          <form th:action="@{/notificacoes/verificar-conexao}" method="post">
+            <button type="submit" class="btn btn-outline-primary btn-sm">
+              <i class="bi bi-plug me-1"></i>Verificar Conexão Agora
+            </button>
+          </form>
+        </div>
+
+        <!-- Enviar mensagem de teste -->
+        <div class="col-md-6">
+          <h6 class="fw-semibold mb-1"><i class="bi bi-send me-1 text-success"></i>2. Enviar Mensagem de Teste</h6>
+          <p class="small text-muted mb-3">
+            Envia uma mensagem <strong>real</strong> para o número informado,
+            independente do Modo de Teste — para confirmar que a API está funcionando end-to-end.
+          </p>
+          <form th:action="@{/notificacoes/enviar-teste}" method="post" class="d-flex flex-column gap-2">
+            <div>
+              <label class="form-label small fw-semibold mb-1">Número destino (com DDD)</label>
+              <input type="text" name="numeroTeste" class="form-control form-control-sm"
+                     placeholder="11999998888" pattern="[0-9]{10,13}" required
+                     title="Apenas dígitos — DDD + número (10 ou 11 dígitos)"/>
+              <div class="form-text">Somente dígitos: DDD + número. Ex: <code>11999998888</code></div>
+            </div>
+            <div>
+              <label class="form-label small fw-semibold mb-1">Mensagem (opcional)</label>
+              <input type="text" name="mensagemTeste" class="form-control form-control-sm"
+                     placeholder="Deixe em branco para usar mensagem padrão de teste"/>
+            </div>
+            <div>
+              <button type="submit" class="btn btn-success btn-sm">
+                <i class="bi bi-send me-1"></i>Enviar Teste
+              </button>
+            </div>
+          </form>
+        </div>
+
+      </div>
+
+      <!-- Passos de configuração da Evolution API -->
+      <hr class="my-4"/>
+      <h6 class="fw-semibold mb-2"><i class="bi bi-list-ol me-1"></i>Passo a passo para configurar a Evolution API</h6>
+      <ol class="small text-muted mb-0">
+        <li>Instale a Evolution API via Docker:
+          <code class="d-block bg-light p-1 rounded mt-1 mb-2">docker run -d --name evolution-api -p 8080:8080 atendai/evolution-api:latest</code>
+        </li>
+        <li>Acesse o painel em <code>http://localhost:8080</code> e crie uma instância com o nome configurado acima (ex: <code>pascoa</code>).</li>
+        <li>Escaneie o QR Code com o WhatsApp do número que fará os disparos.</li>
+        <li>Clique em <strong>Verificar Conexão</strong> — deve retornar <code>state: open</code>.</li>
+        <li>Clique em <strong>Enviar Teste</strong> com o seu próprio número para confirmar o envio end-to-end.</li>
+        <li>Após validado: desmarque <strong>Modo de Teste</strong> no canal WhatsApp e salve.</li>
+      </ol>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

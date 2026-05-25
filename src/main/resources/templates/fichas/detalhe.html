@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="'Ficha Técnica — ' + ${produto.nome} + ' — Sistema Páscoa'">Ficha Técnica</title>
+</head>
+<body>
+<div id="pageContent">
+
+    <!-- Cabeçalho -->
+    <div class="d-flex justify-content-between align-items-start mb-3">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-1">
+                    <li class="breadcrumb-item"><a th:href="@{/produtos}">Produtos</a></li>
+                    <li class="breadcrumb-item active" th:text="${produto.nome}"></li>
+                    <li class="breadcrumb-item active">Ficha Técnica</li>
+                </ol>
+            </nav>
+            <h2 class="mb-0">
+                <i class="bi bi-journal-text me-2 text-success"></i>
+                Ficha Técnica —
+                <span th:text="${produto.nome}"></span>
+            </h2>
+        </div>
+        <a th:href="@{/produtos}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Voltar
+        </a>
+    </div>
+
+    <div class="row g-3">
+
+        <!-- Coluna Esquerda: Informações da receita + resumo de custo -->
+        <div class="col-lg-4">
+
+            <!-- Informações da Receita -->
+            <div class="card mb-3">
+                <div class="card-header bg-white fw-semibold">
+                    <i class="bi bi-sliders me-2 text-primary"></i>Informações da Receita
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/fichas/{id}/salvar(id=${produto.id})}" method="post">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Rendimento *</label>
+                            <div class="input-group">
+                                <input type="number" name="rendimento" class="form-control"
+                                       th:value="${ficha != null ? ficha.rendimento : '1'}"
+                                       min="0.001" step="0.001" placeholder="Ex: 12">
+                                <select name="unidadeRendimento" class="form-select" style="max-width:100px">
+                                    <option th:each="un : ${unidades}"
+                                            th:value="${un.name()}"
+                                            th:text="${un.simbolo}"
+                                            th:selected="${ficha != null and ficha.unidadeRendimento == un}"></option>
+                                </select>
+                            </div>
+                            <div class="form-text">Quantidade produzida por esta receita.</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Observações</label>
+                            <textarea name="observacoes" class="form-control" rows="3"
+                                      placeholder="Modo de preparo, tempo, temperatura..."
+                                      th:text="${ficha != null ? ficha.observacoes : ''}"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-save me-1"></i>Salvar Informações
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Resumo de Custo -->
+            <div class="card">
+                <div class="card-header bg-white fw-semibold">
+                    <i class="bi bi-calculator me-2 text-success"></i>Resumo de Custo
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-sm mb-0">
+                        <tr>
+                            <td class="ps-3 text-muted">Custo Total dos Ingredientes</td>
+                            <td class="text-end pe-3 fw-semibold">
+                                R$ <span th:text="${#numbers.formatDecimal(custoTotal, 1, 'POINT', 2, 'COMMA')}">0,00</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="ps-3 text-muted">
+                                Rendimento
+                                <span th:if="${ficha != null}" th:text="'(' + ${ficha.rendimento} + ' ' + ${ficha.unidadeRendimento.simbolo} + ')'"></span>
+                            </td>
+                            <td class="text-end pe-3 fw-semibold"
+                                th:text="${ficha != null ? ficha.rendimento : '-'}"></td>
+                        </tr>
+                        <tr class="table-light">
+                            <td class="ps-3 fw-bold">Custo por Unidade</td>
+                            <td class="text-end pe-3 fw-bold text-danger">
+                                R$ <span th:text="${#numbers.formatDecimal(custoPorUnidade, 1, 'POINT', 2, 'COMMA')}">0,00</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="ps-3 text-muted">Preço de Venda</td>
+                            <td class="text-end pe-3 fw-semibold text-success">
+                                R$ <span th:text="${#numbers.formatDecimal(produto.precoVenda, 1, 'POINT', 2, 'COMMA')}">0,00</span>
+                            </td>
+                        </tr>
+                        <tr class="table-light">
+                            <td class="ps-3 fw-bold">Margem de Lucro</td>
+                            <td class="text-end pe-3 fw-bold"
+                                th:classappend="${margem != null and margem.compareTo(T(java.math.BigDecimal).ZERO) > 0} ? 'text-success' : 'text-danger'">
+                                <span th:text="${#numbers.formatDecimal(margem, 1, 'POINT', 1, 'COMMA')}">0,0</span>%
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="card-footer bg-white">
+                    <a th:href="@{/produtos/{id}/editar(id=${produto.id})}"
+                       class="btn btn-sm btn-outline-primary w-100">
+                        <i class="bi bi-pencil me-1"></i>Ajustar Preço de Venda
+                    </a>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Coluna Direita: Ingredientes -->
+        <div class="col-lg-8">
+
+            <!-- Tabela de Ingredientes -->
+            <div class="card mb-3">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <span class="fw-semibold">
+                        <i class="bi bi-list-ul me-2 text-secondary"></i>Ingredientes
+                    </span>
+                    <span class="badge bg-secondary"
+                          th:text="${ficha != null ? #lists.size(ficha.itens) : 0} + ' item(ns)'"></span>
+                </div>
+                <div class="card-body p-0">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-3">Matéria-Prima</th>
+                                <th class="text-center">Unidade</th>
+                                <th class="text-end">Quantidade</th>
+                                <th class="text-end">Custo Unit.</th>
+                                <th class="text-end">Custo Item</th>
+                                <th class="text-center pe-3">Remover</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:if="${ficha == null or #lists.isEmpty(ficha.itens)}">
+                                <td colspan="6" class="text-center text-muted py-5">
+                                    <i class="bi bi-journal-x fs-3 d-block mb-2 opacity-50"></i>
+                                    Nenhum ingrediente cadastrado. Adicione abaixo.
+                                </td>
+                            </tr>
+                            <tr th:each="item : ${ficha != null ? ficha.itens : {}}">
+                                <td class="ps-3 fw-semibold" th:text="${item.materiaPrima.nome}"></td>
+                                <td class="text-center">
+                                    <span class="badge bg-light text-dark border"
+                                          th:text="${item.materiaPrima.unidade.simbolo}"></span>
+                                </td>
+                                <td class="text-end"
+                                    th:text="${#numbers.formatDecimal(item.quantidade, 1, 'POINT', 3, 'COMMA')}"></td>
+                                <td class="text-end text-muted">
+                                    R$ <span th:text="${#numbers.formatDecimal(item.materiaPrima.custoUnitario, 1, 'POINT', 4, 'COMMA')}"></span>
+                                </td>
+                                <td class="text-end fw-semibold">
+                                    R$ <span th:text="${#numbers.formatDecimal(item.custoItem, 1, 'POINT', 2, 'COMMA')}"></span>
+                                </td>
+                                <td class="text-center pe-3">
+                                    <form th:action="@{/fichas/{pId}/item/{iId}/excluir(pId=${produto.id}, iId=${item.id})}"
+                                          method="post"
+                                          onsubmit="return confirm('Remover este ingrediente?')">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot th:if="${ficha != null and !#lists.isEmpty(ficha.itens)}">
+                            <tr class="table-light fw-bold">
+                                <td colspan="4" class="ps-3 text-end">Total dos Ingredientes:</td>
+                                <td class="text-end text-danger">
+                                    R$ <span th:text="${#numbers.formatDecimal(custoTotal, 1, 'POINT', 2, 'COMMA')}"></span>
+                                </td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Adicionar Ingrediente -->
+            <div class="card">
+                <div class="card-header bg-white fw-semibold">
+                    <i class="bi bi-plus-circle me-2 text-success"></i>Adicionar Ingrediente
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/fichas/{id}/item(id=${produto.id})}"
+                          th:object="${itemForm}" method="post">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-7">
+                                <label class="form-label fw-semibold">Matéria-Prima *</label>
+                                <select class="form-select" th:field="*{materiaPrimaId}">
+                                    <option value="">Selecione...</option>
+                                    <option th:each="mp : ${materiasPrimas}"
+                                            th:value="${mp.id}"
+                                            th:text="${mp.nome} + ' (' + ${mp.unidade.simbolo} + ') — R$ ' + ${#numbers.formatDecimal(mp.custoUnitario, 1, 'POINT', 4, 'COMMA')} + '/un'"></option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">Quantidade *</label>
+                                <input type="number" class="form-control" th:field="*{quantidade}"
+                                       min="0.001" step="0.001" placeholder="Ex: 250.000">
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="bi bi-plus-lg"></i> Adicionar
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-text mt-1">
+                            A quantidade deve ser na mesma unidade da matéria-prima selecionada.
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div>
+</body>
+</html>
