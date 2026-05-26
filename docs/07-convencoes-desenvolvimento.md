@@ -519,18 +519,35 @@ th:text="${condicao} ? 'texto true' : 'texto false'"
 
 O menu está em `src/main/resources/templates/fragments/layout.html`.
 
+O menu é organizado em **7 grupos fixos** — não adicionar links avulsos no topo:
+
+| Grupo | `sec:authorize` | O que contém |
+|-------|-----------------|-------------|
+| **Cadastros** | qualquer autenticado | Clientes, Produtos, Matérias-Primas, Fornecedores |
+| **Comercial** | `ADMIN, ATENDENTE` | Pedidos, Orçamentos, CRM |
+| **Produção** | `ADMIN, CONFEITEIRO, GESTOR_QUALIDADE` | Kanban, Ordens, Qualidade |
+| **Estoque** | qualquer autenticado | Movimentações, Entrada, Ajuste |
+| **Financeiro** | `ADMIN, FINANCEIRO, ANALISTA` | Dashboard, análises, contas; seção Gastos Variáveis (`ADMIN, FINANCEIRO`) |
+| **Admin** | `ADMIN` | Notificações, Usuários |
+| **Catálogo** | qualquer autenticado | Link externo (target=_blank) |
+
+Para adicionar um link, localize o grupo adequado e insira um `<li>` dentro do `<ul class="dropdown-menu">` correspondente:
+
 ```html
-<!-- Entrada simples no menu -->
-<li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'OUTRO_ROLE')">
-    <a class="nav-link" th:href="@{/minha-entidade}">
-        <i class="bi bi-ICONE me-1"></i>Minha Entidade
+<!-- Dentro do grupo correto em layout.html -->
+<li sec:authorize="hasAnyRole('ADMIN', 'OUTRO_ROLE')">
+    <a class="dropdown-item" th:href="@{/minha-entidade}">
+        <i class="bi bi-ICONE me-2"></i>Minha Entidade
     </a>
 </li>
+```
 
-<!-- Dropdown no menu -->
+Para criar um **novo grupo** (caso o módulo não se encaixe em nenhum existente):
+
+```html
 <li class="nav-item dropdown" sec:authorize="hasAnyRole('ADMIN', 'OUTRO_ROLE')">
     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-        <i class="bi bi-ICONE me-1"></i>Módulo
+        <i class="bi bi-ICONE me-1"></i>Novo Grupo
     </a>
     <ul class="dropdown-menu">
         <li><a class="dropdown-item" th:href="@{/minha-entidade}">

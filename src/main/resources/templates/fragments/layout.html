@@ -35,78 +35,69 @@
 <body class="bg-light">
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-success py-2">
-    <div class="container-fluid px-4">
+    <div class="container-fluid px-3">
         <a class="navbar-brand" th:href="@{/dashboard}">
             <i class="bi bi-egg-fill me-1"></i>Páscoa Gestão
         </a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu"
+                aria-controls="navMenu" aria-expanded="false" aria-label="Abrir menu">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navMenu">
-            <ul class="navbar-nav me-auto gap-1">
-                <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'ATENDENTE')">
-                    <a class="nav-link" th:href="@{/clientes}">
-                        <i class="bi bi-people me-1"></i>Clientes
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" th:href="@{/produtos}">
-                        <i class="bi bi-box-seam me-1"></i>Produtos
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" th:href="@{/materias-primas}">
-                        <i class="bi bi-stack me-1"></i>Matérias-Primas
-                    </a>
-                </li>
-                <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'ATENDENTE')">
-                    <a class="nav-link" th:href="@{/fornecedores}">
-                        <i class="bi bi-truck me-1"></i>Fornecedores
-                    </a>
-                </li>
-                <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'ATENDENTE')">
-                    <a class="nav-link" th:href="@{/pedidos}">
-                        <i class="bi bi-cart3 me-1"></i>Pedidos
-                    </a>
-                </li>
-                <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'ATENDENTE')">
-                    <a class="nav-link" th:href="@{/crm}">
-                        <i class="bi bi-people-fill me-1"></i>CRM
-                    </a>
-                </li>
-                <li class="nav-item dropdown" sec:authorize="hasAnyRole('ADMIN', 'ATENDENTE')">
-                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                        <i class="bi bi-file-earmark-text me-1"></i>Orçamentos
-                    </a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" th:href="@{/orcamentos}">
-                            <i class="bi bi-list-ul me-2"></i>Lista de Orçamentos</a></li>
-                        <li><a class="dropdown-item" th:href="@{/orcamentos/novo}">
-                            <i class="bi bi-plus-circle me-2 text-success"></i>Novo Orçamento</a></li>
-                    </ul>
-                </li>
+            <ul class="navbar-nav me-auto">
+
+                <!-- CADASTROS -->
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                        <i class="bi bi-clipboard-data me-1"></i>Estoque
+                        <i class="bi bi-card-list me-1"></i>Cadastros
                     </a>
                     <ul class="dropdown-menu">
-                        <li>
-                            <a class="dropdown-item" th:href="@{/estoque/movimentacoes}">
-                                <i class="bi bi-list-ul me-2 text-secondary"></i>Movimentações
+                        <li sec:authorize="hasAnyRole('ADMIN', 'ATENDENTE')">
+                            <a class="dropdown-item" th:href="@{/clientes}">
+                                <i class="bi bi-people me-2"></i>Clientes
                             </a>
                         </li>
                         <li>
-                            <a class="dropdown-item" th:href="@{/estoque/entrada}">
-                                <i class="bi bi-box-arrow-in-down me-2 text-success"></i>Entrada de MP
+                            <a class="dropdown-item" th:href="@{/produtos}">
+                                <i class="bi bi-box-seam me-2"></i>Produtos
                             </a>
                         </li>
                         <li>
-                            <a class="dropdown-item" th:href="@{/estoque/ajuste}">
-                                <i class="bi bi-pencil-square me-2 text-warning"></i>Ajuste de Inventário
+                            <a class="dropdown-item" th:href="@{/materias-primas}">
+                                <i class="bi bi-stack me-2"></i>Matérias-Primas
+                            </a>
+                        </li>
+                        <li sec:authorize="hasAnyRole('ADMIN', 'ATENDENTE')">
+                            <a class="dropdown-item" th:href="@{/fornecedores}">
+                                <i class="bi bi-truck me-2"></i>Fornecedores
                             </a>
                         </li>
                     </ul>
                 </li>
+
+                <!-- COMERCIAL -->
+                <li class="nav-item dropdown" sec:authorize="hasAnyRole('ADMIN', 'ATENDENTE')">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-cart3 me-1"></i>Comercial
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><h6 class="dropdown-header">Pedidos</h6></li>
+                        <li><a class="dropdown-item" th:href="@{/pedidos}">
+                            <i class="bi bi-list-ul me-2"></i>Lista de Pedidos</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header">Orçamentos</h6></li>
+                        <li><a class="dropdown-item" th:href="@{/orcamentos}">
+                            <i class="bi bi-file-earmark-text me-2"></i>Lista de Orçamentos</a></li>
+                        <li><a class="dropdown-item" th:href="@{/orcamentos/novo}">
+                            <i class="bi bi-plus-circle me-2 text-success"></i>Novo Orçamento</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header">Relacionamento</h6></li>
+                        <li><a class="dropdown-item" th:href="@{/crm}">
+                            <i class="bi bi-people-fill me-2"></i>CRM</a></li>
+                    </ul>
+                </li>
+
+                <!-- PRODUÇÃO -->
                 <li class="nav-item dropdown" sec:authorize="hasAnyRole('ADMIN', 'CONFEITEIRO', 'GESTOR_QUALIDADE')">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                         <i class="bi bi-gear me-1"></i>Produção
@@ -121,19 +112,23 @@
                             <i class="bi bi-clipboard2-check me-2"></i>Qualidade</a></li>
                     </ul>
                 </li>
-                <li class="nav-item dropdown" sec:authorize="hasAnyRole('ADMIN', 'FINANCEIRO')">
+
+                <!-- ESTOQUE -->
+                <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                        <i class="bi bi-receipt me-1"></i>Gastos
+                        <i class="bi bi-clipboard-data me-1"></i>Estoque
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" th:href="@{/gastos}">
-                            <i class="bi bi-list-ul me-2"></i>Lançamentos</a></li>
-                        <li><a class="dropdown-item" th:href="@{/gastos/dashboard}">
-                            <i class="bi bi-bar-chart me-2"></i>Dashboard</a></li>
-                        <li><a class="dropdown-item" th:href="@{/gastos/importar}">
-                            <i class="bi bi-upload me-2"></i>Importar CSV</a></li>
+                        <li><a class="dropdown-item" th:href="@{/estoque/movimentacoes}">
+                            <i class="bi bi-list-ul me-2 text-secondary"></i>Movimentações</a></li>
+                        <li><a class="dropdown-item" th:href="@{/estoque/entrada}">
+                            <i class="bi bi-box-arrow-in-down me-2 text-success"></i>Entrada de MP</a></li>
+                        <li><a class="dropdown-item" th:href="@{/estoque/ajuste}">
+                            <i class="bi bi-pencil-square me-2 text-warning"></i>Ajuste de Inventário</a></li>
                     </ul>
                 </li>
+
+                <!-- FINANCEIRO (inclui Gastos) -->
                 <li class="nav-item dropdown" sec:authorize="hasAnyRole('ADMIN', 'FINANCEIRO', 'ANALISTA')">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                         <i class="bi bi-graph-up me-1"></i>Financeiro
@@ -158,32 +153,54 @@
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" th:href="@{/analytics}">
                             <i class="bi bi-bar-chart-line me-2 text-primary"></i>Analytics de Vendas</a></li>
+                        <li sec:authorize="hasAnyRole('ADMIN', 'FINANCEIRO')">
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li sec:authorize="hasAnyRole('ADMIN', 'FINANCEIRO')">
+                            <h6 class="dropdown-header">Gastos Variáveis</h6>
+                        </li>
+                        <li sec:authorize="hasAnyRole('ADMIN', 'FINANCEIRO')">
+                            <a class="dropdown-item" th:href="@{/gastos}">
+                                <i class="bi bi-receipt me-2"></i>Lançamentos</a>
+                        </li>
+                        <li sec:authorize="hasAnyRole('ADMIN', 'FINANCEIRO')">
+                            <a class="dropdown-item" th:href="@{/gastos/dashboard}">
+                                <i class="bi bi-bar-chart me-2"></i>Dashboard de Gastos</a>
+                        </li>
+                        <li sec:authorize="hasAnyRole('ADMIN', 'FINANCEIRO')">
+                            <a class="dropdown-item" th:href="@{/gastos/importar}">
+                                <i class="bi bi-upload me-2"></i>Importar CSV</a>
+                        </li>
                     </ul>
                 </li>
+
+                <!-- ADMIN -->
                 <li class="nav-item dropdown" sec:authorize="hasRole('ADMIN')">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                        <i class="bi bi-bell me-1"></i>Notificações
+                        <i class="bi bi-shield-lock me-1"></i>Admin
                     </a>
-                    <ul class="dropdown-menu">
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><h6 class="dropdown-header">Notificações</h6></li>
                         <li><a class="dropdown-item" th:href="@{/notificacoes/templates}">
                             <i class="bi bi-file-text me-2"></i>Templates</a></li>
                         <li><a class="dropdown-item" th:href="@{/notificacoes/historico}">
                             <i class="bi bi-clock-history me-2"></i>Histórico de Envios</a></li>
-                        <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" th:href="@{/notificacoes/configuracao}">
                             <i class="bi bi-gear me-2"></i>Configurar Canais</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><h6 class="dropdown-header">Sistema</h6></li>
+                        <li><a class="dropdown-item" th:href="@{/usuarios}">
+                            <i class="bi bi-people me-2"></i>Usuários</a></li>
                     </ul>
                 </li>
-                <li class="nav-item" sec:authorize="hasRole('ADMIN')">
-                    <a class="nav-link" th:href="@{/usuarios}">
-                        <i class="bi bi-people me-1"></i>Usuários
-                    </a>
-                </li>
+
+                <!-- CATÁLOGO -->
                 <li class="nav-item">
                     <a class="nav-link" th:href="@{/catalogo}" target="_blank">
                         <i class="bi bi-shop me-1"></i>Catálogo
                     </a>
                 </li>
+
             </ul>
 
             <!-- Usuário logado + alertas + logout -->

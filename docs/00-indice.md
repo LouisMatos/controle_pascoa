@@ -19,6 +19,7 @@
 | 05 | [05-estado-implementacao.md](05-estado-implementacao.md) | O que está feito, parcial, pendente e bugs conhecidos | Iniciar qualquer sessão de desenvolvimento |
 | 06 | [06-schema-banco.md](06-schema-banco.md) | 25 tabelas com colunas, tipos, FKs, índices e guia de migrations | Escrever queries, criar migrations, debugar JPA |
 | 07 | [07-convencoes-desenvolvimento.md](07-convencoes-desenvolvimento.md) | Templates de entity/service/controller/template + naming + checklist | Qualquer tarefa de desenvolvimento novo |
+| 08 | [08-manutencao-docs.md](08-manutencao-docs.md) | Protocolo de fim de sessão — quais docs atualizar após cada mudança | **Executar ao final de toda sessão com código alterado** |
 
 ---
 
@@ -139,11 +140,15 @@ Senha: admin123
 
 ## Como Usar Esta Documentação em Novas Sessões
 
-Para indexação rápida, leia nesta ordem:
+**Ao iniciar uma sessão de desenvolvimento**, leia nesta ordem:
 
 1. **`00-indice.md`** — orientação geral (este arquivo)
-2. **`05-estado-implementacao.md`** — o que está feito, pendente e bugs — **leia sempre ao iniciar desenvolvimento**
+2. **`05-estado-implementacao.md`** — o que está feito, pendente e bugs — **leia sempre**
 3. **`02-arquitetura-tecnica.md`** — se a tarefa envolver código Java
 4. **`03-fluxos-negocio.md`** — se a tarefa envolver lógica de negócio
 5. **`01-infraestrutura.md`** — se a tarefa envolver configuração/deploy
 6. **`04-rotas-endpoints.md`** — se a tarefa envolver endpoints/permissões
+
+**Ao encerrar uma sessão em que código foi alterado:**
+
+7. **`08-manutencao-docs.md`** — executar o protocolo de atualização das docs

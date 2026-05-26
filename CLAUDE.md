@@ -32,6 +32,21 @@ Leia antes de começar qualquer tarefa — evita re-exploração do código:
 | `docs/04-rotas-endpoints.md` | Endpoints, permissões, novas rotas |
 | `docs/06-schema-banco.md` | 25 tabelas com colunas, tipos, FKs e índices — migrations e queries |
 | `docs/07-convencoes-desenvolvimento.md` | Padrões de entity/service/controller/template + naming + checklist de PR |
+| `docs/08-manutencao-docs.md` | **Protocolo de fim de sessão** — quais docs atualizar após cada mudança de código |
+
+---
+
+## ⚠️ Protocolo Obrigatório de Fim de Sessão
+
+**Ao final de toda sessão em que código foi criado ou alterado**, executar:
+
+1. `git diff --name-only HEAD` — listar arquivos modificados
+2. Consultar `docs/08-manutencao-docs.md` — identificar quais docs precisam ser atualizadas
+3. Atualizar `docs/05-estado-implementacao.md` — sempre (roadmap, bugs, gaps)
+4. Atualizar os demais docs impactados conforme a tabela em `08-manutencao-docs.md`
+5. Atualizar este `CLAUDE.md` se o roadmap mudou
+
+> Se a sessão não produziu mudança de código (apenas consultas ou leituras), pular este protocolo.
 
 ---
 
