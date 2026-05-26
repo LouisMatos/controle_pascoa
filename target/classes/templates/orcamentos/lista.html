@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head><title>Orçamentos — Sistema Páscoa</title></head>
+<body>
+<div id="pageContent">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0"><i class="bi bi-file-earmark-text me-2 text-warning"></i>Orçamentos</h2>
+        <a th:href="@{/orcamentos/novo}" class="btn btn-success btn-sm">
+            <i class="bi bi-plus-lg me-1"></i>Novo Orçamento
+        </a>
+    </div>
+
+    <div th:if="${sucesso}" class="alert alert-success alert-dismissible fade show">
+        <i class="bi bi-check-circle me-2"></i><span th:text="${sucesso}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show">
+        <i class="bi bi-exclamation-triangle me-2"></i><span th:text="${erro}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <div th:if="${#lists.isEmpty(orcamentos)}" class="text-center text-muted py-5">
+                <i class="bi bi-file-earmark-text fs-2 d-block mb-2 opacity-40"></i>
+                Nenhum orçamento cadastrado.
+                <div class="mt-3">
+                    <a th:href="@{/orcamentos/novo}" class="btn btn-sm btn-success">
+                        <i class="bi bi-plus-lg me-1"></i>Criar Orçamento
+                    </a>
+                </div>
+            </div>
+            <table th:unless="${#lists.isEmpty(orcamentos)}"
+                   class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-3">#</th>
+                        <th>Cliente</th>
+                        <th>Criado em</th>
+                        <th>Validade</th>
+                        <th class="text-end">Total</th>
+                        <th class="text-center">Status</th>
+                        <th class="text-end pe-3">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="o : ${orcamentos}"
+                        th:classappend="${o.expirado()} ? 'table-warning'">
+                        <td class="ps-3 text-muted small" th:text="${o.id}"></td>
+                        <td class="fw-semibold" th:text="${o.cliente.nome}"></td>
+                        <td class="text-muted small"
+                            th:text="${#temporals.format(o.dataCriacao, 'dd/MM/yyyy')}"></td>
+                        <td>
+                            <span th:text="${#temporals.format(o.validade, 'dd/MM/yyyy')}"
+                                  th:classappend="${o.expirado()} ? 'text-danger fw-semibold'"></span>
+                            <small th:if="${o.expirado()}" class="text-danger ms-1">(expirado)</small>
+                        </td>
+                        <td class="text-end fw-semibold">
+                            R$ <span th:text="${#numbers.formatDecimal(o.total, 1, 'POINT', 2, 'COMMA')}"></span>
+                        </td>
+                        <td class="text-center">
+                            <span th:switch="${o.status.name()}">
+                                <span th:case="'PENDENTE'"  class="badge bg-warning text-dark">Pendente</span>
+                                <span th:case="'APROVADO'"  class="badge bg-success">Aprovado</span>
+                                <span th:case="'RECUSADO'"  class="badge bg-danger">Recusado</span>
+                                <span th:case="'EXPIRADO'"  class="badge bg-secondary">Expirado</span>
+                            </span>
+                        </td>
+                        <td class="text-end pe-3">
+                            <a th:href="@{/orcamentos/{id}(id=${o.id})}"
+                               class="btn btn-sm btn-outline-primary me-1">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a th:href="@{/orcamentos/{id}/pdf(id=${o.id})}"
+                               class="btn btn-sm btn-outline-secondary" target="_blank">
+                                <i class="bi bi-file-pdf"></i>
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

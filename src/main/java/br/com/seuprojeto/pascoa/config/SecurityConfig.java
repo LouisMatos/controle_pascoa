@@ -35,12 +35,21 @@ public class SecurityConfig {
                 // Acesso público
                 .requestMatchers("/login", "/logout").permitAll()
                 .requestMatchers("/acompanhamento/**").permitAll()
+                .requestMatchers("/orcamento-publico/**").permitAll()
+                .requestMatchers("/catalogo/**").permitAll()
+                .requestMatchers("/uploads/**").permitAll()
+                // PWA
+                .requestMatchers("/manifest.json", "/sw.js", "/icons/**").permitAll()
                 // Apenas ADMIN
                 .requestMatchers("/usuarios/**", "/notificacoes/**").hasRole("ADMIN")
-                // ADMIN e FINANCEIRO
-                .requestMatchers("/financeiro/**").hasAnyRole("ADMIN", "FINANCEIRO")
-                // ADMIN e CONFEITEIRO
-                .requestMatchers("/producao/**").hasAnyRole("ADMIN", "CONFEITEIRO")
+                // ADMIN e ATENDENTE — CRM
+                .requestMatchers("/crm/**").hasAnyRole("ADMIN", "ATENDENTE")
+                // ADMIN, FINANCEIRO e ANALISTA — relatórios e analytics
+                .requestMatchers("/financeiro/**", "/analytics/**").hasAnyRole("ADMIN", "FINANCEIRO", "ANALISTA")
+                // ADMIN e FINANCEIRO — gestão de gastos (lançamentos, importação)
+                .requestMatchers("/gastos/**").hasAnyRole("ADMIN", "FINANCEIRO")
+                // ADMIN, CONFEITEIRO e GESTOR_QUALIDADE — produção e qualidade
+                .requestMatchers("/producao/**", "/qualidade/**").hasAnyRole("ADMIN", "CONFEITEIRO", "GESTOR_QUALIDADE")
                 // Qualquer autenticado para o restante
                 .anyRequest().authenticated()
             )

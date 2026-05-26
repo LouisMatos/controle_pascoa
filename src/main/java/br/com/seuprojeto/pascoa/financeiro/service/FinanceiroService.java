@@ -5,6 +5,8 @@ import br.com.seuprojeto.pascoa.fichaTecnica.repository.FichaTecnicaRepository;
 import br.com.seuprojeto.pascoa.financeiro.dto.MargemProdutoDto;
 import br.com.seuprojeto.pascoa.financeiro.dto.RelatorioFinanceiro;
 import br.com.seuprojeto.pascoa.financeiro.dto.TopProdutoDto;
+import br.com.seuprojeto.pascoa.financeiro.repository.DespesaFixaRepository;
+import br.com.seuprojeto.pascoa.gastos.repository.GastoVariavelRepository;
 import br.com.seuprojeto.pascoa.pedido.entity.StatusPedido;
 import br.com.seuprojeto.pascoa.pedido.repository.ItemPedidoRepository;
 import br.com.seuprojeto.pascoa.pedido.repository.PagamentoRepository;
@@ -12,6 +14,8 @@ import br.com.seuprojeto.pascoa.pedido.repository.PedidoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.YearMonth;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -27,6 +31,8 @@ public class FinanceiroService {
     private final ItemPedidoRepository itemPedidoRepository;
     private final MateriaPrimaRepository materiaPrimaRepository;
     private final FichaTecnicaRepository fichaTecnicaRepository;
+    private final GastoVariavelRepository gastoRepository;
+    private final DespesaFixaRepository despesaFixaRepository;
 
     @Transactional(readOnly = true)
     public RelatorioFinanceiro gerarRelatorio() {
@@ -34,6 +40,10 @@ public class FinanceiroService {
         BigDecimal totalRecebido        = safe(pagamentoRepository.sumTotal());
         BigDecimal pipeline             = safe(pedidoRepository.sumTotalPorStatuses(List.of(
             StatusPedido.CONFIRMADO, StatusPedido.EM_PRODUCAO, StatusPedido.PRONTO)));
+
+        YearMonth mesAtual = YearMonth.now();
+        BigDecimal gastosVariaveisMes  = safe(gastoRepository.sumTotal(mesAtual.getYear(), mesAtual.getMonthValue()));
+        BigDecimal despesasFixasMensais = safe(despesaFixaRepository.sumMensalAtivas());
 
         List<Object[]> topRows = itemPedidoRepository.topProdutos(StatusPedido.CANCELADO);
         List<TopProdutoDto> topProdutos = topRows.stream()
@@ -50,6 +60,8 @@ public class FinanceiroService {
             .faturamentoEntregues(faturamentoEntregues)
             .totalRecebido(totalRecebido)
             .pipeline(pipeline)
+            .totalGastosVariaveisMes(gastosVariaveisMes)
+            .totalDespesasFixasMensais(despesasFixasMensais)
             .totalPedidos(pedidoRepository.count())
             .pedidosNovos(pedidoRepository.countByStatus(StatusPedido.NOVO))
             .pedidosConfirmados(pedidoRepository.countByStatus(StatusPedido.CONFIRMADO))

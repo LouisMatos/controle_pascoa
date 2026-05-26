@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head><title>CRM — Sistema Páscoa</title></head>
+<body>
+<div id="pageContent">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0"><i class="bi bi-people-fill me-2 text-success"></i>CRM — Clientes</h2>
+    </div>
+
+    <!-- KPIs -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card text-center">
+                <div class="card-body py-3">
+                    <div class="fs-2 fw-bold" th:text="${totalClientes}">0</div>
+                    <div class="text-muted small">Total Clientes</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card text-center border-warning">
+                <div class="card-body py-3">
+                    <div class="fs-2 fw-bold text-warning" th:text="${totalVip}">0</div>
+                    <div class="text-muted small"><i class="bi bi-star-fill me-1 text-warning"></i>VIP</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card text-center border-secondary">
+                <div class="card-body py-3">
+                    <div class="fs-2 fw-bold text-secondary" th:text="${totalNovos}">0</div>
+                    <div class="text-muted small">Novos</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card text-center border-danger">
+                <div class="card-body py-3">
+                    <div class="fs-2 fw-bold text-danger" th:text="${totalInativos}">0</div>
+                    <div class="text-muted small">Inativos (90+ dias)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ranking -->
+    <div class="card">
+        <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
+            <span><i class="bi bi-trophy me-2 text-warning"></i>Ranking por LTV (Top 20)</span>
+            <a th:href="@{/clientes}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-people me-1"></i>Todos os clientes
+            </a>
+        </div>
+        <div class="card-body p-0">
+            <div th:if="${#lists.isEmpty(ranking)}" class="text-center text-muted py-5">
+                <i class="bi bi-people fs-2 d-block mb-2 opacity-40"></i>
+                Nenhum cliente com pedidos registrado.
+            </div>
+            <table th:unless="${#lists.isEmpty(ranking)}" class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-3" style="width:50px">#</th>
+                        <th>Cliente</th>
+                        <th class="text-center" style="width:110px">Segmento</th>
+                        <th class="text-end" style="width:120px">LTV</th>
+                        <th class="text-center" style="width:90px">Pedidos</th>
+                        <th class="text-center" style="width:80px">Pontos</th>
+                        <th class="text-end pe-3" style="width:80px">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="c, i : ${ranking}">
+                        <td class="ps-3 text-muted fw-semibold" th:text="${i.index + 1}"></td>
+                        <td>
+                            <div class="fw-semibold" th:text="${c.cliente().nome}"></div>
+                            <div class="text-muted small" th:text="${c.cliente().email}"></div>
+                        </td>
+                        <td class="text-center">
+                            <span th:classappend="'bg-' + ${c.segmento().badgeColor()}"
+                                  class="badge"
+                                  th:text="${c.segmento().descricao()}"></span>
+                        </td>
+                        <td class="text-end fw-semibold text-success">
+                            R$ <span th:text="${#numbers.formatDecimal(c.ltv(), 1, 'POINT', 2, 'COMMA')}"></span>
+                        </td>
+                        <td class="text-center" th:text="${c.totalPedidos()}"></td>
+                        <td class="text-center">
+                            <span th:classappend="${c.saldoPontos() > 0} ? 'text-success' : 'text-muted'"
+                                  th:text="${c.saldoPontos()}"></span>
+                        </td>
+                        <td class="text-end pe-3">
+                            <a th:href="@{/crm/clientes/{id}(id=${c.cliente().id})}"
+                               class="btn btn-sm btn-outline-success">
+                                <i class="bi bi-person-lines-fill"></i>
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

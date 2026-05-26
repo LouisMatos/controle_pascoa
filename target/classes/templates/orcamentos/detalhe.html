@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="'Orçamento #' + ${orc.id} + ' — Sistema Páscoa'">Orçamento — Sistema Páscoa</title>
+</head>
+<body>
+<div id="pageContent">
+
+    <div class="d-flex align-items-center mb-4">
+        <a th:href="@{/orcamentos}" class="btn btn-outline-secondary btn-sm me-3">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <h2 class="mb-0 me-3">
+            <i class="bi bi-file-earmark-text me-2 text-warning"></i>
+            Orçamento <span th:text="'#' + ${orc.id}"></span>
+        </h2>
+        <!-- Badge de status -->
+        <span th:switch="${orc.status.name()}">
+            <span th:case="'PENDENTE'" class="badge bg-warning text-dark fs-6">Pendente</span>
+            <span th:case="'APROVADO'" class="badge bg-success fs-6">Aprovado</span>
+            <span th:case="'RECUSADO'" class="badge bg-danger fs-6">Recusado</span>
+            <span th:case="'EXPIRADO'" class="badge bg-secondary fs-6">Expirado</span>
+        </span>
+    </div>
+
+    <div class="row g-4 mb-4">
+
+        <!-- Informações gerais -->
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header fw-semibold">
+                    <i class="bi bi-info-circle me-2"></i>Informações
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-5 text-muted">Cliente</dt>
+                        <dd class="col-7 fw-semibold" th:text="${orc.cliente.nome}"></dd>
+
+                        <dt class="col-5 text-muted">Criado em</dt>
+                        <dd class="col-7"
+                            th:text="${#temporals.format(orc.dataCriacao, 'dd/MM/yyyy')}"></dd>
+
+                        <dt class="col-5 text-muted">Criado por</dt>
+                        <dd class="col-7" th:text="${orc.criadoPor}"></dd>
+
+                        <dt class="col-5 text-muted">Válido até</dt>
+                        <dd class="col-7">
+                            <span th:text="${#temporals.format(orc.validade, 'dd/MM/yyyy')}"
+                                  th:classappend="${orc.expirado()} ? 'text-danger fw-semibold'"></span>
+                            <small th:if="${orc.expirado()}" class="text-danger ms-1">(expirado)</small>
+                        </dd>
+
+                        <dt class="col-5 text-muted">Total</dt>
+                        <dd class="col-7 fw-bold text-success fs-5">
+                            R$ <span th:text="${#numbers.formatDecimal(orc.total, 1, 'POINT', 2, 'COMMA')}"></span>
+                        </dd>
+
+                        <th:block th:if="${orc.observacoes != null and !orc.observacoes.isEmpty()}">
+                            <dt class="col-5 text-muted">Observações</dt>
+                            <dd class="col-7" th:text="${orc.observacoes}"></dd>
+                        </th:block>
+
+                        <!-- Pedido vinculado -->
+                        <th:block th:if="${orc.pedido != null}">
+                            <dt class="col-5 text-muted">Pedido</dt>
+                            <dd class="col-7">
+                                <a th:href="@{/pedidos/{id}(id=${orc.pedido.id})}"
+                                   class="fw-semibold text-decoration-none">
+                                    <i class="bi bi-cart3 me-1"></i>Pedido #<span th:text="${orc.pedido.id}"></span>
+                                </a>
+                            </dd>
+                        </th:block>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <!-- Itens -->
+        <div class="col-lg-8">
+            <div class="card h-100">
+                <div class="card-header fw-semibold">
+                    <i class="bi bi-list-ul me-2"></i>Itens do Orçamento
+                </div>
+                <div class="card-body p-0">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-3">Produto</th>
+                                <th class="text-center" style="width:80px">Qtd</th>
+                                <th class="text-end" style="width:140px">Preço Unit.</th>
+                                <th class="text-end pe-3" style="width:130px">Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="item : ${orc.itens}">
+                                <td class="ps-3 fw-semibold" th:text="${item.produto.nome}"></td>
+                                <td class="text-center" th:text="${item.quantidade}"></td>
+                                <td class="text-end">
+                                    R$ <span th:text="${#numbers.formatDecimal(item.precoUnitario, 1, 'POINT', 2, 'COMMA')}"></span>
+                                </td>
+                                <td class="text-end pe-3 text-success fw-semibold">
+                                    R$ <span th:text="${#numbers.formatDecimal(item.subtotal, 1, 'POINT', 2, 'COMMA')}"></span>
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-light">
+                                <td colspan="3" class="text-end fw-bold pe-2">Total Geral</td>
+                                <td class="text-end pe-3 fw-bold text-success">
+                                    R$ <span th:text="${#numbers.formatDecimal(orc.total, 1, 'POINT', 2, 'COMMA')}"></span>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Link de aprovação pública (apenas PENDENTE) -->
+    <div th:if="${orc.isPendente()}" class="card mb-4 border-warning">
+        <div class="card-body">
+            <div class="d-flex align-items-start gap-3">
+                <i class="bi bi-share-fill text-warning fs-4 mt-1"></i>
+                <div class="flex-grow-1">
+                    <div class="fw-semibold mb-1">Link de Aprovação para o Cliente</div>
+                    <div class="input-group">
+                        <input type="text" class="form-control form-control-sm font-monospace"
+                               id="linkAprovacao"
+                               th:value="${linkAprovacao}"
+                               readonly>
+                        <button class="btn btn-sm btn-outline-secondary" type="button"
+                                onclick="copiarLink()">
+                            <i class="bi bi-clipboard me-1"></i>Copiar
+                        </button>
+                    </div>
+                    <small class="text-muted">Compartilhe este link com o cliente para que ele possa aprovar ou recusar o orçamento.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ações -->
+    <div class="d-flex flex-wrap gap-2 justify-content-end">
+        <!-- PDF sempre disponível -->
+        <a th:href="@{/orcamentos/{id}/pdf(id=${orc.id})}" target="_blank"
+           class="btn btn-outline-secondary">
+            <i class="bi bi-file-pdf me-1"></i>Baixar PDF
+        </a>
+
+        <!-- Editar (apenas PENDENTE) -->
+        <a th:if="${orc.isPendente()}"
+           th:href="@{/orcamentos/{id}/editar(id=${orc.id})}"
+           class="btn btn-outline-warning">
+            <i class="bi bi-pencil me-1"></i>Editar
+        </a>
+
+        <!-- Converter em Pedido (apenas APROVADO e sem pedido) -->
+        <form th:if="${orc.isAprovado() and orc.pedido == null}"
+              th:action="@{/orcamentos/{id}/converter(id=${orc.id})}" method="post">
+            <button type="submit" class="btn btn-success"
+                    onclick="return confirm('Converter este orçamento em pedido?')">
+                <i class="bi bi-cart-plus me-1"></i>Converter em Pedido
+            </button>
+        </form>
+
+        <!-- Excluir (apenas PENDENTE) -->
+        <form th:if="${orc.isPendente()}"
+              th:action="@{/orcamentos/{id}/excluir(id=${orc.id})}" method="post">
+            <button type="submit" class="btn btn-outline-danger"
+                    onclick="return confirm('Excluir este orçamento?')">
+                <i class="bi bi-trash me-1"></i>Excluir
+            </button>
+        </form>
+    </div>
+
+</div>
+
+<script>
+function copiarLink() {
+    const input = document.getElementById('linkAprovacao');
+    input.select();
+    navigator.clipboard.writeText(input.value).then(() => {
+        const btn = input.nextElementSibling;
+        btn.innerHTML = '<i class="bi bi-check-lg me-1"></i>Copiado!';
+        btn.classList.replace('btn-outline-secondary', 'btn-success');
+        setTimeout(() => {
+            btn.innerHTML = '<i class="bi bi-clipboard me-1"></i>Copiar';
+            btn.classList.replace('btn-success', 'btn-outline-secondary');
+        }, 2000);
+    });
+}
+</script>
+</body>
+</html>

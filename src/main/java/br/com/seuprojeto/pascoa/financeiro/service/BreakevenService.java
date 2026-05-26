@@ -7,6 +7,7 @@ import br.com.seuprojeto.pascoa.financeiro.entity.StatusConta;
 import br.com.seuprojeto.pascoa.financeiro.repository.ConfiguracaoFinanceiraRepository;
 import br.com.seuprojeto.pascoa.financeiro.repository.ContaReceberRepository;
 import br.com.seuprojeto.pascoa.financeiro.repository.DespesaFixaRepository;
+import br.com.seuprojeto.pascoa.gastos.repository.GastoVariavelRepository;
 import br.com.seuprojeto.pascoa.pedido.entity.StatusPedido;
 import br.com.seuprojeto.pascoa.pedido.repository.PedidoRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,10 +29,17 @@ public class BreakevenService {
     private final PedidoRepository pedidoRepository;
     private final ConfiguracaoFinanceiraRepository configuracaoRepository;
     private final ContaReceberRepository contaReceberRepository;
+    private final GastoVariavelRepository gastoRepository;
 
     @Transactional(readOnly = true)
     public BreakevenDto calcular() {
-        BigDecimal totalFixoMensal = despesaFixaRepository.sumMensalAtivas();
+        BigDecimal despesasFixasPuras = despesaFixaRepository.sumMensalAtivas();
+
+        // Gastos variáveis do mês atual (são custos de período, somam à base fixa do PE)
+        YearMonth mesAtual0 = YearMonth.now();
+        BigDecimal gastosVariaveisMes = gastoRepository.sumTotal(mesAtual0.getYear(), mesAtual0.getMonthValue());
+
+        BigDecimal totalFixoMensal = despesasFixasPuras.add(gastosVariaveisMes);
 
         // Preço médio e custo médio variável a partir dos pedidos do mês atual
         YearMonth mesAtual = YearMonth.now();
@@ -95,6 +103,8 @@ public class BreakevenService {
 
         return BreakevenDto.builder()
             .totalDespesasFixasMensais(totalFixoMensal)
+            .despesasFixasPuras(despesasFixasPuras)
+            .gastosVariaveisMes(gastosVariaveisMes)
             .precoMedioVenda(precoMedioVenda.setScale(2, RoundingMode.HALF_UP))
             .custoMedioVariavel(custoMedioVariavel.setScale(2, RoundingMode.HALF_UP))
             .margemContribuicao(margemContribuicao.setScale(2, RoundingMode.HALF_UP))

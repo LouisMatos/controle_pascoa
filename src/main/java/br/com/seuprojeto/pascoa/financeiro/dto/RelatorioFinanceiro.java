@@ -15,6 +15,8 @@ public class RelatorioFinanceiro {
     private BigDecimal faturamentoEntregues;
     private BigDecimal totalRecebido;
     private BigDecimal pipeline;
+    private BigDecimal totalGastosVariaveisMes; // Gastos variáveis do mês atual
+    private BigDecimal totalDespesasFixasMensais; // Despesas fixas mensais cadastradas
 
     // Contagem por status
     private long totalPedidos;

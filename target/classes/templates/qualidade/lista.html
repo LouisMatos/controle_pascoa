@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head><title>Controle de Qualidade — Sistema Páscoa</title></head>
+<body>
+<div id="pageContent">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0"><i class="bi bi-clipboard2-check me-2 text-info"></i>Controle de Qualidade</h2>
+    </div>
+
+    <!-- KPIs -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card text-center">
+                <div class="card-body py-3">
+                    <div class="fs-2 fw-bold" th:text="${#lists.size(inspecoes)}">0</div>
+                    <div class="text-muted small">Total Inspeções</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card text-center border-success">
+                <div class="card-body py-3">
+                    <div class="fs-2 fw-bold text-success" th:text="${totalAprovadas}">0</div>
+                    <div class="text-muted small"><i class="bi bi-check-circle me-1 text-success"></i>Aprovadas</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card text-center border-danger">
+                <div class="card-body py-3">
+                    <div class="fs-2 fw-bold text-danger" th:text="${totalReprovadas}">0</div>
+                    <div class="text-muted small"><i class="bi bi-x-circle me-1 text-danger"></i>Reprovadas</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card text-center border-info">
+                <div class="card-body py-3">
+                    <div class="text-muted small fw-semibold mb-1">Checklist por Produto</div>
+                    <select class="form-select form-select-sm" id="selProduto"
+                            onchange="if(this.value) window.location='/qualidade/checklist/'+this.value">
+                        <option value="">Selecione...</option>
+                        <option th:each="p : ${produtos}" th:value="${p.id}" th:text="${p.nome}"></option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de inspeções -->
+    <div class="card">
+        <div class="card-header fw-semibold">
+            <i class="bi bi-list-check me-2"></i>Histórico de Inspeções
+        </div>
+        <div class="card-body p-0">
+            <div th:if="${#lists.isEmpty(inspecoes)}" class="text-center text-muted py-5">
+                <i class="bi bi-clipboard2 fs-2 d-block mb-2 opacity-40"></i>
+                Nenhuma inspeção registrada ainda.<br>
+                <small>Acesse uma ordem de produção concluída para registrar a primeira.</small>
+            </div>
+            <table th:unless="${#lists.isEmpty(inspecoes)}" class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th class="ps-3">#</th>
+                        <th>Produto / Ordem</th>
+                        <th>Inspetor</th>
+                        <th class="text-center">Data</th>
+                        <th class="text-center">Itens</th>
+                        <th class="text-center">Resultado</th>
+                        <th class="text-end pe-3">Ver</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="ins : ${inspecoes}">
+                        <td class="ps-3 text-muted small" th:text="${ins.id}"></td>
+                        <td>
+                            <div class="fw-semibold" th:text="${ins.ordemProducao.produto.nome}"></div>
+                            <div class="text-muted small">
+                                Ordem <a th:href="@{/producao/{id}(id=${ins.ordemProducao.id})}"
+                                         th:text="'#' + ${ins.ordemProducao.id}"
+                                         class="text-decoration-none"></a>
+                            </div>
+                        </td>
+                        <td th:text="${ins.inspetor}"></td>
+                        <td class="text-center text-muted small"
+                            th:text="${#temporals.format(ins.dataInspecao, 'dd/MM/yyyy HH:mm')}"></td>
+                        <td class="text-center text-muted small">
+                            <span th:if="${ins.totalItens() > 0}">
+                                <span th:text="${ins.totalVerificados()}"></span>/<span th:text="${ins.totalItens()}"></span>
+                            </span>
+                            <span th:unless="${ins.totalItens() > 0}" class="text-muted">—</span>
+                        </td>
+                        <td class="text-center">
+                            <span th:if="${ins.aprovado}" class="badge bg-success">
+                                <i class="bi bi-check-lg me-1"></i>Aprovado
+                            </span>
+                            <span th:unless="${ins.aprovado}" class="badge bg-danger">
+                                <i class="bi bi-x-lg me-1"></i>Reprovado
+                            </span>
+                        </td>
+                        <td class="text-end pe-3">
+                            <a th:href="@{/qualidade/inspecao/{id}(id=${ins.id})}"
+                               class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

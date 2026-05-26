@@ -35,9 +35,12 @@
                         <td class="text-muted" th:text="${u.login}"></td>
                         <td class="text-center">
                             <span class="badge"
-                                  th:classappend="${u.role.name() == 'ADMIN'} ? 'bg-danger' :
-                                                  (${u.role.name() == 'FINANCEIRO'} ? 'bg-success' :
-                                                  (${u.role.name() == 'CONFEITEIRO'} ? 'bg-warning text-dark' : 'bg-info text-dark'))"
+                                  th:classappend="${u.role.name() == 'ADMIN'}             ? 'bg-danger' :
+                                                  (${u.role.name() == 'FINANCEIRO'}       ? 'bg-success' :
+                                                  (${u.role.name() == 'CONFEITEIRO'}      ? 'bg-warning text-dark' :
+                                                  (${u.role.name() == 'GESTOR_QUALIDADE'} ? 'bg-info text-dark' :
+                                                  (${u.role.name() == 'ANALISTA'}         ? 'bg-primary' :
+                                                   'bg-secondary'))))"
                                   th:text="${u.role.descricao}"></span>
                         </td>
                         <td class="text-center">

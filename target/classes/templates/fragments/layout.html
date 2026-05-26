@@ -6,6 +6,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:replace="${pageTitle}">Sistema Páscoa</title>
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#198754">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Páscoa">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <!-- Bootstrap -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <style>
@@ -60,6 +69,22 @@
                         <i class="bi bi-cart3 me-1"></i>Pedidos
                     </a>
                 </li>
+                <li class="nav-item" sec:authorize="hasAnyRole('ADMIN', 'ATENDENTE')">
+                    <a class="nav-link" th:href="@{/crm}">
+                        <i class="bi bi-people-fill me-1"></i>CRM
+                    </a>
+                </li>
+                <li class="nav-item dropdown" sec:authorize="hasAnyRole('ADMIN', 'ATENDENTE')">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-file-earmark-text me-1"></i>Orçamentos
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" th:href="@{/orcamentos}">
+                            <i class="bi bi-list-ul me-2"></i>Lista de Orçamentos</a></li>
+                        <li><a class="dropdown-item" th:href="@{/orcamentos/novo}">
+                            <i class="bi bi-plus-circle me-2 text-success"></i>Novo Orçamento</a></li>
+                    </ul>
+                </li>
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                         <i class="bi bi-clipboard-data me-1"></i>Estoque
@@ -82,7 +107,7 @@
                         </li>
                     </ul>
                 </li>
-                <li class="nav-item dropdown" sec:authorize="hasAnyRole('ADMIN', 'CONFEITEIRO')">
+                <li class="nav-item dropdown" sec:authorize="hasAnyRole('ADMIN', 'CONFEITEIRO', 'GESTOR_QUALIDADE')">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                         <i class="bi bi-gear me-1"></i>Produção
                     </a>
@@ -91,9 +116,25 @@
                             <i class="bi bi-kanban me-2"></i>Kanban</a></li>
                         <li><a class="dropdown-item" th:href="@{/producao}">
                             <i class="bi bi-list-ul me-2"></i>Lista de Ordens</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" th:href="@{/qualidade}">
+                            <i class="bi bi-clipboard2-check me-2"></i>Qualidade</a></li>
                     </ul>
                 </li>
                 <li class="nav-item dropdown" sec:authorize="hasAnyRole('ADMIN', 'FINANCEIRO')">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-receipt me-1"></i>Gastos
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" th:href="@{/gastos}">
+                            <i class="bi bi-list-ul me-2"></i>Lançamentos</a></li>
+                        <li><a class="dropdown-item" th:href="@{/gastos/dashboard}">
+                            <i class="bi bi-bar-chart me-2"></i>Dashboard</a></li>
+                        <li><a class="dropdown-item" th:href="@{/gastos/importar}">
+                            <i class="bi bi-upload me-2"></i>Importar CSV</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown" sec:authorize="hasAnyRole('ADMIN', 'FINANCEIRO', 'ANALISTA')">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                         <i class="bi bi-graph-up me-1"></i>Financeiro
                     </a>
@@ -114,6 +155,9 @@
                             <i class="bi bi-clock-history me-2"></i>Aging de Recebíveis</a></li>
                         <li><a class="dropdown-item" th:href="@{/financeiro/contas-pagar}">
                             <i class="bi bi-cash-stack me-2"></i>Contas a Pagar</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" th:href="@{/analytics}">
+                            <i class="bi bi-bar-chart-line me-2 text-primary"></i>Analytics de Vendas</a></li>
                     </ul>
                 </li>
                 <li class="nav-item dropdown" sec:authorize="hasRole('ADMIN')">
@@ -135,10 +179,66 @@
                         <i class="bi bi-people me-1"></i>Usuários
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/catalogo}" target="_blank">
+                        <i class="bi bi-shop me-1"></i>Catálogo
+                    </a>
+                </li>
             </ul>
 
-            <!-- Usuário logado + logout -->
+            <!-- Usuário logado + alertas + logout -->
             <ul class="navbar-nav ms-auto align-items-center gap-1">
+
+                <!-- Sino de alertas internos -->
+                <li class="nav-item dropdown" sec:authorize="isAuthenticated()">
+                    <a class="nav-link position-relative px-2" href="#"
+                       role="button" data-bs-toggle="dropdown" aria-expanded="false"
+                       title="Alertas internos">
+                        <i class="bi bi-bell fs-5"></i>
+                        <span th:if="${alertasNaoLidos > 0}"
+                              class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                              style="font-size:.65rem;"
+                              th:text="${alertasNaoLidos > 99} ? '99+' : ${alertasNaoLidos}"></span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow" style="width:320px; max-height:400px; overflow-y:auto;">
+                        <li>
+                            <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
+                                <span class="fw-semibold small">Alertas</span>
+                                <a th:href="@{/alertas}" class="small text-muted text-decoration-none">Ver todos</a>
+                            </div>
+                        </li>
+                        <li th:if="${#lists.isEmpty(alertasRecentes)}">
+                            <div class="text-center text-muted small py-3">
+                                <i class="bi bi-bell-slash d-block mb-1 opacity-40"></i>
+                                Sem alertas
+                            </div>
+                        </li>
+                        <li th:each="a : ${alertasRecentes}">
+                            <form th:action="@{/alertas/{id}/lido(id=${a.id})}" method="post">
+                                <input type="hidden" name="redirect"
+                                       th:value="${a.link != null} ? ${a.link} : '/alertas'">
+                                <button type="submit"
+                                        th:classappend="${!a.lido} ? 'fw-semibold bg-light'"
+                                        class="dropdown-item d-flex align-items-start gap-2 py-2 text-wrap border-bottom">
+                                    <i th:class="'bi ' + ${a.icone} + ' text-' + ${a.cor} + ' mt-1 flex-shrink-0'"></i>
+                                    <div class="text-start">
+                                        <div class="small" th:text="${a.mensagem}"></div>
+                                        <div class="text-muted" style="font-size:.72rem;"
+                                             th:text="${#temporals.format(a.criadoEm, 'dd/MM HH:mm')}"></div>
+                                    </div>
+                                </button>
+                            </form>
+                        </li>
+                        <li th:if="${alertasNaoLidos > 0}" class="border-top">
+                            <form th:action="@{/alertas/marcar-todos-lidos}" method="post">
+                                <button type="submit" class="dropdown-item text-center small text-muted py-2">
+                                    <i class="bi bi-check2-all me-1"></i>Marcar todos como lidos
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </li>
+
                 <li class="nav-item">
                     <span class="navbar-text text-white-50 small">
                         <i class="bi bi-person-circle me-1"></i>
@@ -175,5 +275,13 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('/sw.js', { scope: '/' })
+        .catch(function (err) { console.warn('SW register failed:', err); });
+    });
+  }
+</script>
 </body>
 </html>

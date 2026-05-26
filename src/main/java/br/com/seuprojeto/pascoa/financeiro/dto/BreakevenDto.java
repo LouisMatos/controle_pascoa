@@ -8,7 +8,9 @@ import java.math.BigDecimal;
 @Data
 @Builder
 public class BreakevenDto {
-    private BigDecimal totalDespesasFixasMensais;
+    private BigDecimal totalDespesasFixasMensais; // DespesasFixas + GastosVariáveis do mês
+    private BigDecimal despesasFixasPuras;        // Só as despesas fixas cadastradas
+    private BigDecimal gastosVariaveisMes;        // Gastos variáveis lançados no mês
     private BigDecimal precoMedioVenda;
     private BigDecimal custoMedioVariavel;
     private BigDecimal margemContribuicao;    // precoMedio - custoMedio

@@ -42,4 +42,42 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
            "LEFT JOIN FETCH i.produto " +
            "WHERE p.tokenAcompanhamento = :token")
     Optional<Pedido> findByTokenAcompanhamento(@Param("token") String token);
+
+    // ── CRM ───────────────────────────────────────────────────────────────
+
+    /** Retorna [clienteId, ltv, totalPedidos, ultimoPedido] agrupado por cliente (exclui CANCELADO). */
+    @Query("SELECT p.cliente.id, COALESCE(SUM(p.totalPedido), 0), COUNT(p), MAX(p.dataPedido) " +
+           "FROM Pedido p WHERE p.status <> br.com.seuprojeto.pascoa.pedido.entity.StatusPedido.CANCELADO " +
+           "GROUP BY p.cliente.id")
+    List<Object[]> statsPorCliente();
+
+    /** Últimos 5 pedidos de um cliente. */
+    @Query("SELECT p FROM Pedido p LEFT JOIN FETCH p.itens WHERE p.cliente.id = :clienteId " +
+           "ORDER BY p.dataPedido DESC LIMIT 5")
+    List<Pedido> ultimosPedidosPorCliente(@Param("clienteId") Long clienteId);
+
+    // ── Analytics ─────────────────────────────────────────────────────────
+
+    /** Faturamento e contagem por mês de um ano: [mes(int), faturamento, count] */
+    @Query(value = "SELECT EXTRACT(MONTH FROM data_pedido)::int, COALESCE(SUM(total_pedido),0), COUNT(*) " +
+                   "FROM pedidos WHERE EXTRACT(YEAR FROM data_pedido) = :ano AND status != 'CANCELADO' " +
+                   "GROUP BY 1 ORDER BY 1", nativeQuery = true)
+    List<Object[]> faturamentoPorMes(@Param("ano") int ano);
+
+    /** Total de faturamento de um ano (excluindo CANCELADO). */
+    @Query(value = "SELECT COALESCE(SUM(total_pedido), 0) FROM pedidos " +
+                   "WHERE EXTRACT(YEAR FROM data_pedido) = :ano AND status != 'CANCELADO'",
+           nativeQuery = true)
+    BigDecimal totalPorAno(@Param("ano") int ano);
+
+    /** Total de pedidos de um ano (excluindo CANCELADO). */
+    @Query(value = "SELECT COUNT(*) FROM pedidos " +
+                   "WHERE EXTRACT(YEAR FROM data_pedido) = :ano AND status != 'CANCELADO'",
+           nativeQuery = true)
+    long countPorAno(@Param("ano") int ano);
+
+    /** Anos distintos que têm pedidos (ordenado DESC). */
+    @Query(value = "SELECT DISTINCT EXTRACT(YEAR FROM data_pedido)::int FROM pedidos " +
+                   "WHERE status != 'CANCELADO' ORDER BY 1 DESC", nativeQuery = true)
+    List<Integer> anosComPedidos();
 }

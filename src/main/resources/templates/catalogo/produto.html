@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${produto.nome} + ' — Páscoa Gestão'">Produto — Páscoa Gestão</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <style>
+        body { background-color: #f8f9fa; font-size: 0.93rem; }
+        .brand-bar { background: linear-gradient(135deg, #198754, #20c997); }
+        .produto-img { width: 100%; max-height: 380px; object-fit: cover; border-radius: 12px; }
+        .badge-TRUFADO    { background-color: #6f42c1; }
+        .badge-RECHEADO   { background-color: #fd7e14; }
+        .badge-DIET       { background-color: #0dcaf0; color: #000 !important; }
+        .badge-VEGANO     { background-color: #198754; }
+        .badge-TRADICIONAL{ background-color: #6c757d; }
+        .badge-ESPECIAL   { background-color: #d63384; }
+        .qr-box { background: #fff; border: 1px solid #dee2e6; border-radius: 10px; padding: 1rem; display: inline-block; }
+    </style>
+</head>
+<body>
+
+<!-- Barra de marca -->
+<div class="brand-bar text-white py-3 mb-4">
+    <div class="container d-flex align-items-center gap-3">
+        <a th:href="@{/catalogo}" class="btn btn-outline-light btn-sm">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div>
+            <i class="bi bi-egg-fill me-1"></i>
+            <span class="fw-bold">Páscoa Gestão</span>
+            <span class="opacity-75 ms-2 small">— Catálogo</span>
+        </div>
+    </div>
+</div>
+
+<div class="container pb-5" style="max-width: 900px;">
+    <div class="row g-4">
+
+        <!-- Coluna esquerda: foto -->
+        <div class="col-md-5">
+            <img th:if="${produto.foto != null and !produto.foto.isEmpty()}"
+                 th:src="@{/uploads/{f}(f=${produto.foto})}"
+                 th:alt="${produto.nome}"
+                 class="produto-img shadow-sm">
+            <div th:unless="${produto.foto != null and !produto.foto.isEmpty()}"
+                 class="produto-img shadow-sm bg-light d-flex align-items-center justify-content-center"
+                 style="height:320px;">
+                <i class="bi bi-egg text-muted" style="font-size:5rem;"></i>
+            </div>
+        </div>
+
+        <!-- Coluna direita: detalhes -->
+        <div class="col-md-7">
+            <span th:classappend="'badge-' + ${produto.categoria.name()}"
+                  class="badge fs-6 mb-2 px-3"
+                  th:text="${produto.categoria.descricao}"></span>
+
+            <h2 class="fw-bold mb-2" th:text="${produto.nome}"></h2>
+
+            <p th:if="${produto.descricao != null and !produto.descricao.isEmpty()}"
+               class="text-muted" th:text="${produto.descricao}"></p>
+
+            <div class="display-6 fw-bold text-success mb-3">
+                R$ <span th:text="${#numbers.formatDecimal(produto.precoVenda, 1, 'POINT', 2, 'COMMA')}"></span>
+            </div>
+
+            <!-- Período de safra -->
+            <div th:if="${produto.inicioSafra != null}" class="mb-3 text-muted small">
+                <i class="bi bi-calendar-event me-1"></i>
+                Disponível de
+                <strong th:text="${#temporals.format(produto.inicioSafra, 'dd/MM')}"></strong>
+                <span th:if="${produto.fimSafra != null}">
+                    até <strong th:text="${#temporals.format(produto.fimSafra, 'dd/MM')}"></strong>
+                </span>
+            </div>
+
+            <hr>
+
+            <!-- CTA -->
+            <div class="alert alert-success d-flex align-items-center gap-2">
+                <i class="bi bi-whatsapp fs-5"></i>
+                <div>
+                    <strong>Gostou? Entre em contato!</strong><br>
+                    <span class="small">Fale conosco para fazer seu pedido.</span>
+                </div>
+            </div>
+
+            <!-- QR Code -->
+            <div class="mt-3 text-center">
+                <div class="text-muted small mb-2">
+                    <i class="bi bi-qr-code me-1"></i>Compartilhe este produto
+                </div>
+                <div class="qr-box mx-auto">
+                    <img th:src="@{/catalogo/qr/{id}(id=${produto.id})}"
+                         alt="QR Code" width="150" height="150">
+                </div>
+                <div class="text-muted small mt-2">
+                    Aponte a câmera para acessar esta página
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Voltar ao catálogo -->
+    <div class="text-center mt-5">
+        <a th:href="@{/catalogo}" class="btn btn-outline-success">
+            <i class="bi bi-grid me-1"></i>Ver todos os produtos
+        </a>
+    </div>
+</div>
+
+<footer class="bg-white border-top py-3 mt-4 text-center text-muted small">
+    <i class="bi bi-egg-fill text-success me-1"></i>Páscoa Gestão — Ovos Artesanais
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

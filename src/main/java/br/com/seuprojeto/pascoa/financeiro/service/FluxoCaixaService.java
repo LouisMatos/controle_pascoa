@@ -6,6 +6,7 @@ import br.com.seuprojeto.pascoa.financeiro.dto.FluxoCaixaDto;
 import br.com.seuprojeto.pascoa.financeiro.repository.ContaPagarRepository;
 import br.com.seuprojeto.pascoa.financeiro.repository.ContaReceberRepository;
 import br.com.seuprojeto.pascoa.financeiro.repository.DespesaFixaRepository;
+import br.com.seuprojeto.pascoa.gastos.repository.GastoVariavelRepository;
 import br.com.seuprojeto.pascoa.pedido.repository.PagamentoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ public class FluxoCaixaService {
     private final ContaPagarRepository contaPagarRepository;
     private final DespesaFixaRepository despesaFixaRepository;
     private final MovimentacaoEstoqueRepository movimentacaoRepository;
+    private final GastoVariavelRepository gastoRepository;
 
     @Transactional(readOnly = true)
     public FluxoCaixaDto calcular(LocalDate inicio, LocalDate fim) {
@@ -57,12 +59,15 @@ public class FluxoCaixaService {
             .multiply(BigDecimal.valueOf(fracaoMes))
             .setScale(2, java.math.RoundingMode.HALF_UP);
 
+        // SAÍDA — gastos variáveis lançados no período
+        BigDecimal saidaGastos = gastoRepository.sumTotalByPeriodo(inicio, fim);
+
         // SAÍDA — previsto: contas a pagar com vencimento no período
         BigDecimal saidaPrevista = contaPagarRepository.sumPrevistoSaida(inicio, fim);
 
-        BigDecimal totalEntradas = recebidoReal.add(previstoEntrada);
-        BigDecimal totalSaidas   = saidaMP.add(saidaDespesasFixas).add(saidaPrevista);
-        BigDecimal saldoRealizado = recebidoReal.subtract(saidaMP).subtract(saidaDespesasFixas);
+        BigDecimal totalEntradas  = recebidoReal.add(previstoEntrada);
+        BigDecimal totalSaidas    = saidaMP.add(saidaDespesasFixas).add(saidaGastos).add(saidaPrevista);
+        BigDecimal saldoRealizado = recebidoReal.subtract(saidaMP).subtract(saidaDespesasFixas).subtract(saidaGastos);
         BigDecimal saldoProjetado = totalEntradas.subtract(totalSaidas);
 
         return FluxoCaixaDto.builder()
@@ -72,6 +77,7 @@ public class FluxoCaixaService {
             .previstoEntrada(previstoEntrada)
             .saidaMP(saidaMP)
             .saidaDespesasFixas(saidaDespesasFixas)
+            .saidaGastosVariaveis(saidaGastos)
             .saidaPrevista(saidaPrevista)
             .totalEntradas(totalEntradas)
             .totalSaidas(totalSaidas)

@@ -5,7 +5,9 @@ public enum Role {
     ADMIN("Administrador"),
     FINANCEIRO("Financeiro"),
     ATENDENTE("Atendente"),
-    CONFEITEIRO("Confeiteiro");
+    CONFEITEIRO("Confeiteiro"),
+    GESTOR_QUALIDADE("Gestor de Qualidade"),
+    ANALISTA("Analista");
 
     private final String descricao;
 

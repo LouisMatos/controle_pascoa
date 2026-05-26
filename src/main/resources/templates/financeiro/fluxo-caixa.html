@@ -33,8 +33,8 @@
       <div class="card border-danger">
         <div class="card-body text-center">
           <div class="text-muted small fw-semibold text-uppercase">Saídas Reais</div>
-          <div class="fs-4 fw-bold text-danger mt-1">R$ <span th:text="${#numbers.formatDecimal(fluxo.saidaMP.add(fluxo.saidaDespesasFixas),1,'POINT',2,'COMMA')}"></span></div>
-          <div class="text-muted small">MP + Despesas fixas</div>
+          <div class="fs-4 fw-bold text-danger mt-1">R$ <span th:text="${#numbers.formatDecimal(fluxo.saidaMP.add(fluxo.saidaDespesasFixas).add(fluxo.saidaGastosVariaveis),1,'POINT',2,'COMMA')}"></span></div>
+          <div class="text-muted small">MP + Despesas fixas + Gastos</div>
         </div>
       </div>
     </div>
@@ -88,6 +88,16 @@
             <td><span class="badge bg-danger">SAÍDA</span></td>
             <td>Despesas fixas proporcionais ao período</td>
             <td class="text-end fw-semibold text-danger">R$ <span th:text="${#numbers.formatDecimal(fluxo.saidaDespesasFixas,1,'POINT',2,'COMMA')}"></span></td>
+          </tr>
+          <tr class="table-danger bg-opacity-25">
+            <td><span class="badge bg-danger">SAÍDA</span></td>
+            <td>
+              Gastos variáveis lançados no período
+              <a th:href="@{/gastos}" class="ms-2 small text-muted text-decoration-none">
+                <i class="bi bi-box-arrow-up-right" style="font-size:.75rem;"></i> ver lançamentos
+              </a>
+            </td>
+            <td class="text-end fw-semibold text-danger">R$ <span th:text="${#numbers.formatDecimal(fluxo.saidaGastosVariaveis,1,'POINT',2,'COMMA')}"></span></td>
           </tr>
           <tr class="table-warning">
             <td><span class="badge bg-warning text-dark">PREVISTO</span></td>

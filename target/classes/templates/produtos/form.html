@@ -19,8 +19,10 @@
 
     <div class="card">
         <div class="card-body">
-            <form th:action="@{/produtos/salvar}" th:object="${produto}" method="post">
+            <form th:action="@{/produtos/salvar}" th:object="${produto}" method="post"
+                  enctype="multipart/form-data">
                 <input type="hidden" th:field="*{id}">
+                <input type="hidden" th:field="*{foto}">
 
                 <div class="row g-3">
                     <div class="col-md-8">
@@ -66,6 +68,31 @@
                                    th:field="*{ativo}" id="ativo">
                             <label class="form-check-label fw-semibold" for="ativo">Produto Ativo</label>
                         </div>
+                    </div>
+
+                    <!-- Foto do produto -->
+                    <div class="col-md-12">
+                        <label class="form-label fw-semibold">Foto do Produto</label>
+                        <div class="d-flex align-items-start gap-3">
+                            <!-- Preview da foto atual -->
+                            <div th:if="${produto.foto != null and !produto.foto.isEmpty()}">
+                                <img th:src="@{/uploads/{f}(f=${produto.foto})}"
+                                     alt="Foto atual" class="rounded border"
+                                     style="width:80px;height:80px;object-fit:cover;">
+                                <div class="small text-muted mt-1 text-center">Atual</div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <input type="file" name="fotoFile" class="form-control"
+                                       accept="image/jpeg,image/png,image/webp">
+                                <div class="form-text">
+                                    JPEG, PNG ou WebP · máx. 5 MB.
+                                    <span th:if="${produto.foto != null and !produto.foto.isEmpty()}">
+                                        Deixe em branco para manter a foto atual.
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div th:if="${erroFoto}" class="text-danger small mt-1" th:text="${erroFoto}"></div>
                     </div>
                 </div>
 

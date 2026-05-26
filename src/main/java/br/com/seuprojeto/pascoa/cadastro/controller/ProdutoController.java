@@ -9,6 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
@@ -44,13 +45,21 @@ public class ProdutoController {
 
     @PostMapping("/salvar")
     public String salvar(@Valid @ModelAttribute("produto") Produto produto,
-                         BindingResult result, Model model, RedirectAttributes ra) {
+                         BindingResult result,
+                         @RequestParam("fotoFile") MultipartFile fotoFile,
+                         Model model, RedirectAttributes ra) {
         if (result.hasErrors()) {
             model.addAttribute("categorias", Categoria.values());
             return "produtos/form";
         }
-        service.salvar(produto);
-        ra.addFlashAttribute("sucesso", "Produto salvo com sucesso!");
+        try {
+            service.salvar(produto, fotoFile);
+            ra.addFlashAttribute("sucesso", "Produto salvo com sucesso!");
+        } catch (Exception e) {
+            model.addAttribute("categorias", Categoria.values());
+            model.addAttribute("erroFoto", "Erro ao salvar foto: " + e.getMessage());
+            return "produtos/form";
+        }
         return "redirect:/produtos";
     }
 

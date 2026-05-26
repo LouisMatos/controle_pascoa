@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="${orcId != null ? 'Editar Orçamento' : 'Novo Orçamento'} + ' — Sistema Páscoa'">
+        Orçamento — Sistema Páscoa
+    </title>
+</head>
+<body>
+<div id="pageContent">
+
+    <div class="d-flex align-items-center mb-4">
+        <a th:href="@{/orcamentos}" class="btn btn-outline-secondary btn-sm me-3">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <h2 class="mb-0">
+            <i class="bi bi-file-earmark-text me-2 text-warning"></i>
+            <span th:text="${orcId != null ? 'Editar Orçamento' : 'Novo Orçamento'}"></span>
+        </h2>
+    </div>
+
+    <div th:if="${erroItens}" class="alert alert-danger">
+        <i class="bi bi-exclamation-triangle me-2"></i><span th:text="${erroItens}"></span>
+    </div>
+
+    <form th:action="${orcId != null ? '/orcamentos/' + orcId + '/editar' : '/orcamentos/novo'}"
+          th:object="${form}" method="post" id="orcamentoForm">
+
+        <div class="row g-4">
+
+            <!-- Coluna esquerda: dados gerais -->
+            <div class="col-lg-4">
+                <div class="card h-100">
+                    <div class="card-header fw-semibold">
+                        <i class="bi bi-person me-2"></i>Dados Gerais
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Cliente <span class="text-danger">*</span></label>
+                            <select th:field="*{clienteId}" class="form-select"
+                                    th:classappend="${#fields.hasErrors('clienteId')} ? 'is-invalid'">
+                                <option value="">Selecione...</option>
+                                <option th:each="c : ${clientes}"
+                                        th:value="${c.id}"
+                                        th:text="${c.nome}"></option>
+                            </select>
+                            <div class="invalid-feedback" th:errors="*{clienteId}"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Válido até <span class="text-danger">*</span></label>
+                            <input type="date" th:field="*{validade}" class="form-control"
+                                   th:classappend="${#fields.hasErrors('validade')} ? 'is-invalid'">
+                            <div class="invalid-feedback" th:errors="*{validade}"></div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Observações</label>
+                            <textarea th:field="*{observacoes}" class="form-control" rows="4"
+                                      placeholder="Condições, prazo de entrega..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coluna direita: itens -->
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
+                        <span><i class="bi bi-list-ul me-2"></i>Itens do Orçamento</span>
+                        <button type="button" class="btn btn-sm btn-outline-success" onclick="adicionarLinha()">
+                            <i class="bi bi-plus-lg me-1"></i>Adicionar Produto
+                        </button>
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table align-middle mb-0" id="tabelaItens">
+                            <thead>
+                                <tr>
+                                    <th class="ps-3">Produto</th>
+                                    <th style="width:90px" class="text-center">Qtd</th>
+                                    <th style="width:130px" class="text-end">Preço Unit. (R$)</th>
+                                    <th style="width:120px" class="text-end">Subtotal</th>
+                                    <th style="width:50px"></th>
+                                </tr>
+                            </thead>
+                            <tbody id="linhasItens">
+                                <!-- Itens do form (edição) -->
+                                <tr th:each="item, i : *{itens}" th:id="'linha-' + ${i.index}">
+                                    <td class="ps-3">
+                                        <select th:name="'itens[' + ${i.index} + '].produtoId'"
+                                                class="form-select form-select-sm produto-select">
+                                            <option value="">Selecione...</option>
+                                            <option th:each="p : ${produtos}"
+                                                    th:value="${p.id}"
+                                                    th:text="${p.nome}"
+                                                    th:selected="${p.id == item.produtoId}"
+                                                    th:attr="data-preco=${p.precoVenda}"></option>
+                                        </select>
+                                    </td>
+                                    <td>
+                                        <input type="number" min="1"
+                                               th:name="'itens[' + ${i.index} + '].quantidade'"
+                                               th:value="${item.quantidade}"
+                                               class="form-control form-control-sm text-center qtd-input">
+                                    </td>
+                                    <td>
+                                        <input type="number" step="0.01" min="0"
+                                               th:name="'itens[' + ${i.index} + '].precoUnitario'"
+                                               th:value="${item.precoUnitario}"
+                                               class="form-control form-control-sm text-end preco-input">
+                                    </td>
+                                    <td class="text-end pe-2 subtotal fw-semibold text-success">—</td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-sm btn-outline-danger"
+                                                onclick="removerLinha(this)">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-light">
+                                    <td colspan="3" class="text-end fw-bold pe-2">Total</td>
+                                    <td class="text-end fw-bold text-success pe-2" id="totalGeral">R$ 0,00</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 justify-content-end mt-4">
+            <a th:href="@{/orcamentos}" class="btn btn-outline-secondary">Cancelar</a>
+            <button type="submit" class="btn btn-warning">
+                <i class="bi bi-check-lg me-1"></i>Salvar Orçamento
+            </button>
+        </div>
+    </form>
+
+</div>
+
+<script th:inline="javascript">
+/*<![CDATA[*/
+const produtos = /*[[${produtos}]]*/ [];
+let linhaIndex = document.querySelectorAll('#linhasItens tr').length;
+
+function adicionarLinha() {
+    const idx = linhaIndex++;
+    const opts = produtos.map(p =>
+        `<option value="${p.id}" data-preco="${p.precoVenda}">${p.nome}</option>`
+    ).join('');
+
+    const tr = document.createElement('tr');
+    tr.id = 'linha-' + idx;
+    tr.innerHTML = `
+        <td class="ps-3">
+            <select name="itens[${idx}].produtoId" class="form-select form-select-sm produto-select">
+                <option value="">Selecione...</option>${opts}
+            </select>
+        </td>
+        <td><input type="number" min="1" name="itens[${idx}].quantidade" value="1"
+                   class="form-control form-control-sm text-center qtd-input"></td>
+        <td><input type="number" step="0.01" min="0" name="itens[${idx}].precoUnitario" value=""
+                   class="form-control form-control-sm text-end preco-input" placeholder="Preço"></td>
+        <td class="text-end pe-2 subtotal fw-semibold text-success">—</td>
+        <td class="text-center">
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="removerLinha(this)">
+                <i class="bi bi-trash"></i>
+            </button>
+        </td>`;
+    document.getElementById('linhasItens').appendChild(tr);
+    bindLinha(tr);
+    recalcular();
+}
+
+function removerLinha(btn) {
+    btn.closest('tr').remove();
+    recalcular();
+}
+
+function bindLinha(tr) {
+    const sel = tr.querySelector('.produto-select');
+    const preco = tr.querySelector('.preco-input');
+    const qtd = tr.querySelector('.qtd-input');
+
+    sel.addEventListener('change', () => {
+        const opt = sel.selectedOptions[0];
+        if (opt && opt.dataset.preco) preco.value = opt.dataset.preco;
+        recalcular();
+    });
+    preco.addEventListener('input', recalcular);
+    qtd.addEventListener('input', recalcular);
+}
+
+function recalcular() {
+    let total = 0;
+    document.querySelectorAll('#linhasItens tr').forEach(tr => {
+        const p = parseFloat(tr.querySelector('.preco-input')?.value || 0);
+        const q = parseInt(tr.querySelector('.qtd-input')?.value || 0);
+        const sub = p * q;
+        const cell = tr.querySelector('.subtotal');
+        if (cell) cell.textContent = sub > 0 ? 'R$ ' + sub.toLocaleString('pt-BR', {minimumFractionDigits: 2}) : '—';
+        total += sub;
+    });
+    document.getElementById('totalGeral').textContent = 'R$ ' + total.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+}
+
+document.querySelectorAll('#linhasItens tr').forEach(bindLinha);
+recalcular();
+/*]]>*/
+</script>
+</body>
+</html>

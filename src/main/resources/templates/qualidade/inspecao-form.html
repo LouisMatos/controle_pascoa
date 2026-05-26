@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head><title>Nova Inspeção — Sistema Páscoa</title></head>
+<body>
+<div id="pageContent">
+
+    <div class="d-flex align-items-center mb-4 gap-3">
+        <a th:href="@{/producao/{id}(id=${ordem.id})}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <h2 class="mb-0">
+            <i class="bi bi-clipboard2-check me-2 text-info"></i>Inspeção de Qualidade
+        </h2>
+    </div>
+
+    <!-- Info da ordem -->
+    <div class="card mb-4 border-info">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="text-muted small">Ordem</div>
+                    <div class="fw-semibold">#<span th:text="${ordem.id}"></span></div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-muted small">Produto</div>
+                    <div class="fw-semibold" th:text="${ordem.produto.nome}"></div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-muted small">Quantidade Produzida</div>
+                    <div class="fw-semibold" th:text="${ordem.quantidade} + ' un.'"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form th:action="@{/qualidade/inspecao/nova/{id}(id=${ordem.id})}" method="post">
+
+        <div class="row g-4">
+
+            <!-- Checklist -->
+            <div class="col-lg-7">
+                <div class="card h-100">
+                    <div class="card-header fw-semibold">
+                        <i class="bi bi-list-check me-2"></i>
+                        Itens de Verificação
+                        <span th:if="${#lists.isEmpty(checklistItens)}" class="badge bg-secondary ms-2">Sem checklist</span>
+                        <span th:unless="${#lists.isEmpty(checklistItens)}"
+                              class="badge bg-info text-dark ms-2"
+                              th:text="${#lists.size(checklistItens)} + ' itens'"></span>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${#lists.isEmpty(checklistItens)}" class="text-muted small text-center py-3">
+                            <i class="bi bi-clipboard2 d-block fs-3 mb-2 opacity-40"></i>
+                            Nenhum item de checklist definido para este produto.<br>
+                            <a th:href="@{/qualidade/checklist/{id}(id=${ordem.produto.id})}"
+                               class="btn btn-sm btn-outline-info mt-2" target="_blank">
+                                <i class="bi bi-plus me-1"></i>Definir Checklist
+                            </a>
+                        </div>
+                        <div th:each="item, i : ${checklistItens}" class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox"
+                                   name="itemsVerificados"
+                                   th:value="${item.id}"
+                                   th:id="'item-' + ${item.id}">
+                            <label class="form-check-label" th:for="'item-' + ${item.id}">
+                                <span class="text-muted me-2"
+                                      th:text="${i.index + 1} + '.'"></span>
+                                <span th:text="${item.item}"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dados da inspeção -->
+            <div class="col-lg-5">
+                <div class="card">
+                    <div class="card-header fw-semibold">
+                        <i class="bi bi-person-check me-2"></i>Dados do Inspetor
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Inspetor <span class="text-danger">*</span></label>
+                            <input type="text" name="inspetor" class="form-control"
+                                   placeholder="Nome do responsável pela inspeção" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Resultado <span class="text-danger">*</span></label>
+                            <div class="d-flex gap-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="aprovado"
+                                           value="true" id="aprovado" checked>
+                                    <label class="form-check-label text-success fw-semibold" for="aprovado">
+                                        <i class="bi bi-check-circle me-1"></i>Aprovado
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="aprovado"
+                                           value="false" id="reprovado">
+                                    <label class="form-check-label text-danger fw-semibold" for="reprovado">
+                                        <i class="bi bi-x-circle me-1"></i>Reprovado
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Observações</label>
+                            <textarea name="observacoes" class="form-control" rows="4"
+                                      placeholder="Descreva não conformidades, pontos de atenção..."></textarea>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-info text-white">
+                                <i class="bi bi-clipboard2-check me-2"></i>Registrar Inspeção
+                            </button>
+                            <a th:href="@{/producao/{id}(id=${ordem.id})}"
+                               class="btn btn-outline-secondary">Cancelar</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+
+</div>
+</body>
+</html>

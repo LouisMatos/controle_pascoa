@@ -17,9 +17,10 @@ public class FluxoCaixaDto {
     private BigDecimal previstoEntrada;    // ContaReceber a vencer no período
 
     // Saídas
-    private BigDecimal saidaMP;            // Compras de MP registradas no período
-    private BigDecimal saidaDespesasFixas; // Despesas fixas proporcionais ao período
-    private BigDecimal saidaPrevista;      // ContaPagar a vencer no período
+    private BigDecimal saidaMP;               // Compras de MP registradas no período
+    private BigDecimal saidaDespesasFixas;    // Despesas fixas proporcionais ao período
+    private BigDecimal saidaGastosVariaveis;  // Gastos variáveis lançados no período
+    private BigDecimal saidaPrevista;         // ContaPagar a vencer no período
 
     // Totais
     private BigDecimal totalEntradas;

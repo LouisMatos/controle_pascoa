@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head><title>Alertas — Sistema Páscoa</title></head>
+<body>
+<div id="pageContent">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">
+            <i class="bi bi-bell me-2 text-warning"></i>Alertas Internos
+            <span th:if="${naoLidos > 0}" class="badge bg-danger ms-2 fs-6"
+                  th:text="${naoLidos}"></span>
+        </h2>
+        <form th:if="${naoLidos > 0}" th:action="@{/alertas/marcar-todos-lidos}" method="post">
+            <button type="submit" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-check2-all me-1"></i>Marcar todos como lidos
+            </button>
+        </form>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <div th:if="${#lists.isEmpty(alertas)}" class="text-center text-muted py-5">
+                <i class="bi bi-bell-slash fs-2 d-block mb-2 opacity-40"></i>
+                Nenhum alerta registrado.
+            </div>
+
+            <div th:each="a : ${alertas}"
+                 th:classappend="${!a.lido} ? 'fw-semibold bg-light'"
+                 class="d-flex align-items-start gap-3 px-4 py-3 border-bottom">
+
+                <!-- Ícone colorido -->
+                <div th:class="'text-' + ${a.cor} + ' fs-4 pt-1'">
+                    <i th:class="'bi ' + ${a.icone}"></i>
+                </div>
+
+                <!-- Mensagem + hora -->
+                <div class="flex-grow-1">
+                    <div th:text="${a.mensagem}"></div>
+                    <div class="text-muted small"
+                         th:text="${#temporals.format(a.criadoEm, 'dd/MM/yyyy HH:mm')}"></div>
+                </div>
+
+                <!-- Badge não-lido -->
+                <span th:unless="${a.lido}" class="badge bg-danger align-self-center">Novo</span>
+
+                <!-- Ações -->
+                <div class="d-flex gap-1 align-self-center">
+                    <form th:if="${a.link != null}"
+                          th:action="@{/alertas/{id}/lido(id=${a.id})}" method="post">
+                        <input type="hidden" name="redirect" th:value="${a.link}">
+                        <button type="submit" class="btn btn-sm btn-outline-primary"
+                                title="Ir para o detalhe">
+                            <i class="bi bi-arrow-right-circle"></i>
+                        </button>
+                    </form>
+                    <form th:unless="${a.lido}"
+                          th:action="@{/alertas/{id}/lido(id=${a.id})}" method="post">
+                        <button type="submit" class="btn btn-sm btn-outline-secondary"
+                                title="Marcar como lido">
+                            <i class="bi bi-check2"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

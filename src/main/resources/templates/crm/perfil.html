@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="${cliente.nome} + ' — CRM — Sistema Páscoa'">Perfil CRM</title>
+</head>
+<body>
+<div id="pageContent">
+
+    <!-- Cabeçalho -->
+    <div class="d-flex align-items-center mb-4 gap-3">
+        <a th:href="@{/crm}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div class="flex-grow-1">
+            <h2 class="mb-0" th:text="${cliente.nome}"></h2>
+            <span th:classappend="'bg-' + ${perfil.segmento().badgeColor()}"
+                  class="badge mt-1" th:text="${perfil.segmento().descricao()}"></span>
+        </div>
+        <a th:href="@{/clientes/{id}/editar(id=${cliente.id})}" class="btn btn-sm btn-outline-warning">
+            <i class="bi bi-pencil me-1"></i>Editar dados
+        </a>
+    </div>
+
+    <!-- KPIs do cliente -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="card text-center">
+                <div class="card-body py-3">
+                    <div class="fw-bold text-success fs-4">
+                        R$ <span th:text="${#numbers.formatDecimal(perfil.ltv(), 1, 'POINT', 2, 'COMMA')}"></span>
+                    </div>
+                    <div class="text-muted small">LTV Total</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card text-center">
+                <div class="card-body py-3">
+                    <div class="fw-bold fs-4" th:text="${perfil.totalPedidos()}">0</div>
+                    <div class="text-muted small">Pedidos</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card text-center">
+                <div class="card-body py-3">
+                    <div class="fw-bold fs-4"
+                         th:classappend="${perfil.saldoPontos() > 0} ? 'text-success' : 'text-muted'"
+                         th:text="${perfil.saldoPontos()}">0</div>
+                    <div class="text-muted small">Saldo de Pontos</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card text-center">
+                <div class="card-body py-3">
+                    <div class="fw-bold small"
+                         th:text="${perfil.ultimoPedido() != null ? #temporals.format(perfil.ultimoPedido(), 'dd/MM/yyyy') : '—'}"></div>
+                    <div class="text-muted small">Último Pedido</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- Coluna esquerda -->
+        <div class="col-lg-5">
+
+            <!-- Dados de contato -->
+            <div class="card mb-4">
+                <div class="card-header fw-semibold"><i class="bi bi-person me-2"></i>Contato</div>
+                <div class="card-body">
+                    <dl class="row mb-0 small">
+                        <dt class="col-4 text-muted">Telefone</dt>
+                        <dd class="col-8" th:text="${cliente.telefone ?: '—'}"></dd>
+                        <dt class="col-4 text-muted">E-mail</dt>
+                        <dd class="col-8" th:text="${cliente.email ?: '—'}"></dd>
+                        <dt class="col-4 text-muted">Endereço</dt>
+                        <dd class="col-8" th:text="${cliente.endereco ?: '—'}"></dd>
+                        <dt class="col-4 text-muted">Canal</dt>
+                        <dd class="col-8" th:text="${cliente.preferenciaCanal.name()}"></dd>
+                        <dt class="col-4 text-muted">Opt-in</dt>
+                        <dd class="col-8">
+                            <span th:if="${cliente.optIn}" class="badge bg-success">Sim</span>
+                            <span th:unless="${cliente.optIn}" class="badge bg-secondary">Não</span>
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Lançar pontos -->
+            <div class="card mb-4">
+                <div class="card-header fw-semibold"><i class="bi bi-award me-2"></i>Lançar Pontos</div>
+                <div class="card-body">
+                    <form th:action="@{/crm/clientes/{id}/pontos(id=${cliente.id})}" method="post">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">Tipo</label>
+                                <select name="tipo" class="form-select form-select-sm">
+                                    <option th:each="t : ${tiposPonto}"
+                                            th:value="${t.name()}"
+                                            th:text="${t.descricao()}"></option>
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold">Pontos</label>
+                                <input type="number" name="pontos" min="1" value="10"
+                                       class="form-control form-control-sm">
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-semibold">Descrição</label>
+                                <input type="text" name="descricao" class="form-control form-control-sm"
+                                       placeholder="Ex.: Compra pedido #42">
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-sm btn-success w-100">
+                                    <i class="bi bi-plus-circle me-1"></i>Registrar
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Histórico de pontos -->
+            <div class="card">
+                <div class="card-header fw-semibold"><i class="bi bi-clock-history me-2"></i>Histórico de Pontos</div>
+                <div class="card-body p-0">
+                    <div th:if="${#lists.isEmpty(pontos)}" class="text-center text-muted py-3 small">
+                        Nenhum ponto registrado.
+                    </div>
+                    <table th:unless="${#lists.isEmpty(pontos)}" class="table table-sm mb-0">
+                        <tbody>
+                            <tr th:each="p : ${pontos}">
+                                <td class="ps-3">
+                                    <span th:if="${p.tipo.name() == 'CREDITO'}" class="text-success fw-bold">
+                                        +<span th:text="${p.pontos}"></span>
+                                    </span>
+                                    <span th:unless="${p.tipo.name() == 'CREDITO'}" class="text-danger fw-bold">
+                                        -<span th:text="${p.pontos}"></span>
+                                    </span>
+                                </td>
+                                <td class="text-muted small" th:text="${p.descricao ?: '—'}"></td>
+                                <td class="text-muted small pe-3 text-end"
+                                    th:text="${#temporals.format(p.dataOperacao, 'dd/MM')}"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Coluna direita -->
+        <div class="col-lg-7">
+
+            <!-- Notas internas -->
+            <div class="card mb-4">
+                <div class="card-header fw-semibold"><i class="bi bi-sticky me-2"></i>Notas Internas</div>
+                <div class="card-body">
+                    <!-- Formulário de nova nota -->
+                    <form th:action="@{/crm/clientes/{id}/notas(id=${cliente.id})}" method="post" class="mb-3">
+                        <div class="input-group">
+                            <textarea name="texto" class="form-control form-control-sm" rows="2"
+                                      placeholder="Nova nota sobre o cliente..." required></textarea>
+                            <button type="submit" class="btn btn-sm btn-success">
+                                <i class="bi bi-plus-lg"></i>
+                            </button>
+                        </div>
+                    </form>
+                    <!-- Lista de notas -->
+                    <div th:if="${#lists.isEmpty(notas)}" class="text-muted small text-center py-2">
+                        Nenhuma nota registrada.
+                    </div>
+                    <div th:each="nota : ${notas}" class="border rounded p-2 mb-2 bg-light">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <p class="mb-1 small" th:text="${nota.texto}"></p>
+                            <form th:action="@{/crm/clientes/{id}/notas/{nid}/excluir(id=${cliente.id},nid=${nota.id})}"
+                                  method="post" class="ms-2">
+                                <button type="submit" class="btn btn-xs btn-outline-danger py-0 px-1"
+                                        onclick="return confirm('Remover nota?')">
+                                    <i class="bi bi-trash" style="font-size:.7rem;"></i>
+                                </button>
+                            </form>
+                        </div>
+                        <div class="text-muted" style="font-size:0.72rem;">
+                            <i class="bi bi-person me-1"></i><span th:text="${nota.criadoPor}"></span>
+                            · <span th:text="${#temporals.format(nota.criadoEm, 'dd/MM/yyyy HH:mm')}"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Últimos pedidos -->
+            <div class="card">
+                <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-cart3 me-2"></i>Últimos Pedidos</span>
+                    <a th:href="@{/pedidos}" class="btn btn-sm btn-outline-secondary">Ver todos</a>
+                </div>
+                <div class="card-body p-0">
+                    <div th:if="${#lists.isEmpty(ultimosPedidos)}" class="text-center text-muted py-3 small">
+                        Nenhum pedido registrado.
+                    </div>
+                    <table th:unless="${#lists.isEmpty(ultimosPedidos)}" class="table table-sm align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-3">#</th>
+                                <th>Data</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-end pe-3">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="p : ${ultimosPedidos}">
+                                <td class="ps-3">
+                                    <a th:href="@{/pedidos/{id}(id=${p.id})}"
+                                       class="text-decoration-none fw-semibold"
+                                       th:text="'#' + ${p.id}"></a>
+                                </td>
+                                <td class="text-muted small"
+                                    th:text="${#temporals.format(p.dataPedido, 'dd/MM/yyyy')}"></td>
+                                <td class="text-center">
+                                    <span class="badge bg-secondary"
+                                          th:text="${p.status.descricao}"></span>
+                                </td>
+                                <td class="text-end pe-3 fw-semibold text-success small">
+                                    R$ <span th:text="${#numbers.formatDecimal(p.totalPedido, 1, 'POINT', 2, 'COMMA')}"></span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

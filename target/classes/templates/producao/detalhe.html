@@ -163,6 +163,16 @@
                         Produção concluída. Estoque baixado automaticamente.
                     </div>
 
+                    <!-- Inspeção de Qualidade -->
+                    <div th:if="${ordem.status == T(br.com.seuprojeto.pascoa.producao.entity.StatusOrdem).CONCLUIDA
+                                 or ordem.status == T(br.com.seuprojeto.pascoa.producao.entity.StatusOrdem).EM_ANDAMENTO}">
+                        <hr class="my-2">
+                        <a th:href="@{/qualidade/inspecao/nova/{id}(id=${ordem.id})}"
+                           class="btn btn-outline-info w-100">
+                            <i class="bi bi-clipboard2-check me-2"></i>Registrar Inspeção de Qualidade
+                        </a>
+                    </div>
+
                     <!-- Cancelar -->
                     <form th:if="${ordem.status.podeCancelar()}"
                           th:action="@{/producao/{id}/cancelar(id=${ordem.id})}" method="post">
