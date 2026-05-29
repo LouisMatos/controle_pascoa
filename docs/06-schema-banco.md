@@ -1,6 +1,6 @@
 # Schema do Banco de Dados — Sistema Controle Páscoa
 
-> **Fonte:** Leitura direta das migrations V1–V4 + entities Java  
+> **Fonte:** Leitura direta das migrations V1–V14 + entities Java  
 > **Banco:** PostgreSQL | **Versionamento:** Flyway  
 > **Atualizado em:** 2026-05-26
 
@@ -26,10 +26,11 @@ DEF  → DEFAULT value
 fornecedores ◄──── materias_primas (fornecedor_preferencial_id)
              ◄──── contas_pagar    (fornecedor_id, opcional)
 
-clientes ◄──── pedidos          (cliente_id)
-         ◄──── orcamentos       (cliente_id)
-         ◄──── pontos_fidelidade (cliente_id)
-         ◄──── notas_cliente    (cliente_id)
+clientes ◄──── pedidos              (cliente_id)
+         ◄──── orcamentos           (cliente_id)
+         ◄──── pontos_fidelidade    (cliente_id)
+         ◄──── notas_cliente        (cliente_id)
+         ◄──── notificacoes_enviadas (cliente_id, opcional — aniversário/sem pedido)
 
 produtos ◄──── fichas_tecnicas        (produto_id, UNIQUE)
          ◄──── fichas_tecnicas_itens  (via ficha)
@@ -38,19 +39,27 @@ produtos ◄──── fichas_tecnicas        (produto_id, UNIQUE)
          ◄──── ordens_producao        (produto_id)
          ◄──── checklist_qualidade    (produto_id)
 
-pedidos ◄──── itens_pedido         (pedido_id)
-        ◄──── pagamentos           (pedido_id)
-        ◄──── ordens_producao      (pedido_id)
-        ◄──── contas_receber       (pedido_id)
-        ◄──── notificacoes_enviadas (pedido_id)
-        ◄──── despesas_variaveis   (pedido_id)
-        ◄──── orcamentos           (pedido_id, FK inversa — orçamento convertido)
-        ◄──── pontos_fidelidade    (pedido_id, opcional)
+pedidos ◄──── itens_pedido          (pedido_id)
+        ◄──── pagamentos            (pedido_id)
+        ◄──── ordens_producao       (pedido_id)
+        ◄──── contas_receber        (pedido_id)
+        ◄──── notificacoes_enviadas  (pedido_id, nullable — V14)
+        ◄──── despesas_variaveis    (pedido_id)
+        ◄──── orcamentos            (pedido_id, FK inversa — orçamento convertido)
+        ◄──── pontos_fidelidade     (pedido_id, opcional)
+        ◄──── gastos_variaveis      (pedido_id, opcional — V12)
+
+orcamentos ◄──── notificacoes_enviadas (orcamento_id, opcional — V14)
 
 ordens_producao ◄──── inspecao_qualidade (ordem_producao_id)
 
 templates_notificacao ◄──── notificacoes_enviadas  (template_id)
                       ◄──── campanha_reengajamento (template_id)
+
+usuarios ◄──── password_reset_token (usuario_id — V11)
+
+audit_log           — tabela autônoma (sem FK, registra ações)
+configuracao_sistema — tabela singleton (id = 1 fixo)
 ```
 
 ---
@@ -89,6 +98,10 @@ templates_notificacao ◄──── notificacoes_enviadas  (template_id)
 | `atualizado_em` | TIMESTAMP | | Auditoria BaseEntity |
 | `criado_por` | VARCHAR(100) | | Auditoria BaseEntity |
 | `atualizado_por` | VARCHAR(100) | | Auditoria BaseEntity |
+| `data_consentimento` | TIMESTAMP | | **V9/LGPD** — momento em que o cliente deu opt-in explícito |
+| `anonimizado` | BOOLEAN | NN, DEF `FALSE` | **V9/LGPD** — `true` quando dados pessoais foram anonimizados a pedido |
+| `segmento` | VARCHAR(20) | DEF `'NOVO'` | **V13** — Enum: NOVO, VIP, FREQUENTE, INATIVO. Recalculado diariamente às 02h |
+| `data_nascimento` | DATE | | **V14** — usado pelo job de aniversário (`@Scheduled` diário às 08h) |
 
 > **Soft-delete:** `DELETE` físico é interceptado e vira `UPDATE SET excluido_em = NOW()`. Todas as queries filtram automaticamente `excluido_em IS NULL` via `@SQLRestriction`.
 
@@ -358,10 +371,12 @@ templates_notificacao ◄──── notificacoes_enviadas  (template_id)
 | `comprovante_url` | VARCHAR(500) | | |
 | `criado_em` | TIMESTAMP | NN, DEF `NOW()` | |
 | `criado_por` | VARCHAR(100) | | |
+| `desconsiderar_no_custo` | BOOLEAN | NN, DEF `FALSE` | **V12** — `true` quando pedido vinculado é cancelado; ignorado nos relatórios |
+| `pedido_id` | BIGINT | FK → `pedidos(id)` ON DELETE SET NULL | **V12** — optional; vincula gasto a pedido específico para desconto automático |
 
-Índice: `idx_gastos_mes_ano ON (referencia_ano, referencia_mes)`
+Índices: `idx_gastos_mes_ano ON (referencia_ano, referencia_mes)` | `idx_gasto_pedido ON (pedido_id) WHERE pedido_id IS NOT NULL`
 
-> **Atenção:** `gastos_variaveis` ≠ `despesas_variaveis`. `gastos_variaveis` é o módulo de controle de gastos operacionais por período (sem FK para pedido). `despesas_variaveis` (V1) está vinculada a um pedido específico.
+> **Atenção:** `gastos_variaveis` ≠ `despesas_variaveis`. `gastos_variaveis` é o módulo de controle de gastos operacionais por período. `despesas_variaveis` (V1) está vinculada obrigatoriamente a um pedido específico.
 
 ### `orcamentos_gasto`
 | Coluna | Tipo | Restrições | Notas |
@@ -406,10 +421,10 @@ templates_notificacao ◄──── notificacoes_enviadas  (template_id)
 | Coluna | Tipo | Restrições | Notas |
 |--------|------|-----------|-------|
 | `id` | BIGSERIAL | PK | |
-| `evento_gatilho` | VARCHAR(30) | NN | Enum `EventoNotificacao`: PEDIDO_CONFIRMADO, PRODUCAO_INICIADA, PEDIDO_PRONTO, PEDIDO_ENTREGUE, PAGAMENTO_RECEBIDO, PEDIDO_CANCELADO, ORCAMENTO_APROVADO, ORCAMENTO_RECUSADO |
-| `canal` | VARCHAR(10) | NN | Enum `CanalNotificacao`: EMAIL, WHATSAPP |
+| `evento_gatilho` | VARCHAR(30) | NN | Enum `EventoNotificacao`: PEDIDO_CONFIRMADO, PRODUCAO_INICIADA, PEDIDO_PRONTO, PEDIDO_ENTREGUE, PAGAMENTO_RECEBIDO, PEDIDO_CANCELADO, ORCAMENTO_APROVADO, ORCAMENTO_RECUSADO, **ANIVERSARIO_CLIENTE** (V14), **ORCAMENTO_EXPIRANDO** (V14) |
+| `canal` | VARCHAR(10) | NN | Enum `CanalNotificacao`: EMAIL, WHATSAPP, **SMS** (V14) |
 | `assunto` | VARCHAR(200) | | Usado apenas para EMAIL |
-| `corpo` | TEXT | NN | Suporta placeholders: `{nome}`, `{numeroPedido}`, `{dataEntrega}`, `{link}`, `{valor}` |
+| `corpo` | TEXT | NN | Suporta placeholders: `{nome}`, `{numeroPedido}`, `{dataEntrega}`, `{link}`, `{valor}`, `{numeroOrcamento}`, `{validade}` |
 | `ativo` | BOOLEAN | NN, DEF `TRUE` | |
 | `variaveis` | VARCHAR(500) | | Documentação das variáveis disponíveis (referência) |
 
@@ -417,22 +432,30 @@ templates_notificacao ◄──── notificacoes_enviadas  (template_id)
 | Coluna | Tipo | Restrições | Notas |
 |--------|------|-----------|-------|
 | `id` | BIGSERIAL | PK | |
-| `pedido_id` | BIGINT | NN, FK → `pedidos(id)` | |
+| `pedido_id` | BIGINT | **nullable** (V14), FK → `pedidos(id)` | NULL em notificações de aniversário e orçamento |
 | `template_id` | BIGINT | FK → `templates_notificacao(id)` | |
 | `canal` | VARCHAR(10) | NN | |
 | `destinatario` | VARCHAR(200) | NN | E-mail ou telefone |
 | `data_envio` | TIMESTAMP | NN, DEF `NOW()` | |
 | `status` | VARCHAR(10) | NN | Enum `StatusEnvio`: ENVIADA, FALHA |
 | `mensagem_erro` | TEXT | | Preenchido quando `status = FALHA` |
+| `evento` | VARCHAR(40) | | **V12** — nome do `EventoNotificacao`; usado no índice de idempotência |
+| `cliente_id` | BIGINT | FK → `clientes(id)` ON DELETE SET NULL | **V14** — referência direta para aniversário e notificações sem pedido |
+| `orcamento_id` | BIGINT | FK → `orcamentos(id)` ON DELETE SET NULL | **V14** — referência para `ORCAMENTO_EXPIRANDO` |
+
+**Índices de idempotência:**
+- `uq_notif_pedido_evento_canal` — UNIQUE parcial em `(pedido_id, evento, canal)` WHERE `status = 'ENVIADA'`
+- `uq_notif_orcamento_expirando` — UNIQUE parcial em `(orcamento_id, evento, canal)` WHERE `evento = 'ORCAMENTO_EXPIRANDO' AND status = 'ENVIADA'`
+- `idx_notif_aniversario` — em `(cliente_id, evento, data_envio)` WHERE `evento = 'ANIVERSARIO_CLIENTE'`
 
 ### `configuracao_canal`
 | Coluna | Tipo | Restrições | Notas |
 |--------|------|-----------|-------|
 | `id` | BIGSERIAL | PK | |
-| `tipo` | VARCHAR(10) | NN, UQ | EMAIL ou WHATSAPP |
-| `api_url` | VARCHAR(300) | | URL da Evolution API (WhatsApp) |
-| `api_key` | VARCHAR(300) | | Token da Evolution API |
-| `remetente` | VARCHAR(200) | | Nome da instância WhatsApp ou e-mail remetente |
+| `tipo` | VARCHAR(10) | NN, UQ | EMAIL, WHATSAPP ou **SMS** (V14) |
+| `api_url` | VARCHAR(300) | | URL da Evolution API (WhatsApp) ou endpoint webhook (SMS) |
+| `api_key` | VARCHAR(300) | | Token da Evolution API ou Bearer token SMS |
+| `remetente` | VARCHAR(200) | | Instância WhatsApp, e-mail remetente, ou sender ID SMS |
 | `ativo` | BOOLEAN | NN, DEF `FALSE` | |
 | `test_mode` | BOOLEAN | NN, DEF `TRUE` | `true` = apenas loga, não envia de verdade |
 
@@ -462,6 +485,45 @@ templates_notificacao ◄──── notificacoes_enviadas  (template_id)
 | `senha` | VARCHAR(255) | NN | Hash BCrypt |
 | `role` | VARCHAR(20) | NN | Enum: ADMIN, FINANCEIRO, ATENDENTE, CONFEITEIRO, GESTOR_QUALIDADE, ANALISTA |
 | `ativo` | BOOLEAN | NN, DEF `TRUE` | `false` = login bloqueado |
+| `email` | VARCHAR(150) | | **V11** — usado para envio do link de recuperação de senha |
+
+### `password_reset_token` (V11)
+| Coluna | Tipo | Restrições | Notas |
+|--------|------|-----------|-------|
+| `id` | BIGSERIAL | PK | |
+| `usuario_id` | BIGINT | NN, FK → `usuarios(id)` ON DELETE CASCADE | |
+| `token` | VARCHAR(36) | NN, UQ | UUID aleatório |
+| `expira_em` | TIMESTAMP | NN | 30 minutos após geração |
+| `usado` | BOOLEAN | NN, DEF `FALSE` | Invalidado após primeiro uso |
+| `criado_em` | TIMESTAMP | NN, DEF `NOW()` | |
+
+Índices: `idx_prt_token ON (token)` | `idx_prt_usuario ON (usuario_id)`
+
+---
+
+## 12-B. Tabelas de Infraestrutura Transversal
+
+### `audit_log` (V8)
+| Coluna | Tipo | Restrições | Notas |
+|--------|------|-----------|-------|
+| `id` | BIGSERIAL | PK | |
+| `usuario` | VARCHAR(100) | NN | Login do usuário que executou a ação |
+| `acao` | VARCHAR(100) | NN | Tipo da ação (ex: CANCELAR_PEDIDO) |
+| `entidade_tipo` | VARCHAR(100) | | Nome da classe/entidade alvo |
+| `entidade_id` | BIGINT | | ID do registro alvo |
+| `detalhes` | VARCHAR(1000) | | Informações adicionais em texto livre |
+| `criado_em` | TIMESTAMP | NN, DEF `NOW()` | |
+
+Índices: `idx_audit_log_criado_em ON (criado_em DESC)` | `idx_audit_log_usuario ON (usuario)` | `idx_audit_log_entidade ON (entidade_tipo, entidade_id)`
+
+### `configuracao_sistema` (V10)
+| Coluna | Tipo | Restrições | Notas |
+|--------|------|-----------|-------|
+| `id` | BIGINT | PK, DEF `1` | **Singleton** — sempre existe uma única linha com id = 1 |
+| `modo_manutencao` | BOOLEAN | NN, DEF `FALSE` | Quando `true`, `MaintenanceFilter` bloqueia todas as rotas não-admin |
+| `mensagem_manutencao` | VARCHAR(500) | DEF `'Sistema indisponível...'` | Exibida na tela de manutenção |
+| `previsao_retorno` | VARCHAR(100) | | Texto livre (ex: "17h00") exibido na tela de manutenção |
+| `atualizado_em` | TIMESTAMP | NN, DEF `NOW()` | Atualizado pelo `SistemaController` |
 
 ---
 
@@ -489,15 +551,24 @@ templates_notificacao ◄──── notificacoes_enviadas  (template_id)
 
 ## 14. Índices
 
-| Índice | Tabela | Colunas | Propósito |
-|--------|--------|---------|-----------|
-| `idx_gastos_mes_ano` | `gastos_variaveis` | `(referencia_ano, referencia_mes)` | Filtro por período no FluxoCaixa e Breakeven |
-| `idx_orcamento_cliente` | `orcamentos` | `(cliente_id)` | Listagem de orçamentos por cliente |
+| Índice | Tabela | Colunas / Condição | Propósito |
+|--------|--------|--------------------|-----------|
+| `idx_gastos_mes_ano` | `gastos_variaveis` | `(referencia_ano, referencia_mes)` | Filtro por período |
+| `idx_gasto_pedido` | `gastos_variaveis` | `(pedido_id)` WHERE NOT NULL | Join ao cancelar pedido |
+| `idx_orcamento_cliente` | `orcamentos` | `(cliente_id)` | Listagem por cliente |
 | `idx_orcamento_status` | `orcamentos` | `(status)` | Filtro por status |
-| `idx_pontos_cliente` | `pontos_fidelidade` | `(cliente_id)` | Histórico de pontos por cliente |
-| `idx_inspecao_ordem` | `inspecao_qualidade` | `(ordem_producao_id)` | Inspeções por ordem de produção |
+| `idx_pontos_cliente` | `pontos_fidelidade` | `(cliente_id)` | Histórico de pontos |
+| `idx_inspecao_ordem` | `inspecao_qualidade` | `(ordem_producao_id)` | Inspeções por ordem |
 | `idx_nota_cliente` | `notas_cliente` | `(cliente_id)` | Notas por cliente |
-| `idx_alerta_lido` | `alertas_internos` | `(lido, criado_em DESC)` | Busca de alertas não lidos, mais recentes primeiro |
+| `idx_alerta_lido` | `alertas_internos` | `(lido, criado_em DESC)` | Alertas não lidos |
+| `idx_audit_log_criado_em` | `audit_log` | `(criado_em DESC)` | Histórico cronológico |
+| `idx_audit_log_usuario` | `audit_log` | `(usuario)` | Ações por usuário |
+| `idx_audit_log_entidade` | `audit_log` | `(entidade_tipo, entidade_id)` | Histórico de uma entidade |
+| `idx_prt_token` | `password_reset_token` | `(token)` | Busca por UUID |
+| `idx_prt_usuario` | `password_reset_token` | `(usuario_id)` | Tokens de um usuário |
+| `uq_notif_pedido_evento_canal` | `notificacoes_enviadas` | `(pedido_id, evento, canal)` WHERE `ENVIADA` | Idempotência por pedido |
+| `uq_notif_orcamento_expirando` | `notificacoes_enviadas` | `(orcamento_id, evento, canal)` WHERE `ORCAMENTO_EXPIRANDO + ENVIADA` | Idempotência orçamento expirando |
+| `idx_notif_aniversario` | `notificacoes_enviadas` | `(cliente_id, evento, data_envio)` WHERE `ANIVERSARIO_CLIENTE` | Busca de aniversários enviados |
 
 ---
 
@@ -516,18 +587,21 @@ templates_notificacao ◄──── notificacoes_enviadas  (template_id)
 | Gastos | `gastos_variaveis`, `orcamentos_gasto` |
 | CRM | `pontos_fidelidade`, `notas_cliente` |
 | Notificações | `templates_notificacao`, `notificacoes_enviadas`, `configuracao_canal`, `alertas_internos` |
-| Segurança | `usuarios` |
+| Segurança | `usuarios`, `password_reset_token` |
+| Infraestrutura | `audit_log`, `configuracao_sistema` |
 | **Órfã** | `campanha_reengajamento` (sem entity Java) |
-| **Total** | **25 tabelas** |
+| **Total** | **29 tabelas** |
+
+> **Nota V14:** `notificacoes_enviadas` ganhou `pedido_id` nullable + `cliente_id` + `orcamento_id` para suportar notificações proativas sem pedido (aniversário, orçamento expirando).
 
 ---
 
 ## 16. Guia para Novas Migrations
 
-Próxima versão disponível: **V5**
+Próxima versão disponível: **V15**
 
 ```sql
--- Arquivo: src/main/resources/db/migration/V5__descricao.sql
+-- Arquivo: src/main/resources/db/migration/V15__descricao.sql
 
 -- Adicionar coluna nullable (seguro, sem DEFAULT obrigatório)
 ALTER TABLE nome_tabela ADD COLUMN nova_coluna VARCHAR(100);

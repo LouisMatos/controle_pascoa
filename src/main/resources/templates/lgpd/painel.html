@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-BR"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>LGPD – Gestão de Dados</title>
+</head>
+<body th:replace="~{fragments/layout :: layout(~{::title}, ~{::main})}">
+
+<main>
+    <!-- Cabeçalho -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-0"><i class="bi bi-shield-shaded me-2 text-success"></i>LGPD — Gestão de Dados Pessoais</h4>
+            <p class="text-muted small mb-0 mt-1">
+                Gerencie consentimentos, direito ao esquecimento e exportação de dados dos titulares.
+            </p>
+        </div>
+    </div>
+
+    <!-- Cards informativos -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+            <div class="card text-center p-3">
+                <div class="fs-2 fw-bold text-success" th:text="${#lists.size(clientes)}">0</div>
+                <div class="small text-muted">Titulares cadastrados</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card text-center p-3">
+                <div class="fs-2 fw-bold text-primary" th:text="${totalOptIn}">0</div>
+                <div class="small text-muted">Com consentimento (opt-in)</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card text-center p-3">
+                <div class="fs-2 fw-bold text-warning" th:text="${totalOptOut}">0</div>
+                <div class="small text-muted">Sem consentimento (opt-out)</div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+            <div class="card text-center p-3">
+                <div class="fs-2 fw-bold text-secondary" th:text="${totalAnonimizados}">0</div>
+                <div class="small text-muted">Dados anonimizados</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela de titulares -->
+    <div class="card">
+        <div class="card-header py-2">
+            <span class="fw-semibold"><i class="bi bi-people me-2"></i>Titulares de Dados</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>E-mail</th>
+                            <th>Consentimento</th>
+                            <th>Data consentimento</th>
+                            <th>Situação</th>
+                            <th class="text-center">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(clientes)}">
+                            <td colspan="6" class="text-center text-muted py-4">
+                                <i class="bi bi-inbox d-block fs-3 mb-1 opacity-40"></i>
+                                Nenhum cliente cadastrado.
+                            </td>
+                        </tr>
+                        <tr th:each="c : ${clientes}"
+                            th:classappend="${c.anonimizado} ? 'table-secondary opacity-75'">
+                            <td>
+                                <span th:text="${c.nome}" class="fw-semibold"></span>
+                                <span th:if="${c.anonimizado}"
+                                      class="badge bg-secondary ms-1" style="font-size:.7rem;">anonimizado</span>
+                            </td>
+                            <td class="text-muted small" th:text="${c.email} ?: '—'"></td>
+
+                            <!-- Consentimento -->
+                            <td>
+                                <span th:if="${c.optIn}" class="badge bg-success">
+                                    <i class="bi bi-check-circle me-1"></i>Opt-in
+                                </span>
+                                <span th:unless="${c.optIn}" class="badge bg-secondary">
+                                    <i class="bi bi-dash-circle me-1"></i>Opt-out
+                                </span>
+                            </td>
+
+                            <!-- Data consentimento -->
+                            <td class="small text-muted"
+                                th:text="${c.dataConsentimento != null}
+                                    ? ${#temporals.format(c.dataConsentimento, 'dd/MM/yyyy HH:mm')}
+                                    : '—'">
+                            </td>
+
+                            <!-- Situação -->
+                            <td>
+                                <span th:if="${c.anonimizado}" class="badge bg-secondary">
+                                    <i class="bi bi-person-slash me-1"></i>Anonimizado
+                                </span>
+                                <span th:unless="${c.anonimizado}" class="badge bg-light text-dark border">
+                                    <i class="bi bi-person-check me-1 text-success"></i>Ativo
+                                </span>
+                            </td>
+
+                            <!-- Ações -->
+                            <td class="text-center" style="white-space:nowrap;">
+
+                                <!-- Toggle consentimento -->
+                                <form th:unless="${c.anonimizado}"
+                                      th:action="@{/lgpd/clientes/{id}/consentimento(id=${c.id})}"
+                                      method="post" class="d-inline">
+                                    <input type="hidden" name="optIn" th:value="${!c.optIn}">
+                                    <button type="submit"
+                                            th:class="${c.optIn} ? 'btn btn-sm btn-outline-warning' : 'btn btn-sm btn-outline-success'"
+                                            th:title="${c.optIn} ? 'Registrar opt-out' : 'Registrar opt-in'">
+                                        <i th:class="${c.optIn} ? 'bi bi-dash-circle' : 'bi bi-check-circle'"></i>
+                                        <span th:text="${c.optIn} ? 'Opt-out' : 'Opt-in'" class="d-none d-md-inline ms-1"></span>
+                                    </button>
+                                </form>
+
+                                <!-- Exportar dados -->
+                                <a th:href="@{/lgpd/clientes/{id}/exportar(id=${c.id})}"
+                                   class="btn btn-sm btn-outline-primary ms-1"
+                                   title="Exportar dados (JSON)">
+                                    <i class="bi bi-download"></i>
+                                    <span class="d-none d-md-inline ms-1">Exportar</span>
+                                </a>
+
+                                <!-- Anonimizar -->
+                                <form th:unless="${c.anonimizado}"
+                                      th:action="@{/lgpd/clientes/{id}/anonimizar(id=${c.id})}"
+                                      method="post" class="d-inline ms-1">
+                                    <button type="submit"
+                                            class="btn btn-sm btn-outline-danger"
+                                            title="Anonimizar dados (direito ao esquecimento)"
+                                            onclick="return confirm('Atenção: esta ação é irreversível.\nOs dados pessoais deste titular serão apagados permanentemente.\n\nDeseja continuar?')">
+                                        <i class="bi bi-person-slash"></i>
+                                        <span class="d-none d-md-inline ms-1">Anonimizar</span>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nota informativa -->
+    <div class="alert alert-info mt-3 small" role="alert">
+        <i class="bi bi-info-circle-fill me-2"></i>
+        <strong>Sobre a LGPD:</strong>
+        A <em>anonimização</em> substitui os dados pessoais do titular por valores genéricos — é irreversível
+        e atende ao <strong>direito ao esquecimento</strong> (art. 18, IV da Lei 13.709/2018).
+        A <em>exportação</em> atende ao <strong>direito de acesso e portabilidade</strong> (art. 18, I e V).
+        O <em>consentimento</em> registra o opt-in/opt-out para comunicações de marketing.
+    </div>
+</main>
+
+</body>
+</html>

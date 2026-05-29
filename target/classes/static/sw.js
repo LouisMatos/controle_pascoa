@@ -76,10 +76,8 @@ async function cacheFirst(request) {
 async function networkFirst(request) {
   try {
     const response = await fetch(request);
-    if (response.ok && request.method === 'GET') {
-      const cache = await caches.open(CACHE_NAME);
-      cache.put(request, response.clone());
-    }
+    // S9: Não cacheia páginas dinâmicas/autenticadas — apenas usa a rede.
+    // O cache de páginas HTML autenticadas causava loop de redirect e dados stale.
     return response;
   } catch {
     const cached = await caches.match(request);

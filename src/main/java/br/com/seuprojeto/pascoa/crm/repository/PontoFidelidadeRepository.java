@@ -13,8 +13,22 @@ public interface PontoFidelidadeRepository extends JpaRepository<PontoFidelidade
 
     List<PontoFidelidade> findByClienteIdOrderByDataOperacaoDesc(Long clienteId);
 
+    /**
+     * F9: Calcula saldo considerando apenas créditos não expirados.
+     * - DEBITO: sempre deduzido (sem expiração)
+     * - CREDITO: só conta se data_expiracao IS NULL ou ainda no futuro
+     */
     @Query(value = """
-            SELECT COALESCE(SUM(CASE WHEN tipo = 'CREDITO' THEN pontos ELSE -pontos END), 0)
+            SELECT COALESCE(SUM(
+                CASE
+                    WHEN tipo = 'CREDITO'
+                         AND (data_expiracao IS NULL OR data_expiracao >= CURRENT_DATE)
+                    THEN pontos
+                    WHEN tipo = 'DEBITO'
+                    THEN -pontos
+                    ELSE 0
+                END
+            ), 0)
             FROM pontos_fidelidade
             WHERE cliente_id = :clienteId
             """, nativeQuery = true)

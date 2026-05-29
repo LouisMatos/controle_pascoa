@@ -20,6 +20,7 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -33,15 +34,16 @@ public class BreakevenService {
 
     @Transactional(readOnly = true)
     public BreakevenDto calcular() {
-        BigDecimal despesasFixasPuras = despesaFixaRepository.sumMensalAtivas();
+        // SUM() retorna null quando não há linhas — coalescer para zero evita NPE nas operações seguintes
+        BigDecimal despesasFixasPuras = Objects.requireNonNullElse(
+            despesaFixaRepository.sumMensalAtivas(), BigDecimal.ZERO);
 
-        // Gastos variáveis do mês atual (são custos de período, somam à base fixa do PE)
         YearMonth mesAtual0 = YearMonth.now();
-        BigDecimal gastosVariaveisMes = gastoRepository.sumTotal(mesAtual0.getYear(), mesAtual0.getMonthValue());
+        BigDecimal gastosVariaveisMes = Objects.requireNonNullElse(
+            gastoRepository.sumTotal(mesAtual0.getYear(), mesAtual0.getMonthValue()), BigDecimal.ZERO);
 
         BigDecimal totalFixoMensal = despesasFixasPuras.add(gastosVariaveisMes);
 
-        // Preço médio e custo médio variável a partir dos pedidos do mês atual
         YearMonth mesAtual = YearMonth.now();
         LocalDate inicioMes = mesAtual.atDay(1);
         LocalDate fimMes    = mesAtual.atEndOfMonth();

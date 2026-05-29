@@ -34,9 +34,23 @@ public class NotificacaoController {
     }
 
     @PostMapping("/templates/salvar")
-    public String salvarTemplate(@ModelAttribute TemplateNotificacao template,
+    public String salvarTemplate(@ModelAttribute TemplateNotificacao templateForm,
                                   RedirectAttributes ra) {
-        templateRepository.save(template);
+        if (templateForm.getId() != null) {
+            // Edição: preserva ativo (gerenciado pelo botão toggle, não pelo form)
+            templateRepository.findById(templateForm.getId()).ifPresent(existente -> {
+                existente.setEventoGatilho(templateForm.getEventoGatilho());
+                existente.setCanal(templateForm.getCanal());
+                existente.setAssunto(templateForm.getAssunto());
+                existente.setCorpo(templateForm.getCorpo());
+                existente.setVariaveis(templateForm.getVariaveis());
+                templateRepository.save(existente);
+            });
+        } else {
+            // Novo: ativo=true por padrão
+            if (templateForm.getAtivo() == null) templateForm.setAtivo(true);
+            templateRepository.save(templateForm);
+        }
         ra.addFlashAttribute("sucesso", "Template salvo com sucesso.");
         return "redirect:/notificacoes/templates";
     }
@@ -85,9 +99,18 @@ public class NotificacaoController {
     }
 
     @PostMapping("/configuracao/salvar")
-    public String salvarConfiguracao(@ModelAttribute ConfiguracaoCanal config,
+    public String salvarConfiguracao(@ModelAttribute ConfiguracaoCanal configForm,
                                       RedirectAttributes ra) {
-        canalRepository.save(config);
+        // Carrega entidade existente para preservar o campo `tipo` (unique) e
+        // aplicar null-safe para checkboxes não enviados pelo browser quando desmarcados.
+        canalRepository.findById(configForm.getId()).ifPresent(canal -> {
+            canal.setApiUrl(configForm.getApiUrl());
+            canal.setApiKey(configForm.getApiKey());
+            canal.setRemetente(configForm.getRemetente());
+            canal.setAtivo(Boolean.TRUE.equals(configForm.getAtivo()));
+            canal.setTestMode(Boolean.TRUE.equals(configForm.getTestMode()));
+            canalRepository.save(canal);
+        });
         ra.addFlashAttribute("sucesso", "Configuração salva com sucesso.");
         return "redirect:/notificacoes/configuracao";
     }

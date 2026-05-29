@@ -45,6 +45,12 @@ public class AlertaInternoService {
         return repository.findAllByOrderByCriadoEmDesc();
     }
 
+    /** Apenas alertas não-lidos para filtro. */
+    @Transactional(readOnly = true)
+    public List<AlertaInterno> naoLidos() {
+        return repository.findByLidoFalseOrderByCriadoEmDesc();
+    }
+
     // ── Ações ─────────────────────────────────────────────────────────────────
 
     @Transactional
@@ -58,5 +64,15 @@ public class AlertaInternoService {
     @Transactional
     public void marcarTodasLidas() {
         repository.marcarTodasLidas();
+    }
+
+    @Transactional
+    public void excluir(Long id) {
+        repository.deleteById(id);
+    }
+
+    @Transactional
+    public int excluirLidas() {
+        return repository.excluirLidas();
     }
 }

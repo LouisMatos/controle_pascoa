@@ -1,11 +1,14 @@
 package br.com.seuprojeto.pascoa.cadastro.repository;
 
 import br.com.seuprojeto.pascoa.cadastro.entity.MateriaPrima;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface MateriaPrimaRepository extends JpaRepository<MateriaPrima, Long> {
@@ -16,4 +19,8 @@ public interface MateriaPrimaRepository extends JpaRepository<MateriaPrima, Long
 
     @Query("SELECT m FROM MateriaPrima m WHERE m.quantidadeAtual < m.quantidadeMinima ORDER BY m.nome")
     List<MateriaPrima> findComEstoqueCritico();
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT m FROM MateriaPrima m WHERE m.id = :id")
+    Optional<MateriaPrima> findByIdForUpdate(Long id);
 }

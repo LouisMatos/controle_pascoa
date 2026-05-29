@@ -6,10 +6,12 @@ import br.com.seuprojeto.pascoa.seguranca.entity.Usuario;
 import br.com.seuprojeto.pascoa.seguranca.service.UsuarioService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.propertyeditors.StringTrimmerEditor;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -19,6 +21,12 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
+
+    /** Converte strings em branco para null antes da validação — permite @Email opcional. */
+    @InitBinder
+    protected void initBinder(WebDataBinder binder) {
+        binder.registerCustomEditor(String.class, new StringTrimmerEditor(true));
+    }
 
     @GetMapping
     public String lista(Model model) {
@@ -40,6 +48,7 @@ public class UsuarioController {
         form.setId(u.getId());
         form.setNome(u.getNome());
         form.setLogin(u.getLogin());
+        form.setEmail(u.getEmail());
         form.setRole(u.getRole());
         form.setAtivo(u.isAtivo());
         model.addAttribute("form", form);
@@ -50,9 +59,11 @@ public class UsuarioController {
     @PostMapping("/salvar")
     public String salvar(@Valid @ModelAttribute("form") UsuarioForm form,
                          BindingResult result, Model model, RedirectAttributes ra) {
-        // Senha obrigatória apenas para criação
+        // Senha obrigatória na criação; se fornecida em qualquer caso, deve ter mínimo 8 caracteres
         if (form.getId() == null && (form.getSenha() == null || form.getSenha().isBlank())) {
             result.rejectValue("senha", "required", "Senha é obrigatória para novos usuários");
+        } else if (form.getSenha() != null && !form.getSenha().isBlank() && form.getSenha().length() < 8) {
+            result.rejectValue("senha", "size", "Senha deve ter no mínimo 8 caracteres");
         }
         if (result.hasErrors()) {
             model.addAttribute("roles", Role.values());

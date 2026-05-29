@@ -69,7 +69,8 @@ public class EstoqueService {
 
     @Transactional
     public void registrarSaida(Long materiaPrimaId, BigDecimal quantidade, String motivo) {
-        MateriaPrima mp = carregarMp(materiaPrimaId);
+        MateriaPrima mp = mpRepository.findByIdForUpdate(materiaPrimaId)
+            .orElseThrow(() -> new RecursoNaoEncontradoException("Matéria-prima não encontrada: " + materiaPrimaId));
 
         if (mp.getQuantidadeAtual().compareTo(quantidade) < 0) {
             throw new EstoqueInsuficienteException(

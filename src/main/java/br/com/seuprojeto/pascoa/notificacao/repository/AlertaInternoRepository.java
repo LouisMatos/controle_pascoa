@@ -19,7 +19,14 @@ public interface AlertaInternoRepository extends JpaRepository<AlertaInterno, Lo
     /** Lista completa ordenada por mais recente. */
     List<AlertaInterno> findAllByOrderByCriadoEmDesc();
 
+    /** Apenas não-lidos, para filtro. */
+    List<AlertaInterno> findByLidoFalseOrderByCriadoEmDesc();
+
     @Modifying
     @Query("UPDATE AlertaInterno a SET a.lido = true WHERE a.lido = false")
     void marcarTodasLidas();
+
+    @Modifying
+    @Query("DELETE FROM AlertaInterno a WHERE a.lido = true")
+    int excluirLidas();
 }

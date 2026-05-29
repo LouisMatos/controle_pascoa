@@ -15,13 +15,17 @@ import br.com.seuprojeto.pascoa.pedido.entity.ItemPedido;
 import br.com.seuprojeto.pascoa.pedido.entity.Pedido;
 import br.com.seuprojeto.pascoa.pedido.repository.ItemPedidoRepository;
 import br.com.seuprojeto.pascoa.pedido.repository.PedidoRepository;
+import br.com.seuprojeto.pascoa.shared.exception.OrcamentoJaConvertidoException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import br.com.seuprojeto.pascoa.auditoria.annotation.Auditavel;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -88,6 +92,8 @@ public class OrcamentoService {
         return orc;
     }
 
+    @Auditavel(acao = "EXCLUIR_ORCAMENTO", entidade = "Orcamento")
+    @PreAuthorize("@authService.owns(#id, authentication)")
     @Transactional
     public void excluir(Long id) {
         Orcamento orc = buscarPorId(id);
@@ -124,15 +130,27 @@ public class OrcamentoService {
         eventPublisher.publishEvent(new OrcamentoAcaoEvent(orc, false));
     }
 
+    @Auditavel(acao = "CONVERTER_ORCAMENTO", entidade = "Orcamento")
+    @PreAuthorize("@authService.owns(#id, authentication)")
     @Transactional
     public Pedido converter(Long id) {
-        Orcamento orc = buscarPorId(id);
-        if (!orc.isAprovado()) {
+        // Adquire lock exclusivo antes de verificar status — evita dupla conversão por cliques simultâneos
+        Orcamento orcLocked = orcamentoRepo.findByIdForUpdate(id)
+                .orElseThrow(() -> new EntityNotFoundException("Orçamento não encontrado: " + id));
+
+        if (orcLocked.getPedido() != null) {
+            throw new OrcamentoJaConvertidoException(orcLocked.getPedido().getId());
+        }
+        if (!orcLocked.isAprovado()) {
             throw new IllegalStateException("Somente orçamentos aprovados podem ser convertidos em pedido.");
         }
-        if (orc.getPedido() != null) {
-            throw new IllegalStateException("Este orçamento já foi convertido no pedido #" + orc.getPedido().getId() + ".");
+        if (orcLocked.getValidade() != null && LocalDate.now().isAfter(orcLocked.getValidade())) {
+            throw new IllegalStateException(
+                "Este orçamento expirou em " + orcLocked.getValidade() + " e não pode mais ser convertido em pedido.");
         }
+
+        // Carrega a entidade completa com itens (mesmo ID, mesma transação — usa cache de 1º nível)
+        Orcamento orc = buscarPorId(id);
 
         Pedido pedido = Pedido.builder()
                 .cliente(orc.getCliente())

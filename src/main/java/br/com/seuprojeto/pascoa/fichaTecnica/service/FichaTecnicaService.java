@@ -11,6 +11,7 @@ import br.com.seuprojeto.pascoa.fichaTecnica.repository.FichaTecnicaItemReposito
 import br.com.seuprojeto.pascoa.fichaTecnica.repository.FichaTecnicaRepository;
 import br.com.seuprojeto.pascoa.shared.exception.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +20,7 @@ import java.math.RoundingMode;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class FichaTecnicaService {
 
     private final FichaTecnicaRepository fichaRepository;
@@ -80,11 +82,30 @@ public class FichaTecnicaService {
         itemRepository.deleteById(itemId);
     }
 
+    /**
+     * B8: Retorna o custo total dos itens da ficha.
+     * Loga um aviso quando a ficha existe mas não tem itens — custo zero nesse caso
+     * é intencionalmente silencioso para fichas novas, mas relevante quando usado
+     * para cálculo de preço de venda (o chamador deve checar se itens está vazio).
+     */
     public BigDecimal calcularCustoTotal(FichaTecnica ficha) {
-        if (ficha == null || ficha.getItens().isEmpty()) return BigDecimal.ZERO;
+        if (ficha == null) return BigDecimal.ZERO;
+        if (ficha.getItens().isEmpty()) {
+            log.warn("[FICHA] Produto id={} não possui itens na ficha técnica — custo retornado como ZERO.",
+                    ficha.getProduto() != null ? ficha.getProduto().getId() : "?");
+            return BigDecimal.ZERO;
+        }
         return ficha.getItens().stream()
             .map(FichaTecnicaItem::getCustoItem)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    /**
+     * B8: Indica se a ficha possui itens. Use para alertar o usuário
+     * antes de aceitar um preço de venda baseado em custo zero.
+     */
+    public boolean fichaTemItens(FichaTecnica ficha) {
+        return ficha != null && !ficha.getItens().isEmpty();
     }
 
     public BigDecimal calcularCustoPorUnidade(FichaTecnica ficha) {

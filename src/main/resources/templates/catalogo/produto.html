@@ -41,7 +41,7 @@
         <!-- Coluna esquerda: foto -->
         <div class="col-md-5">
             <img th:if="${produto.foto != null and !produto.foto.isEmpty()}"
-                 th:src="@{/uploads/{f}(f=${produto.foto})}"
+                 th:src="@{/media/{f}(f=${produto.foto})}"
                  th:alt="${produto.nome}"
                  class="produto-img shadow-sm">
             <div th:unless="${produto.foto != null and !produto.foto.isEmpty()}"

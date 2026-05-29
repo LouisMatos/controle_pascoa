@@ -1,0 +1,30 @@
+# Environment / secrets
+.env
+.env.local
+.env.*.local
+
+# Maven
+target/
+*.class
+*.jar
+*.war
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.code-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Upload directory (runtime files — not source)
+pascoa-uploads/
+
+# Spring Boot devtools restart
+.spring-boot-devtools.properties

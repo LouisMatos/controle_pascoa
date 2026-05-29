@@ -4,6 +4,8 @@ import br.com.seuprojeto.pascoa.cadastro.entity.Cliente;
 import br.com.seuprojeto.pascoa.cadastro.entity.Produto;
 import br.com.seuprojeto.pascoa.cadastro.repository.ClienteRepository;
 import br.com.seuprojeto.pascoa.cadastro.repository.ProdutoRepository;
+import br.com.seuprojeto.pascoa.fichaTecnica.entity.FichaTecnica;
+import br.com.seuprojeto.pascoa.fichaTecnica.service.FichaTecnicaService;
 import br.com.seuprojeto.pascoa.notificacao.entity.EventoNotificacao;
 import br.com.seuprojeto.pascoa.notificacao.event.PedidoStatusEvent;
 import br.com.seuprojeto.pascoa.pedido.dto.PagamentoForm;
@@ -12,10 +14,13 @@ import br.com.seuprojeto.pascoa.pedido.entity.*;
 import br.com.seuprojeto.pascoa.pedido.repository.ItemPedidoRepository;
 import br.com.seuprojeto.pascoa.pedido.repository.PagamentoRepository;
 import br.com.seuprojeto.pascoa.pedido.repository.PedidoRepository;
+import br.com.seuprojeto.pascoa.gastos.repository.GastoVariavelRepository;
 import br.com.seuprojeto.pascoa.producao.service.ProducaoService;
 import br.com.seuprojeto.pascoa.shared.exception.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
+import br.com.seuprojeto.pascoa.auditoria.annotation.Auditavel;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +37,8 @@ public class PedidoService {
     private final ClienteRepository clienteRepository;
     private final ProdutoRepository produtoRepository;
     private final ProducaoService producaoService;
+    private final FichaTecnicaService fichaTecnicaService;
+    private final GastoVariavelRepository gastoVariavelRepository;
     private final ApplicationEventPublisher eventPublisher;
 
     // -----------------------------------------------------------------------
@@ -188,6 +195,8 @@ public class PedidoService {
     // Máquina de estados
     // -----------------------------------------------------------------------
 
+    @Auditavel(acao = "CONFIRMAR_PEDIDO", entidade = "Pedido")
+    @PreAuthorize("@authService.owns(#id, authentication)")
     @Transactional
     public Pedido confirmar(Long id) {
         Pedido pedido = buscarPorId(id);
@@ -198,12 +207,15 @@ public class PedidoService {
             throw new IllegalStateException("Pedido sem itens não pode ser confirmado.");
         }
         pedido.setStatus(StatusPedido.CONFIRMADO);
+        snapshotCustos(pedido);
         pedidoRepository.save(pedido);
         producaoService.gerarOrdens(pedido);   // usa pedido (com itens carregados via findByIdComItens)
         eventPublisher.publishEvent(new PedidoStatusEvent(pedido, EventoNotificacao.PEDIDO_CONFIRMADO));
         return pedido;
     }
 
+    @Auditavel(acao = "CANCELAR_PEDIDO", entidade = "Pedido")
+    @PreAuthorize("@authService.owns(#id, authentication)")
     @Transactional
     public Pedido cancelar(Long id) {
         Pedido pedido = buscarPorId(id);
@@ -211,9 +223,22 @@ public class PedidoService {
             throw new IllegalStateException("Pedido entregue não pode ser cancelado.");
         }
         pedido.setStatus(StatusPedido.CANCELADO);
-        return pedidoRepository.save(pedido);
+        Pedido pedidoCancelado = pedidoRepository.save(pedido);
+
+        // Propaga cancelamento para ordens de produção não concluídas
+        producaoService.listarPorPedido(id).stream()
+            .filter(o -> o.getStatus().podeCancelar())
+            .forEach(o -> producaoService.cancelarOrdem(o.getId()));
+
+        // F6: Desconsiderar gastos vinculados a este pedido do cálculo de custo
+        gastoVariavelRepository.desconsiderarPorPedido(id);
+
+        eventPublisher.publishEvent(new PedidoStatusEvent(pedidoCancelado, EventoNotificacao.PEDIDO_CANCELADO));
+        return pedidoCancelado;
     }
 
+    @Auditavel(acao = "PEDIDO_PRONTO", entidade = "Pedido")
+    @PreAuthorize("@authService.owns(#id, authentication)")
     @Transactional
     public Pedido marcarPronto(Long id) {
         Pedido pedido = buscarPorId(id);
@@ -226,6 +251,8 @@ public class PedidoService {
         return pedidoPronto;
     }
 
+    @Auditavel(acao = "ENTREGAR_PEDIDO", entidade = "Pedido")
+    @PreAuthorize("@authService.owns(#id, authentication)")
     @Transactional
     public Pedido registrarEntrega(Long id) {
         Pedido pedido = buscarPorId(id);
@@ -236,6 +263,15 @@ public class PedidoService {
         Pedido pedidoEntregue = pedidoRepository.save(pedido);
         eventPublisher.publishEvent(new PedidoStatusEvent(pedidoEntregue, EventoNotificacao.PEDIDO_ENTREGUE));
         return pedidoEntregue;
+    }
+
+    private void snapshotCustos(Pedido pedido) {
+        for (ItemPedido item : pedido.getItens()) {
+            FichaTecnica ficha = fichaTecnicaService.buscarPorProduto(item.getProduto().getId());
+            BigDecimal custo = fichaTecnicaService.calcularCustoPorUnidade(ficha);
+            item.setCustoUnitario(custo);
+            itemRepository.save(item);
+        }
     }
 
     // -----------------------------------------------------------------------

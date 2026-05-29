@@ -31,4 +31,19 @@ public class Usuario {
 
     @Builder.Default
     private boolean ativo = true;
+
+    /** E-mail para recuperação de senha (opcional). */
+    @Column(length = 150)
+    private String email;
+
+    @Column(name = "totp_secret", length = 64)
+    private String totpSecret;
+
+    @Builder.Default
+    @Column(name = "totp_ativado", nullable = false)
+    private boolean totpAtivado = false;
+
+    @Builder.Default
+    @Column(name = "tentativas_totp_falhas", nullable = false)
+    private int tentativasTotpFalhas = 0;
 }

@@ -76,7 +76,7 @@
                         <div class="d-flex align-items-start gap-3">
                             <!-- Preview da foto atual -->
                             <div th:if="${produto.foto != null and !produto.foto.isEmpty()}">
-                                <img th:src="@{/uploads/{f}(f=${produto.foto})}"
+                                <img th:src="@{/media/{f}(f=${produto.foto})}"
                                      alt="Foto atual" class="rounded border"
                                      style="width:80px;height:80px;object-fit:cover;">
                                 <div class="small text-muted mt-1 text-center">Atual</div>

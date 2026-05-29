@@ -84,6 +84,9 @@ NOVO ──[confirmar]──► CONFIRMADO ──[iniciar]──► EM_PRODUCAO 
 | Registrar entrega | `POST /pedidos/{id}/registrar-entrega` |
 | Cancelar | `POST /pedidos/{id}/cancelar` |
 
+**Efeito colateral do cancelamento (V12):**
+Ao cancelar um pedido, `PedidoService` marca todos os `GastoVariavel` vinculados (`pedido_id = id`) como `desconsiderar_no_custo = true`. Isso garante que gastos específicos daquele pedido não distorçam relatórios de período.
+
 ### 2.2 Notificações Automáticas por Status
 
 | Transição | Evento Notificação | Canal |
@@ -336,32 +339,61 @@ FluxoCaixaService.calcularFluxo(dataInicio, dataFim):
 ```
 [1. Configuração] (uma vez, pelo ADMIN)
   /notificacoes/configuracao
-    → Ativar/desativar canal EMAIL
-    → Ativar/desativar canal WHATSAPP
-    → Configurar credenciais (SMTP, Evolution API)
-    → Ativar testMode (envia para email/número de teste)
+    → Ativar/desativar canal EMAIL, WHATSAPP ou SMS (V14)
+    → Configurar credenciais (SMTP, Evolution API, webhook SMS)
+    → Ativar testMode (apenas loga, não envia de verdade)
+    → Verificar conexão WhatsApp / Enviar mensagem de teste
 
 [2. Templates]
   /notificacoes/templates
-    → Editar corpo do template por EventoNotificacao + CanalNotificacao
-    → Usar placeholders: {{nomeCliente}}, {{numeroPedido}}, {{dataEntrega}}, etc.
+    → Editar corpo do template por EventoNotificacao × CanalNotificacao
+    → Placeholders disponíveis: {nome}, {numeroPedido}, {dataEntrega},
+      {valor}, {link}, {numeroOrcamento}, {validade}
 
-[3. Fluxo de Envio] (automático por evento)
+[3. Fluxo de Envio Reativo] (disparado por evento Spring)
   Evento publicado (ex: PedidoStatusEvent com PEDIDO_CONFIRMADO)
         │
         ▼
-  NotificacaoEventListener.onPedidoStatus(event)
+  NotificacaoEventListener → NotificacaoService.processar(pedido, evento)
         │
         ▼
-  NotificacaoService.enviarNotificacao(cliente, evento, variaveis)
-    1. Verifica se canal está ativo (ConfiguracaoCanal)
-    2. Verifica opt-in do cliente (cliente.optIn)
+  Para cada canal preferido do cliente (EMAIL e/ou WHATSAPP):
+    1. Verifica canal ativo (ConfiguracaoCanal)
+    2. Verifica opt-in do cliente
     3. Busca template por (evento, canal)
-    4. Substitui variáveis {{}} no template
+    4. Substitui variáveis {placeholder} no corpo
     5. Delega a EmailService ou WhatsAppService
-    6. Registra NotificacaoEnviada (status: ENVIADO ou FALHA)
+    6. Se WhatsApp FALHA → tenta SMS fallback (V14, se canal SMS ativo)
+    7. Registra NotificacaoEnviada com pedido_id
 
-[4. Alertas Internos]
+[4. Fluxo de Envio Proativo] (V14 — @Scheduled, sem evento Spring)
+
+  Aniversários — todos os dias às 08h:
+    NotificacaoAgendadaService.notificarAniversariantes()
+      → ClienteRepository.findAniversariantesHoje(mes, dia)
+      → Para cada cliente c/ opt-in:
+          NotificacaoService.processarParaCliente(cliente, ANIVERSARIO_CLIENTE)
+          → persiste NotificacaoEnviada com cliente_id (sem pedido_id)
+          → idempotência: apenas 1 envio por cliente × canal × ano
+
+  Orçamentos expirando — todos os dias às 09h:
+    NotificacaoAgendadaService.notificarOrcamentosExpirando()
+      → OrcamentoRepository.findPendentesComValidadeEm(PENDENTE, hoje+2dias)
+      → Para cada orçamento:
+          NotificacaoService.processarParaOrcamento(orcamento, ORCAMENTO_EXPIRANDO)
+          → persiste NotificacaoEnviada com orcamento_id (sem pedido_id)
+          → idempotência: índice UNIQUE uq_notif_orcamento_expirando
+
+[5. SMS Fallback] (V14)
+  Quando WhatsAppService lança exceção:
+    tentarSmsFallback(cliente, orcamento/pedido, evento, variaveis)
+      1. Verifica canal SMS ativo
+      2. Busca template para (evento, SMS) — se não existir, cancela
+      3. Substitui variáveis
+      4. SmsService.enviar(config, telefone, mensagem)
+      5. Registra NotificacaoEnviada canal=SMS
+
+[6. Alertas Internos]
   AlertaInternoListener cria AlertaInterno para usuários do sistema
   Exibidos no sino (🔔) do navbar
   Marcados como lidos ao visualizar
@@ -388,6 +420,11 @@ FluxoCaixaService.calcularFluxo(dataInicio, dataFim):
     FREQUENTE → pedidos últimos 30 dias > N
     NOVO      → menos de X pedidos no total
     INATIVO   → último pedido > 90 dias atrás
+
+  Job diário às 02h (V13):
+    CrmService.recalcularSegmentos() — @Scheduled + ShedLock
+    Atualiza clientes.segmento em batch para todos os clientes ativos
+    Permite filtrar por segmento em consultas sem recalcular on-the-fly
 
 [Notas do Atendente]
   Atendente adiciona nota no perfil do cliente
@@ -515,6 +552,10 @@ FluxoCaixaService.calcularFluxo(dataInicio, dataFim):
 | Meta de faturamento configurável | `ConfiguracaoFinanceira.metaFaturamentoMensal` |
 | Inspeção reprovada gera alerta interno | `InspecaoReprovadaEvent` → `AlertaInternoService` |
 | Usuário inativo não acessa o sistema | `UsuarioService.loadUserByUsername` verifica `usuario.ativo` |
+| Cancelar pedido desconsiderar gastos vinculados | `PedidoService.cancelar()` → `gastos_variaveis.desconsiderar_no_custo = true` (V12) |
+| Notificação aniversário: 1 por cliente por canal por ano | `jaEnviouAniversarioNoAno()` via native SQL com `EXTRACT(YEAR)` (V14) |
+| Notificação orçamento expirando: 1 por orçamento por canal | Índice UNIQUE `uq_notif_orcamento_expirando` no banco (V14) |
+| SMS só como fallback ou campanha direta — não como preferência | `PreferenciaCanal.AMBOS` não inclui SMS; SMS é ativado automaticamente quando WhatsApp falha |
 
 ---
 
@@ -523,9 +564,10 @@ FluxoCaixaService.calcularFluxo(dataInicio, dataFim):
 | Sistema | Finalidade | Configuração |
 |---------|-----------|-------------|
 | Gmail SMTP | Envio de e-mails ao cliente | `application.properties` + tela de config |
-| Evolution API (WhatsApp) | Envio de mensagens WhatsApp | URL + token via tela de admin |
+| Evolution API (WhatsApp) | Envio de mensagens WhatsApp | URL + API key via tela `/notificacoes/configuracao` |
+| Provedor SMS (V14) | Fallback quando WhatsApp falha; suporta Twilio, Zenvia, AWS SNS, qualquer webhook `{"to":"...","message":"..."}` | URL + Bearer token via tela de config |
 
-Ambas as integrações podem ser desabilitadas pelo ADMIN sem alterar código (`ConfiguracaoCanal.ativo=false`).
+Todas as integrações podem ser desabilitadas pelo ADMIN sem alterar código (`ConfiguracaoCanal.ativo=false`). `testMode=true` faz o envio ser apenas logado, sem tráfego real.
 
 ---
 

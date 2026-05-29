@@ -18,6 +18,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -143,6 +144,7 @@ class OrcamentoServiceIntegrationTest {
 
     @Test
     @DisplayName("Converter orçamento APROVADO gera pedido com itens e total corretos")
+    @WithMockUser(roles = "ADMIN")
     void converter_aprovado_geraPedidoComItensCorretos() {
         Orcamento orc = service.criar(formComUmItem(3, new BigDecimal("89.90")), "op");
         service.aprovar(orc.getTokenAprovacao());
@@ -163,6 +165,7 @@ class OrcamentoServiceIntegrationTest {
 
     @Test
     @DisplayName("Converter orçamento não-APROVADO lança IllegalStateException")
+    @WithMockUser(roles = "ADMIN")
     void converter_naoAprovado_lancaExcecao() {
         Orcamento orc = service.criar(formComUmItem(1, new BigDecimal("89.90")), "op");
         // ainda PENDENTE

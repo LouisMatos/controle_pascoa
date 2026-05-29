@@ -72,7 +72,7 @@ br.com.seuprojeto.pascoa/
 ## 3. Camada de Configuração (`config/`)
 
 ### AppConfig.java
-- Configura beans de infraestrutura geral (ex: `RestTemplate` para chamadas ao WhatsApp).
+- Configura beans de infraestrutura geral (`RestTemplate` usado por `WhatsAppService` e `SmsService`).
 
 ### SecurityConfig.java
 - Configura Spring Security 6:
@@ -96,6 +96,18 @@ br.com.seuprojeto.pascoa/
 
 ### DataInitializer.java
 - `CommandLineRunner` que cria o usuário `admin` se nenhum usuário existir.
+
+### MaintenanceFilter.java
+- `OncePerRequestFilter` que intercepta todas as requisições.
+- Se `ConfiguracaoSistema.modoManutencao = true`, redireciona para `/manutencao` (exceto ADMIN e rotas de login).
+
+### ManutencaoController.java / SistemaController.java
+- `GET /manutencao` — página de manutenção pública.
+- `GET/POST /admin/sistema` — ADMIN ativa/desativa modo manutenção e edita mensagem.
+
+### WhatsAppHealthIndicator.java
+- Implementa `HealthIndicator` do Spring Boot Actuator.
+- Verifica conectividade com a Evolution API e reporta no `/actuator/health`.
 
 ---
 
@@ -132,13 +144,19 @@ public abstract class BaseEntity {
 
 **Usuario.java**
 ```
-campos: id, nome, login (único), senha (BCrypt), role (enum), ativo
+campos: id, nome, login (único), senha (BCrypt), email (V11 — para reset), role (enum), ativo
 ```
 
 **Role.java (enum)**
 ```
 ADMIN, FINANCEIRO, ATENDENTE, CONFEITEIRO, GESTOR_QUALIDADE, ANALISTA
 ```
+
+**PasswordResetToken.java** (V11)
+```
+campos: id, usuario, token (UUID), expiraEm, usado, criadoEm
+```
+Token de uso único, válido por 30 minutos, para recuperação de senha via e-mail.
 
 ### Classes
 
@@ -147,6 +165,8 @@ ADMIN, FINANCEIRO, ATENDENTE, CONFEITEIRO, GESTOR_QUALIDADE, ANALISTA
 | `UsuarioController` | CRUD de usuários via `/usuarios` (ADMIN only) |
 | `UsuarioService` | Implementa `UserDetailsService`, gerencia usuários |
 | `UsuarioRepository` | `findByLogin(String login)` para autenticação |
+| `PasswordResetService` | Gera token, envia e-mail com link, valida e aplica reset |
+| `PasswordResetTokenRepository` | `findByToken(String)` para validação |
 
 **DTOs:** `UsuarioForm` (nome, login, senha, role)
 
@@ -158,11 +178,16 @@ ADMIN, FINANCEIRO, ATENDENTE, CONFEITEIRO, GESTOR_QUALIDADE, ANALISTA
 
 **Cliente.java** (soft-delete)
 ```
-campos: id, nome, email, telefone, CPF, endereço, 
-        preferenciaCanal (enum), optIn (boolean), ativo
+campos: id, nome, email, telefone, CPF, endereço,
+        preferenciaCanal (enum), optIn (boolean),
+        dataConsentimento (LGPD — V9), anonimizado (LGPD — V9),
+        segmento (SegmentoCliente — recalculado diariamente pelo job às 02h — V13),
+        dataNascimento (LocalDate — para job de aniversário às 08h — V14),
+        excluidoEm (soft-delete)
 ```
-- `@SQLDelete(sql="UPDATE clientes SET deletado=true WHERE id=?")` — nunca deletado fisicamente.
-- `@SQLRestriction("deletado=false")` — filtro automático em todas as queries.
+- `@SQLDelete(sql="UPDATE clientes SET excluido_em = NOW() WHERE id=?")` — nunca deletado fisicamente.
+- `@SQLRestriction("excluido_em IS NULL")` — filtro automático em todas as queries.
+- `@AttributeOverride(name="criadoEm", column=@Column(name="data_cadastro"))` — mapeia herança de BaseEntity para coluna legada.
 
 **Produto.java** (soft-delete)
 ```
@@ -187,7 +212,8 @@ campos: id, nome, unidade (enum), quantidadeAtual, quantidadeMinima,
 |------|---------|
 | `Categoria` | TRUFADO, RECHEADO, DIET, VEGANO, TRADICIONAL, ESPECIAL |
 | `Unidade` | KG, G, L, ML, UN, CX |
-| `PreferenciaCanal` | EMAIL, WHATSAPP |
+| `PreferenciaCanal` | NENHUM, EMAIL, WHATSAPP, AMBOS |
+| `SegmentoCliente` | NOVO, VIP, FREQUENTE, INATIVO |
 
 ### Classes por entidade (padrão)
 
@@ -494,9 +520,12 @@ campos: id, cliente, tipo (enum), valor, data, descricao
 
 | Classe | Responsabilidade |
 |--------|-----------------|
-| `CrmController` | Perfil de cliente, histórico de pedidos, notas, segmentação |
-| `CrmService` | Calcula LTV, segmenta clientes, gerencia notas e pontos |
+| `CrmController` | Perfil de cliente, histórico de pedidos, notas, segmentação, ranking |
+| `CrmService` | Calcula LTV, `gerarRanking()` para campanhas, gerencia notas e pontos |
+| `CampanhaService` | Dispara campanhas em lote via `CampanhaQueue` (rate-limited: 10 envios/min); `@Scheduled` worker com ShedLock |
 | `NotaClienteRepository`, `PontoFidelidadeRepository` | Queries por cliente |
+
+> **Job de Segmentação:** `CrmService.recalcularSegmentos()` roda às 02h via `@Scheduled` com ShedLock, atualiza `clientes.segmento` para todos os clientes (VIP/FREQUENTE/INATIVO/NOVO) e persiste em batch.
 
 **DTOs:** `ClienteCrmDto` (LTV, total pedidos, último pedido, segmento)
 
@@ -508,9 +537,9 @@ campos: id, cliente, tipo (enum), valor, data, descricao
 
 **TemplateNotificacao.java**
 ```
-campos: id, evento (enum), canal (enum), assunto, corpo, ativo
+campos: id, evento (enum), canal (enum), assunto, corpo, ativo, variaveis (documentação)
 ```
-Corpo usa `{{variavel}}` como placeholders substituídos em runtime.
+Corpo usa `{variavel}` como placeholders substituídos em runtime por `NotificacaoService`.
 
 **ConfiguracaoCanal.java**
 ```
@@ -519,31 +548,36 @@ campos: id, canal (enum), ativo, testMode, configuracoes (JSON/Map)
 
 **NotificacaoEnviada.java**
 ```
-campos: id, cliente, evento, canal, status (enum), dataEnvio, conteudo, erro
+campos: id, pedido (nullable — V14), cliente (nullable — V14), orcamento (nullable — V14),
+        evento (V12), canal, status (enum), dataEnvio, destinatario, mensagemErro, templateId
 ```
+- `pedido` é nullable desde V14 para suportar notificações sem contexto de pedido.
+- `cliente` e `orcamento` são FKs opcionais adicionadas em V14.
 
 **AlertaInterno.java**
 ```
-campos: id, titulo, mensagem, tipo, lido, dataCriacao, destinatario
+campos: id, mensagem, link, icone, cor, lido, criadoEm
 ```
 
 ### Enums
 
 | Enum | Valores |
 |------|---------|
-| `EventoNotificacao` | PEDIDO_CONFIRMADO, PRODUCAO_INICIADA, PEDIDO_PRONTO, PEDIDO_ENTREGUE, PAGAMENTO_RECEBIDO, PEDIDO_CANCELADO, ORCAMENTO_APROVADO, ORCAMENTO_RECUSADO |
-| `CanalNotificacao` | EMAIL, WHATSAPP |
-| `StatusEnvio` | ENVIADO, FALHA, PENDENTE |
+| `EventoNotificacao` | PEDIDO_CONFIRMADO, PRODUCAO_INICIADA, PEDIDO_PRONTO, PEDIDO_ENTREGUE, PAGAMENTO_RECEBIDO, PEDIDO_CANCELADO, ORCAMENTO_APROVADO, ORCAMENTO_RECUSADO, **ANIVERSARIO_CLIENTE** (V14), **ORCAMENTO_EXPIRANDO** (V14) |
+| `CanalNotificacao` | EMAIL, WHATSAPP, **SMS** (V14 — fallback automático quando WhatsApp falha) |
+| `StatusEnvio` | ENVIADA, FALHA |
 
 ### Classes
 
 | Classe | Responsabilidade |
 |--------|-----------------|
-| `NotificacaoService` | Orquestra envios: busca template, substitui variáveis, delega a `EmailService`/`WhatsAppService` |
+| `NotificacaoService` | Orquestra envios: 3 entry-points (`processar`, `processarParaCliente`, `processarParaOrcamento`), substitui variáveis, delega ao canal correto, persiste `NotificacaoEnviada` |
 | `EmailService` | Envio via JavaMailSender (SMTP Gmail) |
-| `WhatsAppService` | Envio via HTTP para Evolution API |
+| `WhatsAppService` | Envio via HTTP para Evolution API; falha dispara SMS fallback |
+| `SmsService` | **V14** — Envio via HTTP POST para webhook SMS (Twilio, Zenvia, AWS SNS ou compatível). `formatarNumero()` normaliza para `+55XXXXXXXXXXX` |
+| `NotificacaoAgendadaService` | **V14** — Jobs proativos: `notificarAniversariantes()` às 08h e `notificarOrcamentosExpirando()` às 09h, ambos com ShedLock |
 | `AlertaInternoService` | Cria/lista alertas para usuários do sistema |
-| `NotificacaoController` | Configuração de canais, templates, histórico de envios |
+| `NotificacaoController` | Configuração de canais, templates, histórico de envios, teste de conexão WhatsApp |
 | `AlertaInternoController` | Visualização e marcação de alertas como lidos |
 
 ### Arquitetura Event-Driven
@@ -553,17 +587,33 @@ campos: id, titulo, mensagem, tipo, lido, dataCriacao, destinatario
                             │
                             ▼
                  [NotificacaoEventListener]
-                   ├── NotificacaoService (email/WhatsApp)
+                   ├── NotificacaoService.processar(pedido, evento)
+                   │     ├── EmailService
+                   │     ├── WhatsAppService ──(falha)──► SmsService (fallback V14)
+                   │     └── persiste NotificacaoEnviada
                    └── AlertaInternoService (alertas UI)
+
+[NotificacaoAgendadaService] ──► (V14: jobs proativos)
+  ├── notificarAniversariantes() @08h
+  │     └── NotificacaoService.processarParaCliente(cliente, ANIVERSARIO_CLIENTE)
+  └── notificarOrcamentosExpirando() @09h
+        └── NotificacaoService.processarParaOrcamento(orcamento, ORCAMENTO_EXPIRANDO)
 ```
 
-**Eventos publicados:**
+**Eventos publicados via Spring ApplicationEventPublisher:**
 
 | Evento | Publicado quando |
 |--------|-----------------|
 | `PedidoStatusEvent` | Status do pedido muda (confirmado, pronto, entregue, etc.) |
 | `OrcamentoAcaoEvent` | Orçamento é aprovado ou recusado |
 | `InspecaoReprovadaEvent` | Inspeção de qualidade reprova uma ordem |
+
+**Notificações proativas (sem evento Spring — disparadas diretamente por `@Scheduled`):**
+
+| Job | Horário | EventoNotificacao |
+|-----|---------|-------------------|
+| `notificarAniversariantes` | 08h diário | `ANIVERSARIO_CLIENTE` |
+| `notificarOrcamentosExpirando` | 09h diário | `ORCAMENTO_EXPIRANDO` (2 dias antes) |
 
 ---
 

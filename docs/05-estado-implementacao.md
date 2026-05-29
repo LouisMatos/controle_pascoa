@@ -1,6 +1,6 @@
 # Estado de Implementação — Sistema Controle Páscoa
 
-> **Verificado em:** 2026-05-26 (leitura direta dos arquivos `.java` e `.html`)  
+> **Verificado em:** 2026-05-26 — atualizado Item 22 (senha), Item 23 (bugs médios), Item 24 (testes) e Item 25 (novas notificações)  
 > **Critério:** ✅ Implementado e testado | ⚠️ Parcialmente implementado | ❌ Não iniciado | 🐛 Bug conhecido
 
 ---
@@ -21,13 +21,13 @@
 | DRE simplificado | ❌ Não iniciado |
 | Simulador de cenários | ❌ Não iniciado |
 | CRM | ✅ Completo |
-| Notificações (email + WhatsApp) — 8 eventos | ✅ Completo |
-| Notificações de aniversário / expiração / SMS | ❌ Não iniciado |
+| Notificações (email + WhatsApp + SMS) — 10 eventos | ✅ Completo |
+| Notificações de aniversário / expiração / SMS | ✅ Item 25 — Completo |
 | Analytics (safras, ranking) | ✅ Completo |
 | Catálogo público | ✅ Completo |
 | PWA | ✅ Completo |
 | Segurança / RBAC | ✅ Completo |
-| Testes de integração | ✅ 6 classes cobrindo módulos críticos |
+| Testes de integração | ✅ 107 testes — 10 classes cobrindo todos os módulos críticos |
 
 ---
 
@@ -169,7 +169,9 @@
 - Perfil do cliente com LTV, ticket médio, histórico de pedidos
 - Notas do atendente (`NotaCliente`)
 - Pontos de fidelidade (`PontoFidelidade`: GANHO/RESGATADO)
+  - **F9 (Item 23):** `saldoPorCliente()` agora exclui CREDITOs com `data_expiracao` passada
 - Segmentação (`SegmentoCliente`)
+  - **F8 (Item 23):** campo `segmento` persistido na entidade `Cliente`; job `@Scheduled("0 0 2 * * *")` + ShedLock atualiza diariamente
 - Dashboard de segmentação (`/crm/dashboard`)
 
 ---
@@ -193,10 +195,13 @@ PAGAMENTO_RECEBIDO, PEDIDO_CANCELADO, ORCAMENTO_APROVADO, ORCAMENTO_RECUSADO
 - `AlertaInterno`: gerado por `AlertaInternoListener` para eventos internos
 - Configuração de canais: ativar/desativar EMAIL e WHATSAPP pelo admin
 
-### ❌ Não Iniciado (item 9 do roadmap)
-- Notificação de **aniversário do cliente** — sem evento `ANIVERSARIO_CLIENTE` no enum
-- Notificação de **orçamento expirando** — sem evento `ORCAMENTO_EXPIRANDO` no enum
-- **SMS fallback** — sem canal SMS em `CanalNotificacao` (apenas EMAIL e WHATSAPP)
+### ✅ Item 25 — Novas Notificações
+- **ANIVERSARIO_CLIENTE** — job `@Scheduled("0 0 8 * * *")` + ShedLock; filtra aniversariantes via `findAniversariantesHoje()` (SQL nativo EXTRACT); idempotência por ano por canal
+- **ORCAMENTO_EXPIRANDO** — job `@Scheduled("0 0 9 * * *")` + ShedLock; alerta 2 dias antes do vencimento de orçamentos PENDENTE; idempotência por índice único `uq_notif_orcamento_expirando`
+- **Canal SMS** — `CanalNotificacao.SMS` + `SmsService` (webhook HTTP genérico, testMode por padrão); fallback automático quando WhatsApp falha
+- Templates padrão inseridos pela migration V14 para ANIVERSARIO (email + whatsapp) e ORCAMENTO_EXPIRANDO (email + whatsapp)
+- `NotificacaoEnviada` atualizada: `pedido_id` nullable + FKs `cliente_id` e `orcamento_id`
+- `historico.html` atualizado: mostra evento, contexto (pedido/orçamento/aniversário), badge SMS
 
 ---
 
@@ -218,6 +223,8 @@ PAGAMENTO_RECEBIDO, PEDIDO_CANCELADO, ORCAMENTO_APROVADO, ORCAMENTO_RECUSADO
 - CRUD de usuários (ADMIN only)
 - BCrypt para senhas
 - Usuário inativo bloqueado no login
+- **Recuperação de senha** (Item 22): `AuthController` + `PasswordResetService` + token UUID 30min + email HTML
+- Campo `email` opcional no `Usuario` para recuperação
 
 ---
 
@@ -225,56 +232,51 @@ PAGAMENTO_RECEBIDO, PEDIDO_CANCELADO, ORCAMENTO_APROVADO, ORCAMENTO_RECUSADO
 
 ### ✅ Arquivos confirmados em `db/migration/`
 
-| Arquivo | Status |
-|---------|--------|
-| `V1__baseline.sql` | ✅ Presente |
-| `V2__novas_tabelas_v3.sql` | ✅ Presente |
-| `V3__crm_notas.sql` | ✅ Presente |
-| `V4__alertas_internos.sql` | ✅ Presente |
-
-> **Nota:** Arquivos adicionais (`v2_item1_campos_novos.sql`, `v2_item2_entidades_financeiras.sql`, `v2_item4_notificacoes.sql`) **não existem como arquivos separados**. Seu conteúdo está provavelmente embutido no V2 ou foi aplicado por outro meio.
+| Arquivo | Status | O que faz |
+|---------|--------|-----------|
+| `V1__baseline.sql` | ✅ | Schema base |
+| `V2__novas_tabelas_v3.sql` | ✅ | Tabelas v3 |
+| `V3__crm_notas.sql` | ✅ | Notas CRM |
+| `V4__alertas_internos.sql` | ✅ | Alertas internos |
+| `V5__totp_admin.sql` | ✅ | 2FA TOTP |
+| `V6__custo_snapshot_item_pedido.sql` | ✅ | Snapshot de custo |
+| `V7__shedlock.sql` | ✅ | Tabela ShedLock |
+| `V8__audit_log.sql` | ✅ | Auditoria |
+| `V9__lgpd_campos.sql` | ✅ | LGPD |
+| `V10__configuracao_sistema.sql` | ✅ | Config do sistema |
+| `V11__password_reset_token.sql` | ✅ | Item 22: reset de senha + email em usuários |
+| `V12__bugs_medios_item23.sql` | ✅ | Item 23: `evento` em notificacoes_enviadas, `desconsiderar_no_custo` + `pedido_id` em gastos_variaveis |
+| `V13__cliente_segmento_campo.sql` | ✅ | Item 23 F8: campo `segmento` em clientes |
 
 ---
 
 ## 15. Testes
 
-### ✅ 6 classes de teste de integração
+### ✅ 10 classes de teste — 107 testes (0 falhas)
 
-| Classe | Cobre |
-|--------|-------|
-| `PascoaApplicationTests` | Context load básico |
-| `CustoRealServiceIntegrationTest` | Custo real via Ficha Técnica |
-| `FluxoCaixaGastosIntegrationTest` | Fluxo de caixa com gastos variáveis |
-| `NotificacaoEventListenerTest` | Listener de eventos + envio |
-| `AlertaInternoIntegrationTest` | Criação e leitura de alertas |
-| `OrcamentoServiceIntegrationTest` | CRUD orçamento + conversão em pedido |
-| `RolePermissionsTest` | RBAC (autorização por role) |
+| Classe | Testes | Cobre |
+|--------|--------|-------|
+| `PascoaApplicationTests` | 1 | Context load básico |
+| `CustoRealServiceIntegrationTest` | ? | Custo real via Ficha Técnica |
+| `FluxoCaixaGastosIntegrationTest` | ? | Fluxo de caixa com gastos variáveis |
+| `NotificacaoEventListenerTest` | ? | Listener de eventos + envio |
+| `AlertaInternoIntegrationTest` | ? | Criação e leitura de alertas |
+| `OrcamentoServiceIntegrationTest` | 9 | CRUD orçamento + conversão em pedido (`@WithMockUser`) |
+| `RolePermissionsTest` | 22 | RBAC (autorização por role) |
+| `PedidoStateMachineTest` | 13 | Máquina de estados + F6 (cancelar desconsidere gastos) + B9 |
+| `CrmSegmentoTest` | 8 | F8 (segmentação agendada) + F9 (saldo com expiração) |
+| `NotificacaoIdempotenciaTest` | 5 | B7 — idempotência de notificações |
+| `PasswordResetServiceTest` | 14 | Ciclo completo de recuperação de senha |
 
-**Profile de teste:** H2 in-memory, `ddl-auto=create-drop`, sem Flyway.
+**Profile de teste:** H2 in-memory, `ddl-auto=create-drop`, Flyway desabilitado.  
+**Infraestrutura:** `TestShedLockConfig` (no-op `LockProvider`) + `spring.main.allow-bean-definition-overriding=true`.  
+**Padrão:** `em.flush(); em.clear()` após `criarComItens()` para evitar cache L1 do Hibernate com coleção vazia.
 
-**Sem testes para:** PedidoService (máquina de estados), EstoqueService, CrmService, AnalyticsService.
+**Sem testes para:** EstoqueService, AnalyticsService.
 
 ---
 
 ## 16. Bugs e Problemas Conhecidos
-
-### 🐛 Bug: URL hardcoded em `NotificacaoService`
-
-**Arquivo:** `notificacao/service/NotificacaoService.java:132`
-
-```java
-String link = "http://localhost:8080/acompanhamento/" + pedido.getTokenAcompanhamento();
-```
-
-**Problema:** A URL base está hardcoded para `localhost:8080`. Em produção, o link enviado ao cliente no e-mail/WhatsApp apontará para localhost, tornando o rastreamento inacessível.
-
-**Correção necessária:** Externalizar para `application.properties`:
-```properties
-app.base-url=https://seudominio.com.br
-```
-E injetar via `@Value("${app.base-url}")` no service.
-
----
 
 ### ⚠️ Gap: Template `estoque/saida.html` ausente
 
@@ -284,34 +286,76 @@ E injetar via `@Value("${app.base-url}")` no service.
 
 ---
 
-## 17. Roadmap — Itens Pendentes (design doc v3, item 11)
+## 17. Item 22 — Recuperação de Senha ✅
 
-| # | Item | Status | Observação |
-|---|------|--------|------------|
-| 9 | Notificações: aniversário, orçamento expirando, SMS | ❌ Não iniciado | Requer novos valores no enum `EventoNotificacao` + canal SMS em `CanalNotificacao` |
-| 10a | DRE simplificado | ❌ Não iniciado | Nova tela + FinanceiroService novo método + template |
-| 10b | Simulador de cenários financeiros | ❌ Não iniciado | Nova tela + cálculos hipotéticos em BreakevenService |
-
-**Itens já concluídos (revisão do CLAUDE.md):**
-
-| # | Item | Confirmação |
-|---|------|------------|
-| 1 | Flyway baseline | ✅ V1-V4 presentes |
-| 2 | Módulo Gastos | ✅ CRUD + CSV + dashboard + integração financeiro |
-| 3 | Orçamentos | ✅ PDF + aprovação pública + conversão |
-| 4 | Catálogo + QR Code | ✅ Controller público + ZXing |
-| 5 | CRM | ✅ Segmentação + LTV + notas + pontos |
-| 6 | Controle de Qualidade | ✅ Checklist JSONB + inspeção |
-| 7 | Analytics | ✅ Comparativo safras + ranking |
-| 8 | PWA | ✅ manifest.json + Service Worker |
-| 11 | Roles GESTOR_QUALIDADE e ANALISTA | ✅ No enum Role |
-| 12 | Testes de integração | ✅ 6 classes |
+Implementado nesta sessão:
+- Migration `V11__password_reset_token.sql`: tabela `password_reset_token` + coluna `email` em `usuarios`
+- `PasswordResetToken` entity + `PasswordResetTokenRepository`
+- `PasswordResetService`: gera token UUID (30 min), invalida token antigo, envia email HTML
+- `AuthController` (`/auth/forgot-password`, `/auth/reset-password/{token}`): anti-enumeração
+- Templates `auth/forgot-password.html` e `auth/reset-password.html` (standalone, sem layout)
+- `reset-password.html` com barra de força de senha + show/hide + validação de confirm
+- `Usuario.email` + `UsuarioForm.email` + `@InitBinder(StringTrimmerEditor)` para `@Email` opcional
+- Link "Esqueceu sua senha?" na `login.html`
+- Campo email no form de usuário
 
 ---
 
-## 18. Próximas Sessões — Prioridade Sugerida
+## 18. Item 23 — Bugs Médios e Fluxos ✅
 
-1. **Corrigir bug `app.base-url` hardcoded** — baixo esforço, alto impacto em produção
-2. **Criar template `estoque/saida.html`** — completar gap do módulo de estoque
-3. **Item 9: Notificações pendentes** — adicionar eventos ao enum + implementar agendamento (aniversário requer `@Scheduled`)
-4. **Item 10: DRE + simulador** — novas telas no módulo financeiro
+Implementado nesta sessão:
+
+| Bug | Arquivo(s) | Correção |
+|-----|-----------|----------|
+| **S9** — sw.js cacheava páginas autenticadas | `static/sw.js` | `networkFirst()`: removido `cache.put()` — agora nunca cacheia respostas HTML dinâmicas |
+| **B7** — notificações duplicadas | `NotificacaoEnviada`, `NotificacaoEnviadaRepository`, `NotificacaoService`, `V12` | Campo `evento` adicionado; índice único parcial `(pedido_id, evento, canal) WHERE status='ENVIADA'`; check de idempotência em `processarCanal()` |
+| **B8** — ficha técnica vazia retorna custo zero silenciosamente | `FichaTecnicaService` | `log.warn` quando `getItens().isEmpty()`; método `fichaTemItens()` para callers verificarem |
+| **B9** — gastos de pedidos cancelados poluíam cálculos | `GastoVariavel`, `GastoVariavelRepository`, `V12` | Campo `desconsiderarNoCusto` + `pedidoId` FK; queries `sumTotal`, `sumPorCategoria`, `sumTotalByPeriodo` filtram `desconsiderarNoCusto = false` |
+| **B10** — Periodicidade sem TRIMESTRAL/SEMESTRAL | `Periodicidade`, `DespesaFixaRepository` | Enum ampliado; CASE atualizado: TRIMESTRAL÷3, SEMESTRAL÷6 |
+| **F6** — cancelar pedido não desmarcava gastos | `PedidoService`, `GastoVariavelRepository` | `cancelar()` chama `desconsiderarPorPedido(id)` |
+| **F8** — segmento calculado apenas on-the-fly | `CrmService`, `Cliente`, `ClienteRepository`, `V13` | Campo `segmento` persistido em `clientes`; `@Scheduled("0 0 2 * * *")` + ShedLock `crm_recalcularSegmentos` |
+| **F9** — pontos expirados contados no saldo | `PontoFidelidadeRepository` | `saldoPorCliente()`: CREDITO só conta se `data_expiracao IS NULL OR data_expiracao >= CURRENT_DATE` |
+
+**B6** — `@DecimalMin("0.0001")` já presente em `EntradaEstoqueForm` — sem mudanças necessárias.  
+**F7** — FluxoCaixa caixa vs competência: complexidade de UI elevada, adiado.
+
+---
+
+## 19. Roadmap — Itens Pendentes (design doc v4)
+
+| # | Item | Status | Observação |
+|---|------|--------|------------|
+| 22 | Recuperação de Senha | ✅ Completo | Token UUID 30min, email HTML, anti-enumeração |
+| 23 | Bugs Médios e Fluxos | ✅ Completo | S9, B7-B10, F6, F8, F9 (exceto F7) |
+| 24 | Testes completos | ✅ Completo | 109 testes, 10 classes, BUILD SUCCESS |
+| 25 | Novas Notificações | ✅ Completo | ANIVERSARIO_CLIENTE, ORCAMENTO_EXPIRANDO, canal SMS fallback |
+| 10a | DRE simplificado | ❌ | Nova tela + `FinanceiroService` |
+| 10b | Simulador de cenários financeiros | ❌ | Cálculos hipotéticos em `BreakevenService` |
+| — | F7: FluxoCaixa caixa vs competência | ❌ | Adiado — requer toggle de UI complexo |
+| — | `estoque/saida.html` | ❌ | Template ausente |
+
+---
+
+## 20. Item 24 — Testes Completos ✅
+
+Implementado nesta sessão:
+
+| Classe | Destaque |
+|--------|----------|
+| `PedidoStateMachineTest` | 13 testes: todas as transições válidas (NOVO→CONFIRMADO→PRONTO→ENTREGUE, NOVO→CANCELADO, CONFIRMADO→CANCELADO), transições inválidas lançam `IllegalStateException`, F6 (cancelar desconsidere gastos vinculados), B9 (sumTotal exclui `desconsiderarNoCusto=true`) |
+| `CrmSegmentoTest` | 8 testes: F9 (créditos expirados ignorados, débitos deduzidos, expires-today conta, zero sem pontos), F8 (recalcularSegmentos persiste NOVO sem pedidos, dois clientes independentes) |
+| `PasswordResetServiceTest` | 14 testes: solicitar por login/email/inexistente/inativo/sem-email; segunda solicitação apaga token anterior; expiração futura; validar válido/inexistente/expirado/usado; resetar atualiza senha e marca usado; duplo uso falha |
+| `NotificacaoIdempotenciaTest` | 5 testes: campo `evento` persistido; existsBy detecta duplicata; evento diferente retorna false; FALHA não bloqueia retry; dois eventos/canais independentes |
+
+**Fixes colaterais:**
+- `OrcamentoServiceIntegrationTest`: adicionado `@WithMockUser(roles = "ADMIN")` em `converter_aprovado_*` e `converter_naoAprovado_*` — eliminada falha pré-existente com `@PreAuthorize`
+- `application-test.properties`: `spring.flyway.enabled=false` + `spring.main.allow-bean-definition-overriding=true`
+- `TestShedLockConfig`: no-op `LockProvider` com `@Primary` para evitar acesso à tabela `shedlock` ausente no H2
+
+---
+
+## 21. Próximas Sessões — Prioridade Sugerida
+
+1. **Item 10a: DRE simplificado** — Demonstrativo de Resultado do Exercício (receitas − custos − despesas)
+2. **Item 10b: Simulador de cenários** — "e se aumentar o preço X%? vender Y unidades a mais?"
+3. **`estoque/saida.html`** — template de saída manual de matéria-prima ausente

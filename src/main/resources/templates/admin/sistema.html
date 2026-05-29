@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pt-BR"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Configurações do Sistema</title>
+</head>
+<body th:replace="~{fragments/layout :: layout(~{::title}, ~{::main})}">
+
+<main>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="mb-0"><i class="bi bi-gear-wide-connected me-2 text-success"></i>Configurações do Sistema</h4>
+            <p class="text-muted small mb-0 mt-1">Modo manutenção e parâmetros gerais da plataforma.</p>
+        </div>
+    </div>
+
+    <!-- Banner de aviso quando manutenção está ativa -->
+    <div th:if="${config.modoManutencao}" class="alert alert-warning d-flex align-items-center gap-2 mb-4" role="alert">
+        <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+        <div>
+            <strong>Modo manutenção está ATIVO.</strong>
+            Todos os usuários não-ADMIN estão sendo redirecionados para a página de manutenção.
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- Card: toggle rápido -->
+        <div class="col-md-5">
+            <div class="card h-100">
+                <div class="card-header py-2 fw-semibold">
+                    <i class="bi bi-power me-2"></i>Modo Manutenção
+                </div>
+                <div class="card-body text-center py-4">
+                    <div class="fs-1 mb-3"
+                         th:class="${config.modoManutencao} ? 'text-warning' : 'text-success'">
+                        <i th:class="${config.modoManutencao} ? 'bi bi-tools' : 'bi bi-check-circle'"></i>
+                    </div>
+                    <h5 class="mb-1"
+                        th:text="${config.modoManutencao} ? 'Sistema em manutenção' : 'Sistema operacional'">
+                    </h5>
+                    <p class="text-muted small mb-4"
+                       th:text="${config.modoManutencao}
+                           ? 'Usuários não-ADMIN estão bloqueados.'
+                           : 'Todos os usuários têm acesso normal.'">
+                    </p>
+                    <form th:action="@{/admin/sistema/manutencao/toggle}" method="post">
+                        <button type="submit"
+                                th:class="${config.modoManutencao}
+                                    ? 'btn btn-success w-100'
+                                    : 'btn btn-warning w-100'"
+                                th:onclick="${config.modoManutencao}
+                                    ? 'return confirm(\'Desativar o modo manutenção?\')'
+                                    : 'return confirm(\'Ativar o modo manutenção? Usuários não-ADMIN serão bloqueados.\')'"
+                                >
+                            <i th:class="${config.modoManutencao}
+                                ? 'bi bi-play-circle me-2'
+                                : 'bi bi-pause-circle me-2'"></i>
+                            <span th:text="${config.modoManutencao}
+                                ? 'Desativar Manutenção'
+                                : 'Ativar Manutenção'"></span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card: configuração da mensagem -->
+        <div class="col-md-7">
+            <div class="card h-100">
+                <div class="card-header py-2 fw-semibold">
+                    <i class="bi bi-pencil-square me-2"></i>Mensagem da Página de Manutenção
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/admin/sistema}" method="post" th:object="${config}">
+                        <input type="hidden" th:field="*{id}">
+                        <input type="hidden" th:field="*{modoManutencao}">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Mensagem principal</label>
+                            <textarea th:field="*{mensagemManutencao}"
+                                      class="form-control" rows="3"
+                                      placeholder="O sistema está temporariamente indisponível para manutenção."
+                                      maxlength="500"></textarea>
+                            <div class="form-text">Exibida na tela de manutenção para os usuários.</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Previsão de retorno</label>
+                            <input type="text" th:field="*{previsaoRetorno}"
+                                   class="form-control"
+                                   placeholder="Ex.: hoje às 18h00, amanhã às 9h…"
+                                   maxlength="100">
+                            <div class="form-text">Deixe em branco para não exibir previsão.</div>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-floppy me-1"></i>Salvar Mensagem
+                            </button>
+                            <a th:href="@{/manutencao}" target="_blank" class="btn btn-outline-secondary">
+                                <i class="bi bi-eye me-1"></i>Pré-visualizar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+</body>
+</html>

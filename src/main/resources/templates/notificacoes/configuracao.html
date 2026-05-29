@@ -37,7 +37,8 @@
       <div class="card">
         <div class="card-header bg-light fw-semibold d-flex align-items-center gap-2">
           <i th:if="${canal.tipo.name() == 'WHATSAPP'}" class="bi bi-whatsapp text-success fs-5"></i>
-          <i th:unless="${canal.tipo.name() == 'WHATSAPP'}" class="bi bi-envelope text-primary fs-5"></i>
+          <i th:if="${canal.tipo.name() == 'EMAIL'}"    class="bi bi-envelope text-primary fs-5"></i>
+          <i th:if="${canal.tipo.name() == 'SMS'}"      class="bi bi-phone text-warning fs-5"></i>
           <span th:text="${canal.tipo.name()}"></span>
           <span th:if="${canal.testMode}" class="badge bg-warning text-dark ms-auto">
             <i class="bi bi-flask me-1"></i>Modo Teste
@@ -55,18 +56,25 @@
             <div class="mb-2">
               <label class="form-label fw-semibold small mb-1">
                 <span th:if="${canal.tipo.name() == 'WHATSAPP'}">URL da Evolution API</span>
-                <span th:unless="${canal.tipo.name() == 'WHATSAPP'}">SMTP Host (configurado em application.properties)</span>
+                <span th:if="${canal.tipo.name() == 'EMAIL'}">SMTP Host (configurado em application.properties)</span>
+                <span th:if="${canal.tipo.name() == 'SMS'}">URL do Provedor SMS (webhook HTTP POST)</span>
               </label>
               <input type="text" name="apiUrl" class="form-control form-control-sm"
                      th:value="${canal.apiUrl}"
-                     th:placeholder="${canal.tipo.name() == 'WHATSAPP'} ? 'http://localhost:8080' : 'smtp.gmail.com'"/>
+                     th:placeholder="${canal.tipo.name() == 'WHATSAPP'} ? 'http://localhost:8080' : (${canal.tipo.name() == 'SMS'} ? 'https://api.provedor-sms.com/send' : 'smtp.gmail.com')"/>
               <div th:if="${canal.tipo.name() == 'WHATSAPP'}" class="form-text">
                 Exemplo: <code>http://localhost:8080</code> ou <code>https://sua-evolution-api.com</code>
               </div>
+              <div th:if="${canal.tipo.name() == 'SMS'}" class="form-text">
+                Aceita Twilio, Zenvia, AWS SNS ou qualquer webhook que receba <code>{"to":"...","message":"..."}</code>
+              </div>
             </div>
 
-            <div class="mb-2" th:if="${canal.tipo.name() == 'WHATSAPP'}">
-              <label class="form-label fw-semibold small mb-1">API Key (Evolution)</label>
+            <div class="mb-2" th:if="${canal.tipo.name() == 'WHATSAPP' or canal.tipo.name() == 'SMS'}">
+              <label class="form-label fw-semibold small mb-1">
+                <span th:if="${canal.tipo.name() == 'WHATSAPP'}">API Key (Evolution)</span>
+                <span th:if="${canal.tipo.name() == 'SMS'}">Token de Autenticação (Bearer)</span>
+              </label>
               <input type="text" name="apiKey" class="form-control form-control-sm"
                      th:value="${canal.apiKey}" placeholder="sua-api-key"/>
             </div>
@@ -74,11 +82,12 @@
             <div class="mb-2">
               <label class="form-label fw-semibold small mb-1">
                 <span th:if="${canal.tipo.name() == 'WHATSAPP'}">Nome da Instância</span>
-                <span th:unless="${canal.tipo.name() == 'WHATSAPP'}">E-mail Remetente</span>
+                <span th:if="${canal.tipo.name() == 'EMAIL'}">E-mail Remetente</span>
+                <span th:if="${canal.tipo.name() == 'SMS'}">Remetente / ID do Sender</span>
               </label>
               <input type="text" name="remetente" class="form-control form-control-sm"
                      th:value="${canal.remetente}"
-                     th:placeholder="${canal.tipo.name() == 'WHATSAPP'} ? 'pascoa' : 'noreply@seudominio.com'"/>
+                     th:placeholder="${canal.tipo.name() == 'WHATSAPP'} ? 'pascoa' : (${canal.tipo.name() == 'SMS'} ? 'PascoaApp' : 'noreply@seudominio.com')"/>
             </div>
 
             <div class="mb-2 form-check">

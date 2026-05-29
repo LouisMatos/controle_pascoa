@@ -1,10 +1,13 @@
 package br.com.seuprojeto.pascoa.shared.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.stream.Collectors;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -25,11 +28,30 @@ public class GlobalExceptionHandler {
         return redirectBack(request);
     }
 
+    @ExceptionHandler(OrcamentoJaConvertidoException.class)
+    public String handleOrcamentoJaConvertido(OrcamentoJaConvertidoException ex,
+                                               RedirectAttributes ra,
+                                               HttpServletRequest request) {
+        ra.addFlashAttribute("erro", ex.getMessage());
+        return "redirect:/pedidos/" + ex.getPedidoId();
+    }
+
     @ExceptionHandler(IllegalStateException.class)
     public String handleIllegalState(IllegalStateException ex,
                                       RedirectAttributes ra,
                                       HttpServletRequest request) {
         ra.addFlashAttribute("erro", ex.getMessage());
+        return redirectBack(request);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public String handleConstraintViolation(ConstraintViolationException ex,
+                                             RedirectAttributes ra,
+                                             HttpServletRequest request) {
+        String mensagem = ex.getConstraintViolations().stream()
+            .map(cv -> cv.getMessage())
+            .collect(Collectors.joining("; "));
+        ra.addFlashAttribute("erro", mensagem);
         return redirectBack(request);
     }
 

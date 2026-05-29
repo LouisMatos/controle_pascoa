@@ -18,7 +18,8 @@
         <thead class="table-light">
           <tr>
             <th>Data/Hora</th>
-            <th>Pedido</th>
+            <th>Evento</th>
+            <th>Contexto</th>
             <th>Cliente</th>
             <th>Canal</th>
             <th>Destinatário</th>
@@ -28,23 +29,54 @@
         </thead>
         <tbody>
           <tr th:if="${envios.empty}">
-            <td colspan="7" class="text-center text-muted py-3">Nenhuma notificação enviada ainda.</td>
+            <td colspan="8" class="text-center text-muted py-3">Nenhuma notificação enviada ainda.</td>
           </tr>
           <tr th:each="e : ${envios}">
             <td th:text="${#temporals.format(e.dataEnvio, 'dd/MM/yyyy HH:mm')}"></td>
+
+            <!-- Evento -->
             <td>
-              <a th:href="@{/pedidos/{id}(id=${e.pedido.id})}" th:text="'#' + ${e.pedido.id}"></a>
+              <span class="badge bg-secondary" th:text="${e.evento != null ? e.evento.name() : '-'}"></span>
             </td>
-            <td th:text="${e.pedido.cliente.nome}"></td>
+
+            <!-- Contexto: pedido, orçamento ou direto ao cliente -->
             <td>
-              <span th:if="${e.canal.name() == 'WHATSAPP'}" class="badge bg-success">
-                <i class="bi bi-whatsapp me-1"></i>WhatsApp
-              </span>
-              <span th:unless="${e.canal.name() == 'WHATSAPP'}" class="badge bg-primary">
-                <i class="bi bi-envelope me-1"></i>E-mail
+              <a th:if="${e.pedido != null}"
+                 th:href="@{/pedidos/{id}(id=${e.pedido.id})}"
+                 th:text="'Pedido #' + ${e.pedido.id}"></a>
+              <a th:if="${e.orcamento != null}"
+                 th:href="@{/orcamentos/{id}(id=${e.orcamento.id})}"
+                 th:text="'Orçamento #' + ${e.orcamento.id}"></a>
+              <span th:if="${e.pedido == null and e.orcamento == null}"
+                    class="text-muted">Aniversário</span>
+            </td>
+
+            <!-- Cliente: resolve pelo pedido, orçamento ou vínculo direto -->
+            <td>
+              <span th:if="${e.pedido != null}"      th:text="${e.pedido.cliente.nome}"></span>
+              <span th:if="${e.orcamento != null}"   th:text="${e.orcamento.cliente.nome}"></span>
+              <span th:if="${e.cliente != null and e.pedido == null and e.orcamento == null}"
+                    th:text="${e.cliente.nome}"></span>
+            </td>
+
+            <!-- Canal com badge por tipo -->
+            <td>
+              <span th:switch="${e.canal.name()}">
+                <span th:case="'WHATSAPP'" class="badge bg-success">
+                  <i class="bi bi-whatsapp me-1"></i>WhatsApp
+                </span>
+                <span th:case="'EMAIL'" class="badge bg-primary">
+                  <i class="bi bi-envelope me-1"></i>E-mail
+                </span>
+                <span th:case="'SMS'" class="badge bg-warning text-dark">
+                  <i class="bi bi-phone me-1"></i>SMS
+                </span>
+                <span th:case="*" class="badge bg-secondary" th:text="${e.canal.name()}"></span>
               </span>
             </td>
+
             <td th:text="${e.destinatario}"></td>
+
             <td class="text-center">
               <span th:if="${e.status.name() == 'ENVIADA'}" class="badge bg-success">Enviada</span>
               <span th:unless="${e.status.name() == 'ENVIADA'}" class="badge bg-danger">Falha</span>

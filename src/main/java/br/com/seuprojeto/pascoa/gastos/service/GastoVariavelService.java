@@ -10,6 +10,7 @@ import br.com.seuprojeto.pascoa.gastos.repository.GastoVariavelRepository;
 import br.com.seuprojeto.pascoa.gastos.repository.OrcamentoGastoRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -41,6 +42,7 @@ public class GastoVariavelService {
         return gastoRepo.findByReferenciaAnoAndReferenciaMesOrderByDataLancamentoDesc(ano, mes);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'FINANCEIRO')")
     @Transactional
     public GastoVariavel salvar(GastoVariavelForm form, String usuario) {
         GastoVariavel gasto = GastoVariavel.builder()
@@ -62,6 +64,7 @@ public class GastoVariavelService {
                 .orElseThrow(() -> new EntityNotFoundException("Gasto não encontrado: " + id));
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'FINANCEIRO')")
     @Transactional
     public GastoVariavel atualizar(Long id, GastoVariavelForm form) {
         GastoVariavel gasto = buscarPorId(id);
@@ -75,11 +78,13 @@ public class GastoVariavelService {
         return gastoRepo.save(gasto);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'FINANCEIRO')")
     @Transactional
     public void excluir(Long id) {
         gastoRepo.deleteById(id);
     }
 
+    @PreAuthorize("hasAnyRole('ADMIN', 'FINANCEIRO')")
     @Transactional
     public int importarCSV(MultipartFile file, String usuario) throws Exception {
         int importados = 0;

@@ -16,8 +16,10 @@ public interface DespesaFixaRepository extends JpaRepository<DespesaFixa, Long> 
     @Query("""
         SELECT COALESCE(SUM(
             CASE d.periodicidade
-                WHEN 'MENSAL' THEN d.valor
-                WHEN 'ANUAL'  THEN d.valor / 12
+                WHEN 'MENSAL'     THEN d.valor
+                WHEN 'TRIMESTRAL' THEN d.valor / 3
+                WHEN 'SEMESTRAL'  THEN d.valor / 6
+                WHEN 'ANUAL'      THEN d.valor / 12
             END
         ), 0)
         FROM DespesaFixa d WHERE d.ativo = true

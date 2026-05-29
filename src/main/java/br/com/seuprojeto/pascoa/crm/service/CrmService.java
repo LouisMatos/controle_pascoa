@@ -10,6 +10,9 @@ import br.com.seuprojeto.pascoa.pedido.entity.Pedido;
 import br.com.seuprojeto.pascoa.pedido.repository.PedidoRepository;
 import br.com.seuprojeto.pascoa.shared.exception.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +25,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CrmService {
 
     private final ClienteRepository clienteRepo;
@@ -134,5 +138,34 @@ public class CrmService {
             return SegmentoCliente.VIP;
         }
         return SegmentoCliente.REGULAR;
+    }
+
+    /**
+     * F8: Job diário que recalcula e persiste o segmento de cada cliente.
+     * Executa às 02h00, protegido por ShedLock (exatamente um nó em cluster).
+     */
+    @Scheduled(cron = "0 0 2 * * *")
+    @SchedulerLock(name = "crm_recalcularSegmentos", lockAtMostFor = "PT30M", lockAtLeastFor = "PT1M")
+    @Transactional
+    public void recalcularSegmentos() {
+        log.info("[CRM] Iniciando recalculo de segmentos de clientes...");
+        List<Cliente> clientes = clienteRepo.findAllByOrderByNomeAsc();
+        Map<Long, Object[]> statsMap = pedidoRepo.statsPorCliente().stream()
+                .collect(Collectors.toMap(row -> (Long) row[0], row -> row));
+
+        int atualizados = 0;
+        for (Cliente cliente : clientes) {
+            Object[] stats = statsMap.get(cliente.getId());
+            BigDecimal ltv = stats != null ? (BigDecimal) stats[1] : BigDecimal.ZERO;
+            long count = stats != null ? (Long) stats[2] : 0L;
+            LocalDateTime ultimoPedido = stats != null ? (LocalDateTime) stats[3] : null;
+            SegmentoCliente novoSegmento = calcularSegmento(ltv, count, ultimoPedido);
+            if (novoSegmento != cliente.getSegmento()) {
+                cliente.setSegmento(novoSegmento);
+                clienteRepo.save(cliente);
+                atualizados++;
+            }
+        }
+        log.info("[CRM] Segmentos recalculados: {} clientes atualizados de {}.", atualizados, clientes.size());
     }
 }

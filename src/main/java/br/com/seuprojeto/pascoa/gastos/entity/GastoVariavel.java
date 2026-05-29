@@ -45,6 +45,21 @@ public class GastoVariavel {
     @Column(name = "comprovante_url", length = 500)
     private String comprovanteUrl;
 
+    /**
+     * B9/F6: Quando true, este gasto foi desconsiderado do cálculo de custo
+     * (ex: pedido cancelado — os gastos vinculados são excluídos da apuração).
+     */
+    @Builder.Default
+    @Column(name = "desconsiderar_no_custo", nullable = false)
+    private Boolean desconsiderarNoCusto = false;
+
+    /**
+     * F6: FK opcional para o pedido que originou este gasto.
+     * Permite marcar desconsiderarNoCusto=true quando o pedido for cancelado.
+     */
+    @Column(name = "pedido_id")
+    private Long pedidoId;
+
     @Column(name = "criado_em", nullable = false)
     private LocalDateTime criadoEm;
 

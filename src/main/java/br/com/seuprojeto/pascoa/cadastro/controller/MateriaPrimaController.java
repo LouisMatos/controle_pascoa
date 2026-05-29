@@ -43,13 +43,26 @@ public class MateriaPrimaController {
     }
 
     @PostMapping("/salvar")
-    public String salvar(@Valid @ModelAttribute("materiaPrima") MateriaPrima materiaPrima,
+    public String salvar(@Valid @ModelAttribute("materiaPrima") MateriaPrima mpForm,
                          BindingResult result, Model model, RedirectAttributes ra) {
         if (result.hasErrors()) {
             model.addAttribute("unidades", Unidade.values());
             return "materias-primas/form";
         }
-        service.salvar(materiaPrima);
+        if (mpForm.getId() != null) {
+            // Atualização: carrega entidade existente para preservar campos
+            // não editáveis pelo formulário (custoMedioPonderado, dataUltimaCompra,
+            // fornecedorPreferencial) — evita sobrescrita com null no JPA merge.
+            MateriaPrima existente = service.buscarPorId(mpForm.getId());
+            existente.setNome(mpForm.getNome());
+            existente.setUnidade(mpForm.getUnidade());
+            existente.setCustoUnitario(mpForm.getCustoUnitario());
+            existente.setQuantidadeAtual(mpForm.getQuantidadeAtual());
+            existente.setQuantidadeMinima(mpForm.getQuantidadeMinima());
+            service.salvar(existente);
+        } else {
+            service.salvar(mpForm);
+        }
         ra.addFlashAttribute("sucesso", "Matéria-prima salva com sucesso!");
         return "redirect:/materias-primas";
     }

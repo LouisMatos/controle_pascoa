@@ -30,7 +30,7 @@ Leia antes de começar qualquer tarefa — evita re-exploração do código:
 | `docs/03-fluxos-negocio.md` | Lógica de negócio, novos fluxos |
 | `docs/01-infraestrutura.md` | Configurações, deploy, infraestrutura |
 | `docs/04-rotas-endpoints.md` | Endpoints, permissões, novas rotas |
-| `docs/06-schema-banco.md` | 25 tabelas com colunas, tipos, FKs e índices — migrations e queries |
+| `docs/06-schema-banco.md` | 29 tabelas com colunas, tipos, FKs e índices — migrations V1–V14; próxima: V15 |
 | `docs/07-convencoes-desenvolvimento.md` | Padrões de entity/service/controller/template + naming + checklist de PR |
 | `docs/08-manutencao-docs.md` | **Protocolo de fim de sessão** — quais docs atualizar após cada mudança de código |
 
@@ -96,14 +96,15 @@ Templates em: `src/main/resources/templates/{modulo}/{arquivo}.html`
 ## Fluxos Críticos (resumo)
 
 **Pedido:** NOVO → CONFIRMADO → EM_PRODUCAO → PRONTO → ENTREGUE (ou CANCELADO)  
-Cada transição publica evento → `NotificacaoEventListener` → email/WhatsApp
+Cada transição publica evento → `NotificacaoEventListener` → email/WhatsApp/SMS (fallback)
 
 **Orçamento:** PENDENTE → APROVADO (via link público com token) → converte em Pedido
 
 **Produção:** OrdemProducao criada automaticamente ao confirmar Pedido  
 **Qualidade:** InspecaoQualidade com checklist JSONB — reprovado gera AlertaInterno
 
-**Notificações:** Templates configuráveis por evento+canal no banco; `NotificacaoService` substitui `{{variaveis}}`
+**Notificações:** Templates configuráveis por evento+canal no banco; `NotificacaoService` substitui `{variaveis}`.  
+Jobs proativos: aniversário (08h), orçamento expirando (09h). SMS como fallback quando WhatsApp falha.
 
 ---
 
@@ -140,7 +141,7 @@ BD:    localhost:5432/pascoa_db (usuário: postgres)
 6. ✅ Controle de Qualidade (checklist, inspeção)
 7. ✅ Analytics (comparativo de safras, ranking)
 8. ✅ PWA (manifest.json, Service Worker)
-9. ⏳ Novas notificações: aniversário, orçamento expirando, SMS fallback
+9. ✅ Novas notificações: aniversário, orçamento expirando, SMS fallback
 10. ⏳ Integrar gastos ao financeiro: DRE simplificado, simulador de cenários
 11. ✅ Roles: GESTOR_QUALIDADE, ANALISTA
 12. ✅ Testes de integração

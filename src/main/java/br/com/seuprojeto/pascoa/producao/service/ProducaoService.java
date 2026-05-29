@@ -6,20 +6,24 @@ import br.com.seuprojeto.pascoa.fichaTecnica.entity.FichaTecnicaItem;
 import br.com.seuprojeto.pascoa.fichaTecnica.repository.FichaTecnicaRepository;
 import br.com.seuprojeto.pascoa.notificacao.entity.EventoNotificacao;
 import br.com.seuprojeto.pascoa.notificacao.event.PedidoStatusEvent;
+import br.com.seuprojeto.pascoa.notificacao.service.AlertaInternoService;
 import br.com.seuprojeto.pascoa.pedido.entity.ItemPedido;
 import br.com.seuprojeto.pascoa.pedido.entity.Pedido;
 import br.com.seuprojeto.pascoa.producao.entity.OrdemProducao;
 import br.com.seuprojeto.pascoa.producao.entity.StatusOrdem;
 import br.com.seuprojeto.pascoa.producao.repository.OrdemProducaoRepository;
+import br.com.seuprojeto.pascoa.shared.exception.EstoqueInsuficienteException;
 import br.com.seuprojeto.pascoa.shared.exception.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,6 +34,7 @@ public class ProducaoService {
     private final OrdemProducaoRepository ordemRepository;
     private final FichaTecnicaRepository fichaTecnicaRepository;
     private final EstoqueService estoqueService;
+    private final AlertaInternoService alertaInternoService;
     private final ApplicationEventPublisher eventPublisher;
 
     // -----------------------------------------------------------------------
@@ -120,7 +125,7 @@ public class ProducaoService {
         eventPublisher.publishEvent(new PedidoStatusEvent(ordem.getPedido(), EventoNotificacao.PRODUCAO_INICIADA));
     }
 
-    @Transactional
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     public void concluirOrdem(Long id) {
         OrdemProducao ordem = buscarPorId(id);
         if (!ordem.getStatus().podeConcluir()) {
@@ -148,11 +153,19 @@ public class ProducaoService {
                 "' deve ser maior que zero. Corrija antes de concluir a produção.");
         }
 
+        // Valida disponibilidade de TODAS as MPs antes de deduzir qualquer uma
+        verificarDisponibilidadeMP(ficha.getItens(), qtdOrdem, rendimento, ordem.getProduto().getNome());
+
         String motivoBase = "Produção: " + ordem.getQuantidade() +
                             "x " + ordem.getProduto().getNome() +
                             " | Ordem #" + ordem.getId();
 
-        for (FichaTecnicaItem item : ficha.getItens()) {
+        // Ordenação por ID da MP evita deadlock quando múltiplas MPs são bloqueadas em paralelo
+        List<FichaTecnicaItem> itensOrdenados = ficha.getItens().stream()
+            .sorted(java.util.Comparator.comparing(i -> i.getMateriaPrima().getId()))
+            .toList();
+
+        for (FichaTecnicaItem item : itensOrdenados) {
             BigDecimal qtdNecessaria = item.getQuantidade()
                 .multiply(qtdOrdem)
                 .divide(rendimento, 4, RoundingMode.HALF_UP);
@@ -164,6 +177,32 @@ public class ProducaoService {
         ordemRepository.save(ordem);
     }
 
+    private void verificarDisponibilidadeMP(List<FichaTecnicaItem> itens, BigDecimal qtdOrdem,
+                                             BigDecimal rendimento, String nomeProduto) {
+        List<String> insuficientes = new ArrayList<>();
+        for (FichaTecnicaItem item : itens) {
+            BigDecimal necessario = item.getQuantidade()
+                .multiply(qtdOrdem)
+                .divide(rendimento, 4, RoundingMode.HALF_UP);
+            BigDecimal disponivel = item.getMateriaPrima().getQuantidadeAtual();
+            if (disponivel.compareTo(necessario) < 0) {
+                insuficientes.add(String.format(
+                    "'%s': precisa %.3f %s, disponível %.3f %s",
+                    item.getMateriaPrima().getNome(),
+                    necessario, item.getMateriaPrima().getUnidade().getSimbolo(),
+                    disponivel, item.getMateriaPrima().getUnidade().getSimbolo()
+                ));
+            }
+        }
+        if (!insuficientes.isEmpty()) {
+            throw new EstoqueInsuficienteException(
+                "Estoque insuficiente para produzir '" + nomeProduto + "'. " +
+                "Faça uma entrada de estoque antes de continuar:\n" +
+                String.join("\n", insuficientes)
+            );
+        }
+    }
+
     @Transactional
     public void cancelarOrdem(Long id) {
         OrdemProducao ordem = buscarPorId(id);
@@ -171,7 +210,19 @@ public class ProducaoService {
             throw new IllegalStateException(
                 "Ordem não pode ser cancelada no status: " + ordem.getStatus().getDescricao());
         }
+        boolean estaEmAndamento = ordem.getStatus() == StatusOrdem.EM_ANDAMENTO;
         ordem.setStatus(StatusOrdem.CANCELADA);
         ordemRepository.save(ordem);
+
+        if (estaEmAndamento) {
+            alertaInternoService.criar(
+                "Ordem de produção #" + ordem.getId() + " cancelada — o pedido #" +
+                ordem.getPedido().getId() + " (" + ordem.getProduto().getNome() +
+                ") foi cancelado enquanto estava em andamento.",
+                "/producao/" + ordem.getId(),
+                "bi-clipboard2-x",
+                "danger"
+            );
+        }
     }
 }

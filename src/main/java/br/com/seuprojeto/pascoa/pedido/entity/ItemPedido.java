@@ -35,6 +35,10 @@ public class ItemPedido {
     @Column(name = "preco_unitario", nullable = false, precision = 10, scale = 2)
     private BigDecimal precoUnitario;
 
+    // Snapshot do custo de produção por unidade no momento da confirmação do pedido
+    @Column(name = "custo_unitario", precision = 10, scale = 2)
+    private BigDecimal custoUnitario;
+
     @Column(precision = 12, scale = 2)
     private BigDecimal subtotal;
 

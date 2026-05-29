@@ -40,12 +40,25 @@ public class ClienteController {
     }
 
     @PostMapping("/salvar")
-    public String salvar(@Valid @ModelAttribute("cliente") Cliente cliente,
+    public String salvar(@Valid @ModelAttribute("cliente") Cliente clienteForm,
                          BindingResult result, RedirectAttributes ra) {
         if (result.hasErrors()) {
             return "clientes/form";
         }
-        service.salvar(cliente);
+        if (clienteForm.getId() != null) {
+            // Atualização: carrega entidade existente para preservar campos
+            // gerenciados separadamente (optIn, anonimizado, preferenciaCanal, pedidos)
+            // que não aparecem no formulário de edição.
+            Cliente existente = service.buscarPorId(clienteForm.getId());
+            existente.setNome(clienteForm.getNome());
+            existente.setCpf(clienteForm.getCpf());
+            existente.setTelefone(clienteForm.getTelefone());
+            existente.setEmail(clienteForm.getEmail());
+            existente.setEndereco(clienteForm.getEndereco());
+            service.salvar(existente);
+        } else {
+            service.salvar(clienteForm);
+        }
         ra.addFlashAttribute("sucesso", "Cliente salvo com sucesso!");
         return "redirect:/clientes";
     }

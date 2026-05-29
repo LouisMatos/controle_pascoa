@@ -65,7 +65,7 @@
                 <!-- Foto ou placeholder -->
                 <a th:href="@{/catalogo/{id}(id=${p.id})}">
                     <img th:if="${p.foto != null and !p.foto.isEmpty()}"
-                         th:src="@{/uploads/{f}(f=${p.foto})}"
+                         th:src="@{/media/{f}(f=${p.foto})}"
                          th:alt="${p.nome}" class="produto-img card-img-top">
                     <div th:unless="${p.foto != null and !p.foto.isEmpty()}"
                          class="produto-img-placeholder card-img-top rounded-top">

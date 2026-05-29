@@ -1,5 +1,7 @@
 package br.com.seuprojeto.pascoa.notificacao.entity;
 
+import br.com.seuprojeto.pascoa.cadastro.entity.Cliente;
+import br.com.seuprojeto.pascoa.orcamento.entity.Orcamento;
 import br.com.seuprojeto.pascoa.pedido.entity.Pedido;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -21,13 +23,32 @@ public class NotificacaoEnviada {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /**
+     * Pedido associado — nullable para notificações sem pedido
+     * (ex: ANIVERSARIO_CLIENTE, ORCAMENTO_EXPIRANDO).
+     */
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "pedido_id", nullable = false)
+    @JoinColumn(name = "pedido_id", nullable = true)
     private Pedido pedido;
+
+    /** Item 25: cliente direto (para notificações sem pedido, ex: aniversário). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cliente_id", nullable = true)
+    private Cliente cliente;
+
+    /** Item 25: orçamento associado (para ORCAMENTO_EXPIRANDO). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "orcamento_id", nullable = true)
+    private Orcamento orcamento;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "template_id")
     private TemplateNotificacao template;
+
+    /** Evento que originou o envio — usado para garantir idempotência (ver índice uq_notif_pedido_evento_canal). */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "evento", length = 40)
+    private EventoNotificacao evento;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "canal", nullable = false, length = 10)
