@@ -1,7 +1,8 @@
 # Referência de Rotas e Endpoints — Sistema Controle Páscoa
 
 > **Uso:** Referência rápida de todos os endpoints HTTP do sistema.  
-> **Atualizado em:** 2026-05-26
+> **Cobre:** Monólito (~126 endpoints) + 9 Microsserviços REST (v5)  
+> **Atualizado em:** 2026-05-29
 
 ---
 
@@ -324,4 +325,173 @@
 | Usuários | 7 | 0 |
 | Catálogo | 2 | 2 |
 | PWA/Estáticos | 4 | 4 |
-| **Total** | **~126** | **11** |
+| **Total Monólito** | **~126** | **11** |
+
+---
+
+## Microsserviços v5 — APIs REST
+
+> Base URL de cada serviço: `http://localhost:{porta}` ou via Gateway `http://localhost:8090`  
+> Autenticação: `Authorization: Bearer {jwt}` (exceto rotas públicas)  
+> Roles via `@PreAuthorize("hasAnyRole(...)")`
+
+---
+
+### auth-service (porta 8081)
+
+| Método | URL | Auth | Descrição |
+|--------|-----|------|-----------|
+| POST | `/api/auth/login` | 🔓 | Login com usuário/senha (+ TOTP opcional) → retorna access + refresh token |
+| POST | `/api/auth/refresh` | 🔓 | Renovar access token via refresh token |
+| POST | `/api/auth/logout` | 🔐 | Revogar access token (adiciona ao blacklist Redis) |
+| GET | `/api/auth/validate` | 🔐 | Validar token e retornar claims (userId, login, roles) |
+| GET | `/actuator/health` | 🔓 | Health check |
+
+---
+
+### customer-service (porta 8082)
+
+| Método | URL | Auth | Descrição |
+|--------|-----|------|-----------|
+| GET | `/api/clientes` | 🔐 👑 | Listar todos os clientes ativos |
+| GET | `/api/clientes/{id}` | 🔐 | Buscar cliente por ID |
+| POST | `/api/clientes` | 🔐 👑 | Criar novo cliente |
+| PUT | `/api/clientes/{id}` | 🔐 👑 | Atualizar cliente |
+| DELETE | `/api/clientes/{id}` | 🔐 👑 | Inativar cliente (soft-delete) |
+| GET | `/actuator/health` | 🔓 | Health check |
+
+---
+
+### inventory-service (porta 8083)
+
+| Método | URL | Auth | Descrição |
+|--------|-----|------|-----------|
+| GET | `/api/materias-primas` | 🔐 🎂📊 | Listar matérias-primas ativas |
+| GET | `/api/materias-primas/criticos` | 🔐 🎂📊 | Listar com estoque abaixo do mínimo |
+| GET | `/api/materias-primas/{id}` | 🔐 🎂📊 | Buscar por ID |
+| POST | `/api/materias-primas` | 🔐 👑🎂 | Criar matéria-prima |
+| POST | `/api/materias-primas/{id}/entrada` | 🔐 👑🎂 | Registrar entrada de estoque |
+| POST | `/api/materias-primas/{id}/saida` | 🔐 👑🎂 | Registrar saída de estoque |
+| GET | `/api/materias-primas/{id}/movimentacoes` | 🔐 👑🎂📊 | Histórico de movimentações |
+| GET | `/api/materias-primas/{id}/disponibilidade?quantidade=` | 🔐 👑🎂 | Verificar disponibilidade |
+| GET | `/actuator/health` | 🔓 | Health check |
+
+---
+
+### product-service (porta 8084)
+
+| Método | URL | Auth | Descrição |
+|--------|-----|------|-----------|
+| GET | `/api/produtos` | 🔐 | Listar produtos ativos |
+| GET | `/api/produtos/disponiveis` | 🔓 | Listar disponíveis (catálogo público) |
+| GET | `/api/produtos/categoria/{cat}` | 🔓 | Filtrar por categoria |
+| GET | `/api/produtos/{id}` | 🔐 | Buscar por ID |
+| POST | `/api/produtos` | 🔐 👑 | Criar produto |
+| PUT | `/api/produtos/{id}` | 🔐 👑 | Atualizar produto |
+| PATCH | `/api/produtos/{id}/foto` | 🔐 👑 | Atualizar foto do produto |
+| DELETE | `/api/produtos/{id}` | 🔐 👑 | Inativar produto |
+| GET | `/actuator/health` | 🔓 | Health check |
+
+---
+
+### order-service (porta 8085)
+
+| Método | URL | Auth | Descrição |
+|--------|-----|------|-----------|
+| GET | `/api/pedidos` | 🔐 👤📊💰 | Listar todos os pedidos |
+| GET | `/api/pedidos/{id}` | 🔐 👤📊💰 | Buscar pedido por ID |
+| POST | `/api/pedidos` | 🔐 👤 | Criar novo pedido |
+| POST | `/api/pedidos/{id}/itens` | 🔐 👤 | Adicionar item ao pedido |
+| DELETE | `/api/pedidos/{id}/itens/{itemId}` | 🔐 👤 | Remover item do pedido |
+| POST | `/api/pedidos/{id}/confirmar` | 🔐 👤 | Confirmar pedido (→CONFIRMADO) |
+| POST | `/api/pedidos/{id}/cancelar` | 🔐 👤 | Cancelar pedido |
+| POST | `/api/pedidos/{id}/pronto` | 🔐 🎂 | Marcar como pronto (→PRONTO) |
+| POST | `/api/pedidos/{id}/entregar` | 🔐 👤 | Registrar entrega (→ENTREGUE) |
+| POST | `/api/pedidos/{id}/pagamento` | 🔐 👤 | Registrar forma de pagamento |
+| GET | `/api/acompanhamento/{token}` | 🔓 | Rastreamento público por token |
+| GET | `/actuator/health` | 🔓 | Health check |
+
+---
+
+### production-service (porta 8086)
+
+| Método | URL | Auth | Descrição |
+|--------|-----|------|-----------|
+| GET | `/api/producao` | 🔐 🎂📊 | Listar todas as ordens de produção |
+| GET | `/api/producao/kanban` | 🔐 🎂 | Visão Kanban (PENDENTE/EM_ANDAMENTO/CONCLUIDA) |
+| GET | `/api/producao/{id}` | 🔐 🎂📊 | Buscar ordem por ID |
+| GET | `/api/producao/pedido/{pedidoId}` | 🔐 🎂📊 | Buscar ordem pelo ID do pedido |
+| POST | `/api/producao/{id}/iniciar` | 🔐 🎂 | Iniciar produção (→EM_ANDAMENTO) |
+| POST | `/api/producao/{id}/concluir` | 🔐 🎂 | Concluir produção (→CONCLUIDA) + publica evento |
+| POST | `/api/producao/{id}/cancelar` | 🔐 👑 | Cancelar ordem (→CANCELADA) |
+| GET | `/actuator/health` | 🔓 | Health check |
+
+---
+
+### financial-service (porta 8087)
+
+| Método | URL | Auth | Descrição |
+|--------|-----|------|-----------|
+| GET | `/api/financeiro/lancamentos?mes=&ano=` | 🔐 💰📊 | Listar lançamentos do mês/ano |
+| GET | `/api/financeiro/lancamentos/{id}` | 🔐 💰📊 | Buscar lançamento por ID |
+| POST | `/api/financeiro/lancamentos` | 🔐 💰 | Registrar lançamento manual |
+| GET | `/api/financeiro/resumo?mes=&ano=` | 🔐 💰📊 | Resumo mensal (receitas, despesas, margem) |
+| GET | `/api/financeiro/dre?ano=` | 🔐 💰📊 | DRE anual (receita bruta, custos, lucro líquido) |
+| GET | `/api/financeiro/fluxo-caixa?ano=` | 🔐 💰📊 | Fluxo de caixa mensal (12 meses) |
+| GET | `/actuator/health` | 🔓 | Health check |
+
+---
+
+### notification-service (porta 8088)
+
+| Método | URL | Auth | Descrição |
+|--------|-----|------|-----------|
+| GET | `/api/notificacoes?limite=` | 🔐 👑 | Listar notificações recentes |
+| GET | `/api/notificacoes/{id}` | 🔐 👑 | Buscar notificação por ID |
+| GET | `/api/notificacoes/referencia/{referenciaId}` | 🔐 👤 | Histórico por pedido/cliente |
+| POST | `/api/notificacoes/{id}/reenviar` | 🔐 👑 | Reenviar notificação com falha |
+| GET | `/actuator/health` | 🔓 | Health check |
+
+---
+
+### analytics-service (porta 8089)
+
+| Método | URL | Auth | Descrição |
+|--------|-----|------|-----------|
+| GET | `/api/analytics/dashboard` | 🔐 📊💰 | Dashboard completo (safra + comparativo + ranking + mensal) |
+| GET | `/api/analytics/safras/comparativo?anoAtual=&anoAnterior=` | 🔐 📊💰 | Comparativo entre duas safras (variação %) |
+| GET | `/api/analytics/safras/{ano}` | 🔐 📊💰 | Métricas de uma safra específica |
+| GET | `/api/analytics/produtos/ranking?ano=&limite=` | 🔐 📊💰 | Ranking de produtos (quantidade + receita) |
+| GET | `/api/analytics/metricas-mensais?ano=` | 🔐 📊💰 | Métricas mês a mês (12 registros) |
+| GET | `/actuator/health` | 🔓 | Health check |
+
+---
+
+### api-gateway (porta 8090)
+
+| Método | URL | Auth | Descrição |
+|--------|-----|------|-----------|
+| GET | `/fallback/monolith` | 🔓 | Resposta 503 quando monólito está fora |
+| GET | `/actuator/health` | 🔓 | Health check do gateway |
+| GET | `/actuator/gateway/routes` | 🔓 | Listar rotas configuradas |
+
+> Todas as demais rotas são **proxy transparente** para `http://localhost:8080` (monólito).
+
+---
+
+### Resumo Geral de Endpoints
+
+| Serviço | Total | Públicos |
+|---------|-------|---------|
+| Monólito | ~126 | 11 |
+| auth-service | 5 | 2 |
+| customer-service | 6 | 1 |
+| inventory-service | 9 | 1 |
+| product-service | 9 | 3 |
+| order-service | 12 | 2 |
+| production-service | 7 | 1 |
+| financial-service | 7 | 1 |
+| notification-service | 5 | 1 |
+| analytics-service | 6 | 1 |
+| api-gateway | 3 | 3 |
+| **Total Geral** | **~195** | **~27** |

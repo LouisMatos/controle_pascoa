@@ -1,0 +1,35 @@
+# Configurações herdadas por TODOS os microsserviços
+spring:
+  datasource:
+    username: postgres
+    password: ${DB_PASSWORD:sua_senha}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: 5672
+    username: pascoa
+    password: ${RABBITMQ_PASSWORD:pascoa123}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+    enabled: ${EUREKA_ENABLED:false}
+  instance:
+    prefer-ip-address: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    br.com.seuprojeto: INFO

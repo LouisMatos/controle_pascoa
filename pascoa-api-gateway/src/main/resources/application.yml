@@ -1,0 +1,82 @@
+server:
+  port: 8090
+
+spring:
+  application:
+    name: pascoa-api-gateway
+
+  cloud:
+    gateway:
+      # X-Forwarded-* habilitado explicitamente — o monólito (Tomcat) depende disso
+      # para que sendRedirect() use o host:porta do gateway (8090) e não do backend (8080).
+      x-forwarded:
+        enabled: true
+        for-enabled: true
+        host-enabled: true
+        port-enabled: true
+        proto-enabled: true
+        prefix-enabled: true
+
+      # Descobre serviços automaticamente via Eureka (lb://nome-do-servico)
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+
+      routes:
+        # ── Monólito — rota catch-all (deve ser a última) ─────────────────────
+        - id: pascoa-monolith
+          uri: http://localhost:8080
+          predicates:
+            - Path=/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: monolithCircuitBreaker
+                fallbackUri: forward:/fallback/monolith
+            - name: Retry
+              args:
+                retries: 2
+                statuses: BAD_GATEWAY, SERVICE_UNAVAILABLE
+                methods: GET
+                backoff:
+                  firstBackoff: 100ms
+                  maxBackoff: 500ms
+
+      # Configurações globais de timeout
+      httpclient:
+        connect-timeout: 5000
+        response-timeout: 30s
+
+      # Headers padrão em todas as respostas
+      default-filters:
+        - AddResponseHeader=X-Gateway, pascoa-api-gateway
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+
+# Eureka — registra o gateway como serviço
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    # Tenta Eureka mas não bloqueia a inicialização se estiver indisponível
+    enabled: ${EUREKA_ENABLED:false}
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+
+# Actuator — expõe health, info e rotas configuradas
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+  endpoint:
+    health:
+      show-details: always
+    gateway:
+      enabled: true
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO
+    br.com.seuprojeto.pascoa.gateway: DEBUG

@@ -7,13 +7,90 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="pascoa" />
+      </profile>
+      <profile name="Annotation profile for pascoa-api-gateway" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.34/lombok-1.18.34.jar" />
+        </processorPath>
+        <module name="pascoa-api-gateway" />
+      </profile>
+      <profile name="Annotation profile for pascoa-commons" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.34/lombok-1.18.34.jar" />
+        </processorPath>
+        <module name="pascoa-commons" />
+      </profile>
+      <profile name="Annotation profile for pascoa-config-server" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.34/lombok-1.18.34.jar" />
+        </processorPath>
+        <module name="pascoa-config-server" />
+      </profile>
+      <profile name="Annotation profile for pascoa-eureka" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.34/lombok-1.18.34.jar" />
+        </processorPath>
+        <module name="pascoa-eureka" />
+      </profile>
+      <profile name="Annotation profile for pascoa (1)" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.34/lombok-1.18.34.jar" />
+        </processorPath>
+        <module name="pascoa (1)" />
+      </profile>
+      <profile name="Annotation profile for pascoa-parent" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.36/lombok-1.18.36.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/mapstruct/mapstruct-processor/1.6.3/mapstruct-processor-1.6.3.jar" />
+        </processorPath>
+        <module name="pascoa-inventory-service" />
+        <module name="pascoa-customer-service" />
+        <module name="pascoa-production-service" />
+        <module name="pascoa-product-service" />
+        <module name="pascoa-auth-service" />
+        <module name="pascoa-notification-service" />
+        <module name="pascoa-financial-service" />
+        <module name="pascoa-analytics-service" />
+        <module name="pascoa-order-service" />
       </profile>
     </annotationProcessing>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="pascoa" options="-parameters" />
+      <module name="pascoa" options="" />
+      <module name="pascoa (1)" options="-parameters" />
+      <module name="pascoa-analytics-service" options="-parameters" />
+      <module name="pascoa-api-gateway" options="-parameters" />
+      <module name="pascoa-auth-service" options="-parameters" />
+      <module name="pascoa-commons" options="-parameters" />
+      <module name="pascoa-config-server" options="-parameters" />
+      <module name="pascoa-customer-service" options="-parameters" />
+      <module name="pascoa-eureka" options="-parameters" />
+      <module name="pascoa-financial-service" options="-parameters" />
+      <module name="pascoa-inventory-service" options="-parameters" />
+      <module name="pascoa-monolith" options="-parameters" />
+      <module name="pascoa-notification-service" options="-parameters" />
+      <module name="pascoa-order-service" options="-parameters" />
+      <module name="pascoa-product-service" options="-parameters" />
+      <module name="pascoa-production-service" options="-parameters" />
     </option>
   </component>
 </project>

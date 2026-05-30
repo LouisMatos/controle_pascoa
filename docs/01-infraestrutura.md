@@ -1,40 +1,57 @@
 # Documentação de Infraestrutura — Sistema Controle Páscoa
 
 > **Projeto:** Sistema de Gestão de Ovos de Páscoa Artesanal  
-> **Versão:** Spring Boot 3.3.4 / Java 21  
-> **Atualizado em:** 2026-05-26
+> **Versão:** Spring Boot 3.3.4 / Java 21 / Spring Cloud 2023.0.3  
+> **Arquitetura:** Monólito MVC + 9 Microsserviços (Strangler Fig v5)  
+> **Atualizado em:** 2026-05-29
 
 ---
 
 ## 1. Stack Tecnológica
 
+### Monólito (`pascoa-monolith`)
 | Camada | Tecnologia | Versão |
 |--------|-----------|--------|
 | Linguagem | Java | 21 (LTS) |
 | Framework web | Spring Boot | 3.3.4 |
 | ORM | Spring Data JPA / Hibernate | via Boot BOM |
-| Banco de dados | PostgreSQL | 12+ |
+| Banco de dados | PostgreSQL | 16 |
 | Migrations | Flyway | via Boot BOM |
 | Template engine | Thymeleaf | 3.x |
 | CSS/UI | Bootstrap | 5.3.2 |
 | Ícones | Bootstrap Icons | 1.11.3 |
 | Segurança | Spring Security | 6.x |
 | Validação | Bean Validation / Hibernate Validator | via Boot BOM |
-| PDF | OpenPDF | Maven |
-| Excel | Apache POI | Maven |
-| QR Code | ZXing (Google) | Maven |
+| PDF | OpenPDF | 1.3.43 |
+| Excel | Apache POI | 5.3.0 |
+| QR Code | ZXing (Google) | 3.5.3 |
 | E-mail | Spring Mail (SMTP) | via Boot BOM |
-| Build | Maven | 3.x |
+| Build | Maven | 3.x (multi-module) |
 | Testes | JUnit 5 + H2 in-memory | via Boot BOM |
+
+### Microsserviços (Stack adicional — v5)
+| Camada | Tecnologia | Versão |
+|--------|-----------|--------|
+| Service Discovery | Spring Cloud Netflix Eureka | 2023.0.3 |
+| API Gateway | Spring Cloud Gateway (WebFlux) | 2023.0.3 |
+| Config Centralizado | Spring Cloud Config Server | 2023.0.3 |
+| Mensageria | RabbitMQ | 3.13 |
+| Cache / JWT Blacklist | Redis | 7 |
+| Distributed Tracing | Zipkin | 3 |
+| JWT | JJWT | 0.12.6 |
+| Mapper | MapStruct | 1.6.3 |
+| HTTP entre serviços | Spring Cloud OpenFeign | 2023.0.3 |
+| Circuit Breaker | Spring Cloud CircuitBreaker | via Gateway |
+| Testes de integração | Testcontainers (PostgreSQL) | 1.20.4 |
 
 ---
 
 ## 2. Banco de Dados
 
-### 2.1 Configuração
+### 2.1 Configuração — Monólito
 
 ```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/pascoa_db
+spring.datasource.url=jdbc:postgresql://localhost:5432/pascoa_monolith
 spring.datasource.username=postgres
 spring.jpa.database-platform=org.hibernate.dialect.PostgreSQLDialect
 spring.jpa.hibernate.ddl-auto=validate
@@ -42,6 +59,25 @@ spring.jpa.hibernate.ddl-auto=validate
 
 - DDL gerenciado **exclusivamente pelo Flyway** (`ddl-auto=validate` apenas verifica o schema).
 - O schema nunca é gerado pelo Hibernate em produção.
+
+### 2.2 Múltiplos Bancos — Microsserviços v5
+
+Cada microsserviço possui seu próprio banco de dados, criados automaticamente pelo script de init do Docker:
+
+| Banco | Microsserviço | Porta do serviço |
+|-------|--------------|-----------------|
+| `pascoa_monolith` | pascoa-monolith | 8080 |
+| `pascoa_auth` | pascoa-auth-service | 8081 |
+| `pascoa_customers` | pascoa-customer-service | 8082 |
+| `pascoa_inventory` | pascoa-inventory-service | 8083 |
+| `pascoa_products` | pascoa-product-service | 8084 |
+| `pascoa_orders` | pascoa-order-service | 8085 |
+| `pascoa_production` | pascoa-production-service | 8086 |
+| `pascoa_financial` | pascoa-financial-service | 8087 |
+| `pascoa_notifications` | pascoa-notification-service | 8088 |
+| `pascoa_analytics` | pascoa-analytics-service | 8089 |
+
+Script de init: `infra/postgres/init-databases.sql` (executado na primeira inicialização do container).
 
 ### 2.2 Migrations Flyway
 
@@ -177,9 +213,49 @@ Rotas públicas (sem autenticação):
 Todas as outras rotas exigem autenticação.
 ```
 
-- **Autenticação**: Formulário de login padrão Spring Security.
+- **Autenticação**: Formulário de login padrão Spring Security + 2FA TOTP para ADMIN.
 - **Senhas**: Hash BCrypt.
 - **Autorização**: RBAC por role (ver seção 7.2).
+- **`SecurityContextRepository` bean explícito** (`DelegatingSecurityContextRepository`
+  combinando `RequestAttributeSecurityContextRepository` + `HttpSessionSecurityContextRepository`):
+  declarado em `SecurityConfig` e amarrado ao `SecurityFilterChain` via `.securityContext(...)`.
+  É **obrigatório** porque o Spring Security 6 removeu o `SecurityContextPersistenceFilter` —
+  qualquer fluxo que precise persistir um contexto fora do filtro padrão (ex.: conclusão de 2FA
+  no `TwoFactorController.completarAutenticacao()`) tem que injetar o bean e chamar
+  `saveContext(context, request, response)` explicitamente. Setar `session.setAttribute(SPRING_SECURITY_CONTEXT_KEY, ctx)`
+  sozinho **não funciona mais** — o `RequestAttributeSecurityContextRepository` (com precedência)
+  retorna context vazio no próximo request. Ver bug B13 em [10-bugfix-login-loop-gateway.md](10-bugfix-login-loop-gateway.md).
+
+### 7.1.1 Atrás do API Gateway (monólito + Spring Cloud Gateway)
+
+Quando o monólito roda atrás do `pascoa-api-gateway` (porta 8090), três configurações são
+**obrigatórias** para que redirects, cookies de sessão e CSRF funcionem corretamente:
+
+```properties
+# pascoa-monolith/src/main/resources/application.properties
+server.forward-headers-strategy=framework
+server.servlet.session.cookie.same-site=lax
+server.servlet.session.cookie.http-only=true
+```
+
+```yaml
+# pascoa-api-gateway/src/main/resources/application.yml
+spring:
+  cloud:
+    gateway:
+      x-forwarded:
+        enabled: true
+        for-enabled: true
+        host-enabled: true
+        port-enabled: true
+        proto-enabled: true
+        prefix-enabled: true
+```
+
+Sem `forward-headers-strategy=framework`, o Tomcat ignora `X-Forwarded-*` e monta URLs absolutas
+de `sendRedirect()` apontando para `localhost:8080` — o navegador sai do gateway, perde o
+`JSESSIONID` e cai em loop de login. Detalhamento completo (bugs B11–B13) em
+[10-bugfix-login-loop-gateway.md](10-bugfix-login-loop-gateway.md).
 
 ### 7.2 Roles e Permissões
 
@@ -310,39 +386,69 @@ O diretório `~/pascoa-uploads` é criado automaticamente pelo `WebMvcConfig` se
 
 ---
 
-## 13. Estrutura de Diretórios do Projeto
+## 13. Docker Compose — Infraestrutura Completa
+
+```bash
+# Subir toda a infraestrutura
+docker compose up -d
+
+# Serviços disponíveis:
+# PostgreSQL:  localhost:5432  (10 bancos criados automaticamente)
+# RabbitMQ:   localhost:5672  (AMQP) / localhost:15672 (UI: pascoa/pascoa123)
+# Redis:       localhost:6379  (senha: pascoa123)
+# Zipkin:      localhost:9411
+
+# Os serviços Spring Cloud rodam fora do Docker (IntelliJ / Maven):
+# Eureka:      localhost:8761
+# Config:      localhost:8888
+# Gateway:     localhost:8090
+# Monólito:    localhost:8080
+```
+
+### RabbitMQ — Exchanges configuradas
+
+| Exchange | Tipo | Publishers |
+|----------|------|-----------|
+| `pascoa.orders` | topic | order-service |
+| `pascoa.production` | topic | production-service, inventory-service |
+| `pascoa.customers` | topic | customer-service, auth-service |
+| `pascoa.financial` | topic | financial-service |
+| `pascoa.notifications` | topic | todos (wildcard `#`) |
+| `pascoa.dlx` | direct | dead-letter de todas as filas |
+
+Configuração completa (exchanges, queues, bindings) em `infra/rabbitmq/definitions.json`.
+
+---
+
+## 14. Estrutura de Diretórios do Projeto (v5)
 
 ```
 controle_pascoa/
-├── pom.xml
-├── src/
-│   ├── main/
-│   │   ├── java/br/com/seuprojeto/pascoa/
-│   │   │   ├── PascoaApplication.java
-│   │   │   ├── config/
-│   │   │   ├── common/
-│   │   │   ├── cadastro/
-│   │   │   ├── pedido/
-│   │   │   ├── orcamento/
-│   │   │   ├── financeiro/
-│   │   │   ├── producao/
-│   │   │   ├── estoque/
-│   │   │   ├── qualidade/
-│   │   │   ├── fichaTecnica/
-│   │   │   ├── notificacao/
-│   │   │   ├── crm/
-│   │   │   ├── gastos/
-│   │   │   ├── analytics/
-│   │   │   ├── catalogo/
-│   │   │   ├── pwa/
-│   │   │   ├── seguranca/
-│   │   │   └── shared/
-│   │   └── resources/
-│   │       ├── application.properties
-│   │       ├── application-test.properties
-│   │       ├── db/migration/
-│   │       └── templates/
-│   └── test/
-│       └── java/ (6 testes de integração)
-└── docs/          ← documentação do projeto
+├── pom.xml                        ← root parent (packaging=pom)
+├── docker-compose.yml             ← PostgreSQL, RabbitMQ, Redis, Zipkin
+├── infra/
+│   ├── postgres/init-databases.sql ← cria 10 bancos automaticamente
+│   └── rabbitmq/definitions.json   ← exchanges, queues, bindings, DLQs
+├── pascoa-monolith/               ← monólito Spring MVC + Thymeleaf
+│   ├── pom.xml
+│   └── src/
+│       ├── main/java/.../pascoa/  ← 15 módulos de negócio
+│       └── resources/
+│           ├── application.properties
+│           └── db/migration/      ← V1 a V13 (Flyway)
+├── pascoa-commons/                ← DomainEvent base
+├── pascoa-eureka/                 ← @EnableEurekaServer
+├── pascoa-config-server/          ← @EnableConfigServer
+│   └── configs/                   ← application.yml + {servico}.yml
+├── pascoa-api-gateway/            ← Spring Cloud Gateway
+├── pascoa-auth-service/           ← JWT + TOTP + Redis
+├── pascoa-customer-service/       ← Hexagonal
+├── pascoa-inventory-service/      ← Hexagonal
+├── pascoa-product-service/        ← Hexagonal
+├── pascoa-order-service/          ← Hexagonal + OpenFeign
+├── pascoa-production-service/     ← Hexagonal + event-driven
+├── pascoa-financial-service/      ← Hexagonal + DRE
+├── pascoa-notification-service/   ← Hexagonal + multi-canal
+├── pascoa-analytics-service/      ← Hexagonal + CQRS leve
+└── docs/                          ← documentação do projeto
 ```

@@ -1,8 +1,8 @@
 # Schema do Banco de Dados — Sistema Controle Páscoa
 
-> **Fonte:** Leitura direta das migrations V1–V14 + entities Java  
-> **Banco:** PostgreSQL | **Versionamento:** Flyway  
-> **Atualizado em:** 2026-05-26
+> **Fonte:** Migrations V1–V14 do monólito + V1 de cada microsserviço  
+> **Bancos:** 10 PostgreSQL (1 monólito + 9 microsserviços) | **Versionamento:** Flyway  
+> **Atualizado em:** 2026-05-29
 
 ---
 
@@ -618,3 +618,82 @@ CREATE TABLE IF NOT EXISTS nova_tabela (
 ```
 
 > **Regra:** Nunca alterar migrations já aplicadas. Sempre criar nova versão V{N}.
+
+---
+
+## Schemas dos Microsserviços v5
+
+Cada microsserviço possui seu próprio banco e migration `V1__create_{servico}_schema.sql`.
+
+### pascoa_auth — `pascoa-auth-service`
+
+| Tabela | Colunas principais | Índices |
+|--------|-------------------|---------|
+| `usuarios` | id, login (unique), password_hash, ativo, totp_ativado, totp_secret, tentativas_falhas | idx em login |
+| `usuario_roles` | usuario_id (FK), role | PK composta |
+
+### pascoa_customers — `pascoa-customer-service`
+
+| Tabela | Colunas principais | Índices |
+|--------|-------------------|---------|
+| `clientes` | id, nome, email, telefone, data_nascimento, ativo, criado_em | idx em email, ativo |
+
+### pascoa_inventory — `pascoa-inventory-service`
+
+| Tabela | Colunas principais | Índices |
+|--------|-------------------|---------|
+| `materias_primas` | id, nome, unidade, quantidade_estoque, estoque_minimo, fornecedor_id, ativo | idx estoque crítico (parcial) |
+| `movimentacoes_estoque` | id, materia_prima_id (FK), tipo (ENTRADA/SAIDA), quantidade, observacao, data_movimentacao | idx por materia_prima + data |
+
+### pascoa_products — `pascoa-product-service`
+
+| Tabela | Colunas principais | Índices |
+|--------|-------------------|---------|
+| `produtos` | id, nome, descricao, preco, categoria, foto_url, disponivel, ativo | idx em ativo, disponivel, categoria |
+
+### pascoa_orders — `pascoa-order-service`
+
+| Tabela | Colunas principais | Índices |
+|--------|-------------------|---------|
+| `pedidos` | id, cliente_id, nome_cliente, status, forma_pagamento, observacao, token_rastreamento (unique) | idx em status, cliente_id, token |
+| `itens_pedido` | id, pedido_id (FK cascade), produto_id, nome_produto, preco_unitario, quantidade | idx em pedido_id |
+
+### pascoa_production — `pascoa-production-service`
+
+| Tabela | Colunas principais | Índices |
+|--------|-------------------|---------|
+| `ordens_producao` | id, pedido_id (unique), nome_cliente, status, data_previsao, observacoes | idx em status, data_previsao (parcial) |
+| `itens_ordem` | id, ordem_id (FK cascade), produto_id, nome_produto, quantidade | idx em ordem_id |
+
+### pascoa_financial — `pascoa-financial-service`
+
+| Tabela | Colunas principais | Índices |
+|--------|-------------------|---------|
+| `lancamentos` | id, tipo (RECEITA/DESPESA), categoria, descricao, valor, data, referencia_id, origem | idx em data, mes/ano (expressão), tipo, referencia+origem |
+
+### pascoa_notifications — `pascoa-notification-service`
+
+| Tabela | Colunas principais | Índices |
+|--------|-------------------|---------|
+| `notificacoes` | id, destinatario, canal, assunto, conteudo, status, evento, referencia_id, erro_mensagem, criado_em, enviado_em | idx em status, referencia_id, criado_em DESC |
+
+### pascoa_analytics — `pascoa-analytics-service`
+
+| Tabela | Colunas principais | Índices |
+|--------|-------------------|---------|
+| `registros_venda` | id, pedido_id, cliente_id, produto_id, nome_produto, quantidade, valor_total, data_venda, ano, mes | idx em ano, ano+mes, produto_id+ano, cliente_id+ano |
+
+### Próximo número de migration por serviço
+
+| Serviço | Última migration | Próxima |
+|---------|----------------|---------|
+| pascoa-monolith | V13 | **V14** |
+| pascoa-auth-service | V1 | **V2** |
+| pascoa-customer-service | V1 | **V2** |
+| pascoa-inventory-service | V1 | **V2** |
+| pascoa-product-service | V1 | **V2** |
+| pascoa-order-service | V1 | **V2** |
+| pascoa-production-service | V1 | **V2** |
+| pascoa-financial-service | V1 | **V2** |
+| pascoa-notification-service | V1 | **V2** |
+| pascoa-analytics-service | V1 | **V2** |

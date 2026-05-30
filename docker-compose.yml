@@ -1,45 +1,107 @@
-version: '3.8'
+
+
+# =============================================================================
+# Infraestrutura base — Sistema Páscoa v5 (Strangler Fig)
+# Serviços: PostgreSQL x9, RabbitMQ, Redis, Zipkin
+# Serviços Spring Cloud (Eureka, Config) rodam via Maven fora do compose
+# =============================================================================
 
 services:
-  db:
-    # Use official Postgres image that supports ARM64 (works well on M1)
-    image: postgres:14
-    # Force linux/arm64 platform on M1 to avoid architecture mismatch
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL — uma instância, múltiplos bancos (init script)
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
     platform: linux/arm64
     restart: unless-stopped
     environment:
-      # Valores retirados do application.properties
-      - POSTGRES_DB=pascoa_db
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=sua_senha
-      # Opcional: descomente/alterar para ajustar local do dados
-      # - PGDATA=/var/lib/postgresql/data/pgdata
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: sua_senha
+      POSTGRES_DB: pascoa_monolith
     ports:
       - "5432:5432"
     volumes:
-      # Use named volume (recomendado no macOS para melhor desempenho que bind-mount)
       - postgres_data:/var/lib/postgresql/data
+      - ./infra/postgres/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
+      timeout: 10s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # RabbitMQ — mensageria assíncrona entre microsserviços
+  # Management UI: http://localhost:15672  (guest/guest)
+  # ---------------------------------------------------------------------------
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    platform: linux/arm64
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: pascoa
+      RABBITMQ_DEFAULT_PASS: pascoa123
+    ports:
+      - "5672:5672"    # AMQP
+      - "15672:15672"  # Management UI
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - ./infra/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
+      - ./infra/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # Redis — cache + JWT blacklist + rate limiting
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    platform: linux/arm64
+    restart: unless-stopped
+    command: redis-server --requirepass pascoa123 --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "pascoa123", "ping"]
+      interval: 10s
       timeout: 5s
       retries: 5
-    # Memory limit hint (only used by swarm or certain orchestrators; left as guidance)
-    # deploy:
-    #   resources:
-    #     limits:
-    #       memory: 1024M
+
+  # ---------------------------------------------------------------------------
+  # Zipkin — distributed tracing
+  # UI: http://localhost:9411
+  # ---------------------------------------------------------------------------
+  zipkin:
+    image: openzipkin/zipkin:3
+    platform: linux/arm64
+    restart: unless-stopped
+    environment:
+      STORAGE_TYPE: mem
+    ports:
+      - "9411:9411"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:9411/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
 
 volumes:
   postgres_data:
-    # Use 'local' driver; on Docker Desktop for Mac this creates a volume optimized for the VM
+    driver: local
+  rabbitmq_data:
+    driver: local
+  redis_data:
     driver: local
 
-# Observações:
-# - Este compose expõe o Postgres na porta 5432 do host. A aplicação pode continuar usando
-#   spring.datasource.url=jdbc:postgresql://localhost:5432/pascoa_db (conforme seu application.properties).
-# - Se preferir conectar pelo nome do serviço na mesma rede Docker (sem expor porta), altere a URL
-#   para jdbc:postgresql://db:5432/pascoa_db e remova a linha de ports.
-# - A imagem usada (postgres:14) tem suporte para ARM64/M1. Caso queira versão diferente,
-#   prefira imagens oficiais que suportem linux/arm64 ou mantenha a linha 'platform: linux/arm64'.
-
+# =============================================================================
+# Portas reservadas (serviços Spring Cloud — rodam via Maven/IntelliJ):
+#   8761 — Eureka Server       (pascoa-eureka)
+#   8888 — Config Server       (pascoa-config-server)
+#   8080 — Monólito atual      (pascoa-monolith)
+#   8090 — API Gateway         (pascoa-api-gateway)  — próxima etapa
+# =============================================================================

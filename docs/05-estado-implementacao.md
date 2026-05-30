@@ -1,12 +1,13 @@
 # Estado de Implementação — Sistema Controle Páscoa
 
-> **Verificado em:** 2026-05-26 — atualizado Item 22 (senha), Item 23 (bugs médios), Item 24 (testes) e Item 25 (novas notificações)  
+> **Verificado em:** 2026-05-29 — atualizado migração v5 (microsserviços, arquitetura hexagonal, Docker Compose)  
 > **Critério:** ✅ Implementado e testado | ⚠️ Parcialmente implementado | ❌ Não iniciado | 🐛 Bug conhecido
 
 ---
 
 ## Resumo Executivo
 
+### Monólito (pascoa-monolith)
 | Área | Status |
 |------|--------|
 | Cadastros base | ✅ Completo |
@@ -18,7 +19,7 @@
 | Ficha Técnica | ✅ Completo |
 | Financeiro (dashboard, fluxo, breakeven, aging) | ✅ Completo |
 | Gastos integrados ao financeiro | ✅ Completo |
-| DRE simplificado | ❌ Não iniciado |
+| DRE simplificado | ❌ Não iniciado (implementado no financial-service) |
 | Simulador de cenários | ❌ Não iniciado |
 | CRM | ✅ Completo |
 | Notificações (email + WhatsApp + SMS) — 10 eventos | ✅ Completo |
@@ -28,6 +29,25 @@
 | PWA | ✅ Completo |
 | Segurança / RBAC | ✅ Completo |
 | Testes de integração | ✅ 107 testes — 10 classes cobrindo todos os módulos críticos |
+
+### Microsserviços v5 — Migração Strangler Fig (design doc v5)
+| Serviço | Status | Porta | Checklist 11.1 |
+|---------|--------|-------|----------------|
+| Infraestrutura (Docker Compose) | ✅ Completo | — | RabbitMQ, Redis, Zipkin, PostgreSQL x10 |
+| pascoa-eureka | ✅ Completo | 8761 | Eureka Server |
+| pascoa-config-server | ✅ Completo | 8888 | Spring Cloud Config + Basic Auth |
+| pascoa-api-gateway | ✅ Completo | 8090 | Spring Cloud Gateway + Circuit Breaker |
+| pascoa-commons | ✅ Completo | — | DTOs e eventos compartilhados |
+| pascoa-auth-service | ✅ Completo | 8081 | JWT + TOTP + Redis blacklist + testes |
+| pascoa-customer-service | ✅ Completo | 8082 | Hexagonal completo + testes |
+| pascoa-inventory-service | ✅ Completo | 8083 | Hexagonal completo + testes |
+| pascoa-product-service | ✅ Completo | 8084 | Hexagonal completo + testes |
+| pascoa-order-service | ✅ Completo | 8085 | Hexagonal + OpenFeign + testes |
+| pascoa-production-service | ✅ Completo | 8086 | Hexagonal + event-driven + testes |
+| pascoa-financial-service | ✅ Completo | 8087 | DRE + lançamentos automáticos + testes |
+| pascoa-notification-service | ✅ Completo | 8088 | Email/WhatsApp/SMS + fallback + testes |
+| pascoa-analytics-service | ✅ Completo | 8089 | Safras + ranking + dashboard + testes |
+| Multi-module Maven (root pom) | ✅ Completo | — | 14 módulos, `-parameters` em todos |
 
 ---
 
@@ -278,6 +298,43 @@ PAGAMENTO_RECEBIDO, PEDIDO_CANCELADO, ORCAMENTO_APROVADO, ORCAMENTO_RECUSADO
 
 ## 16. Bugs e Problemas Conhecidos
 
+### ✅ B13 — Após ativar 2FA, volta para `/login` em vez de `/dashboard` — RESOLVIDO 2026-05-30
+
+**Problema:** Login OK → 2FA setup OK → digita TOTP → cai em `/login` em vez de `/dashboard`.
+
+**Causa raiz:** `TwoFactorController.completarAutenticacao()` usava o padrão antigo do Spring Security 5 (`session.setAttribute(SPRING_SECURITY_CONTEXT_KEY, ctx)`). No Spring Security 6 o `SecurityContextPersistenceFilter` foi removido — a persistência precisa passar por `SecurityContextRepository.saveContext()`. Sem isso, o `RequestAttributeSecurityContextRepository` (que tem precedência no `DelegatingSecurityContextRepository`) retornava context vazio no próximo request e o usuário caía em `/login` como anônimo.
+
+**Correção:**
+- `SecurityConfig`: bean `SecurityContextRepository` explícito + amarrado ao `SecurityFilterChain` via `.securityContext(...)`.
+- `TwoFactorController`: injeta o repositório e chama `securityContextRepository.saveContext(context, request, response)` em `completarAutenticacao()`.
+
+**Detalhes completos:** [docs/10-bugfix-login-loop-gateway.md](10-bugfix-login-loop-gateway.md) seção 10.
+
+### ✅ B12 — `./start-all.sh` travado em "Iniciando pascoa-config-server (porta 8888)..." — RESOLVIDO 2026-05-30
+
+**Problema:** Script ficava 180s aguardando porta 8888 e abortava sem mensagem clara.
+
+**Causa raiz:** `ConfigServerSmokeTest` importava `SecurityMockMvcRequestPostProcessors` mas o pom não declarava `spring-security-test`. O `spring-boot:run` (invocado sem `-Dmaven.test.skip=true`) disparava `test-compile`, que falhava → JAR nunca iniciava.
+
+**Correção:**
+- Adicionada dependência `spring-security-test` (test scope) em `pascoa-config-server/pom.xml`.
+- `start-all.sh` agora invoca `spring-boot:run` com `-Dmaven.test.skip=true` e despeja `tail -20` do log no console em caso de timeout.
+
+**Detalhes completos:** [docs/10-bugfix-login-loop-gateway.md](10-bugfix-login-loop-gateway.md) seção 9.
+
+### ✅ B11 — Loop de login após migração v5 (gateway) — RESOLVIDO 2026-05-30
+
+**Problema:** Acessando via `pascoa-api-gateway` (`localhost:8090`), o POST `/login` redirecionava para `localhost:8080/2fa/setup`, o navegador saía do gateway, perdia o `JSESSIONID` e voltava para `/login` em loop.
+
+**Causa raiz:** `server.forward-headers-strategy` não configurado no monólito — Tomcat ignorava `X-Forwarded-Host/Port` enviados pelo Spring Cloud Gateway e usava `localhost:8080` em `sendRedirect`.
+
+**Correção:**
+- `pascoa-monolith/application.properties`: adicionado `server.forward-headers-strategy=framework` + `server.servlet.session.cookie.same-site=lax`
+- `pascoa-config-server/configs/pascoa-monolith.yml`: mesmas configs replicadas
+- `pascoa-api-gateway/application.yml`: `spring.cloud.gateway.x-forwarded.*` habilitado explicitamente
+
+**Detalhes completos:** [docs/10-bugfix-login-loop-gateway.md](10-bugfix-login-loop-gateway.md)
+
 ### ⚠️ Gap: Template `estoque/saida.html` ausente
 
 **Problema:** O arquivo `src/main/resources/templates/estoque/saida.html` não existe no projeto. A operação de saída manual de matéria-prima pode não ter tela acessível pela UI.
@@ -354,8 +411,70 @@ Implementado nesta sessão:
 
 ---
 
-## 21. Próximas Sessões — Prioridade Sugerida
+## 21. Migração v5 — Microsserviços (Strangler Fig) ✅
 
-1. **Item 10a: DRE simplificado** — Demonstrativo de Resultado do Exercício (receitas − custos − despesas)
-2. **Item 10b: Simulador de cenários** — "e se aumentar o preço X%? vender Y unidades a mais?"
-3. **`estoque/saida.html`** — template de saída manual de matéria-prima ausente
+**Implementado em 2026-05-29** — todos os 12 itens do design doc v5 concluídos.
+
+### Estrutura de módulos criada
+
+```
+controle_pascoa/
+├── pom.xml                    ← root parent (packaging=pom, 14 módulos)
+├── pascoa-monolith/           ← monólito original (295 arquivos)
+├── pascoa-commons/            ← DomainEvent base compartilhado
+├── pascoa-eureka/             ← @EnableEurekaServer, porta 8761
+├── pascoa-config-server/      ← @EnableConfigServer + Basic Auth, porta 8888
+│   └── configs/               ← 12 arquivos .yml (1 por serviço + application.yml)
+├── pascoa-api-gateway/        ← Spring Cloud Gateway, porta 8090
+│   ├── RequestTracingFilter   ← injeta X-Request-ID em todas as requisições
+│   ├── ResponseTimeFilter     ← loga método + path + status + ms
+│   └── FallbackController     ← 503 quando monólito cai
+├── pascoa-auth-service/       ← porta 8081
+│   ├── domain/                ← Usuario, Token, Role, JwtDomainService (sem Spring)
+│   ├── application/           ← AuthUseCase + ports
+│   ├── adapter/out/redis/     ← TokenBlacklistAdapter (Redis)
+│   └── db/migration/V1__     ← tabelas usuarios + usuario_roles
+├── pascoa-customer-service/   ← porta 8082, banco pascoa_customers
+├── pascoa-inventory-service/  ← porta 8083, banco pascoa_inventory
+├── pascoa-product-service/    ← porta 8084, banco pascoa_products
+├── pascoa-order-service/      ← porta 8085, banco pascoa_orders
+│   └── adapter/out/client/    ← ClienteFeignClient + ProdutoFeignClient
+├── pascoa-production-service/ ← porta 8086, banco pascoa_production
+├── pascoa-financial-service/  ← porta 8087, banco pascoa_financial
+│   └── domain/                ← DreAnual, ResumoFinanceiro (cálculos puros)
+├── pascoa-notification-service/ ← porta 8088, banco pascoa_notifications
+│   └── domain/service/        ← TemplateEngine (substituição {variavel})
+├── pascoa-analytics-service/  ← porta 8089, banco pascoa_analytics
+│   └── domain/                ← MetricaSafra, RankingProduto, ComparativoSafra
+└── infra/
+    ├── postgres/init-databases.sql ← cria os 10 bancos de dados
+    └── rabbitmq/definitions.json   ← 5 exchanges + filas + DLQs pré-configuradas
+```
+
+### Fluxo de eventos implementado
+
+| Evento | Exchange | Publisher | Consumers |
+|--------|----------|-----------|-----------|
+| `order.confirmed` | `pascoa.orders` | order-service | production-service, inventory-service, notification-service |
+| `order.delivered` | `pascoa.orders` | order-service | financial-service, analytics-service, notification-service |
+| `order.cancelled` | `pascoa.orders` | order-service | notification-service |
+| `production.completed` | `pascoa.production` | production-service | order-service (→PRONTO), financial-service |
+| `inventory.stock.critical` | `pascoa.production` | inventory-service | (futuro: notification-service) |
+| `auth.login.success/failed` | `pascoa.customers` | auth-service | (futuro: auditoria) |
+
+### Fix crítico aplicado: `-parameters` flag
+
+- **Causa:** Migração para `pascoa-parent` perdeu o flag `-parameters` do `spring-boot-starter-parent`
+- **Sintoma:** `IllegalArgumentException: Name for argument of type [String] not specified` no login
+- **Correção:** `maven-compiler-plugin <parameters>true</parameters>` no root pom + em cada módulo + `.idea/compiler.xml`
+- **Impacto:** Afeta todos os 28 controllers com `@RequestParam`/`@PathVariable` sem `value` explícito
+
+---
+
+## 22. Próximas Sessões — Prioridade Sugerida
+
+1. **Simulador de cenários financeiros** — "e se aumentar o preço X%? vender Y unidades a mais?" (monólito)
+2. **`estoque/saida.html`** — template de saída manual de matéria-prima ausente (monólito)
+3. **Integração Eureka** — habilitar `EUREKA_ENABLED=true` e testar service discovery entre microsserviços
+4. **Dockerizar microsserviços** — criar Dockerfiles + adicionar serviços no docker-compose.yml
+5. **customer-service com dados reais** — migrar dados de clientes do monólito para pascoa_customers

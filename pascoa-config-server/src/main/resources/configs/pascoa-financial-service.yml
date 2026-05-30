@@ -1,0 +1,7 @@
+# Configurações específicas do pascoa-financial-service
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:5432/pascoa_financials
+
+server:
+  port: ${SERVER_PORT:8087}

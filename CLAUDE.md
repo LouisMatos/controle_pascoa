@@ -90,6 +90,8 @@ Templates em: `src/main/resources/templates/{modulo}/{arquivo}.html`
 **Segurança:**
 - Novas rotas precisam ser adicionadas em `SecurityConfig.java`
 - Roles disponíveis: `ADMIN`, `FINANCEIRO`, `ATENDENTE`, `CONFEITEIRO`, `GESTOR_QUALIDADE`, `ANALISTA`
+- **Spring Security 6 — persistência de `SecurityContext` em fluxos customizados:** NUNCA usar `session.setAttribute(SPRING_SECURITY_CONTEXT_KEY, ctx)` sozinho — o `SecurityContextPersistenceFilter` foi removido. Injetar o bean `SecurityContextRepository` (exposto em `SecurityConfig`) e chamar `securityContextRepository.saveContext(context, request, response)`. Detalhes em `docs/07-convencoes-desenvolvimento.md` §9.1 e `docs/10-bugfix-login-loop-gateway.md` §10.
+- **Monólito atrás do `pascoa-api-gateway` (8090):** `server.forward-headers-strategy=framework` é obrigatório em `application.properties` para que redirects não escapem do gateway. Ver `docs/10-bugfix-login-loop-gateway.md`.
 
 ---
 
@@ -131,7 +133,7 @@ BD:    localhost:5432/pascoa_db (usuário: postgres)
 
 ---
 
-## Ordem de Implementação Pendente (item 11 do design doc v3)
+## Ordem de Implementação — v3/v4 (monólito)
 
 1. ✅ Flyway baseline + migrations
 2. ✅ Módulo Gastos Variáveis
@@ -142,6 +144,30 @@ BD:    localhost:5432/pascoa_db (usuário: postgres)
 7. ✅ Analytics (comparativo de safras, ranking)
 8. ✅ PWA (manifest.json, Service Worker)
 9. ✅ Novas notificações: aniversário, orçamento expirando, SMS fallback
-10. ⏳ Integrar gastos ao financeiro: DRE simplificado, simulador de cenários
+10. ⏳ DRE simplificado no monólito (implementado no financial-service v5)
 11. ✅ Roles: GESTOR_QUALIDADE, ANALISTA
 12. ✅ Testes de integração
+
+## Ordem de Implementação — v5 (microsserviços, design doc v5) ✅ COMPLETO
+
+1. ✅ Infraestrutura base — Docker Compose: RabbitMQ, Eureka, Config Server, Zipkin, Redis, PostgreSQL x10
+2. ✅ api-gateway — Spring Cloud Gateway, proxy para monólito, porta 8090
+3. ✅ auth-service — JWT + TOTP + Redis blacklist, porta 8081
+4. ✅ config-server — Spring Cloud Config + Basic Auth, porta 8888
+5. ✅ customer-service — bounded context de clientes, porta 8082
+6. ✅ inventory-service — estoque de matérias-primas, porta 8083
+7. ✅ product-service — catálogo de produtos, porta 8084
+8. ✅ order-service — pedidos + OpenFeign, porta 8085
+9. ✅ production-service — ordens de produção event-driven, porta 8086
+10. ✅ financial-service — DRE + lançamentos automáticos, porta 8087
+11. ✅ notification-service — email/WhatsApp/SMS com fallback, porta 8088
+12. ✅ analytics-service — comparativo de safras, ranking, dashboard, porta 8089
+
+## Multi-module Maven
+
+O projeto é agora um **Maven multi-module** com 14 módulos:
+- Root: `pom.xml` (packaging=pom, parent de todos)
+- Monólito: `pascoa-monolith/`
+- Microsserviços: `pascoa-{servico}/` (9 serviços + commons + eureka + config-server + api-gateway)
+
+**Atenção:** Ao rodar o monólito no IntelliJ, selecionar `pascoa-monolith` como módulo Maven.

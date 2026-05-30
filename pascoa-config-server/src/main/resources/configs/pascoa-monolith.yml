@@ -1,0 +1,17 @@
+# Configurações específicas do monólito
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:5432/pascoa_monolith
+  jpa:
+    show-sql: false
+
+server:
+  port: 8080
+  # Honra X-Forwarded-* enviados pelo pascoa-api-gateway (8090). Necessário para que
+  # redirects absolutos do Spring Security não escapem do gateway e percam a sessão.
+  forward-headers-strategy: framework
+  servlet:
+    session:
+      cookie:
+        same-site: lax
+        http-only: true
