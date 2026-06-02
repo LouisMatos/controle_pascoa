@@ -57,14 +57,9 @@ public class SecurityConfig {
         );
     }
 
-    private static final String CSP =
-        "default-src 'self'; " +
-        "script-src 'self' cdn.jsdelivr.net; " +
-        "style-src 'self' 'unsafe-inline' cdn.jsdelivr.net; " +
-        "font-src 'self' cdn.jsdelivr.net; " +
-        "img-src 'self' data:; " +
-        "connect-src 'self'; " +
-        "frame-ancestors 'none'";
+    // S-01 — CSP agora é setado dinamicamente pelo CspNonceFilter (com nonce por
+    // request). Mantemos a constante removida; .contentSecurityPolicy(...) abaixo
+    // foi também removido para evitar duplicação de header.
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
@@ -80,10 +75,13 @@ public class SecurityConfig {
                     .maxAgeInSeconds(31_536_000))
                 .referrerPolicy(rp -> rp
                     .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.SAME_ORIGIN))
-                .contentSecurityPolicy(csp -> csp
-                    .policyDirectives(CSP))
+                // S-01 — CSP definido em CspNonceFilter (nonce por request)
             )
             .authorizeHttpRequests(auth -> auth
+                // V9 Etapa 1.1 — Recursos estáticos NUNCA bloqueados (causa #3 de tela em branco)
+                .requestMatchers("/css/**", "/js/**", "/images/**",
+                                 "/fonts/**", "/webjars/**", "/favicon.ico",
+                                 "/error/**").permitAll()
                 // Acesso público
                 .requestMatchers("/login", "/logout").permitAll()
                 .requestMatchers("/auth/**").permitAll()
@@ -92,6 +90,7 @@ public class SecurityConfig {
                 .requestMatchers("/acompanhamento/**").permitAll()
                 .requestMatchers("/orcamento-publico/**").permitAll()
                 .requestMatchers("/catalogo/**").permitAll()
+                .requestMatchers("/onboarding/**").permitAll()  // FASE 8 v7 — signup público
                 .requestMatchers("/uploads/**").permitAll()  // legado — mantido por compatibilidade
                 .requestMatchers("/media/**").permitAll()
                 // PWA
