@@ -8,6 +8,10 @@ spring:
     url: jdbc:postgresql://localhost:5432/pascoa_orders
     username: postgres
     password: sua_senha
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      idle-timeout: 30000
   jpa:
     hibernate:
       ddl-auto: validate
@@ -31,6 +35,21 @@ clients:
     url: http://localhost:8082
   product-service:
     url: http://localhost:8084
+
+# MS-04 — Timeouts e circuit breaker para OpenFeign. Sem isso, um pico de GC
+# em qualquer downstream prende threads do order-service indefinidamente e
+# pode esgotar o connection pool.
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 3000   # 3s — TCP handshake
+        readTimeout:    5000   # 5s — resposta do servidor
+        loggerLevel: basic
+      pascoa-product-service:
+        readTimeout:    2000   # estoque é caminho crítico — mais agressivo
+      pascoa-customer-service:
+        readTimeout:    3000
 
 eureka:
   client:

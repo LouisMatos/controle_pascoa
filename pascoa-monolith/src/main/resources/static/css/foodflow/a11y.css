@@ -1,0 +1,158 @@
+/* ═══════════════════════════════════════════════════════════════════
+   FoodFlow Design System v7 — Acessibilidade (FASE 10)
+   Reforça focus-visible, garante touch targets, fornece utilitários
+   sr-only e suporta high-contrast / forced-colors.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* M-04 — tap highlight do iOS Safari: substitui o cinza padrão por
+   uma versão semi-transparente da cor brand do tenant atual. */
+:root {
+  --tap-color: color-mix(in srgb, var(--brand-primary) 20%, transparent);
+}
+a,
+button,
+[role="button"],
+.ff-btn,
+.ff-sidebar__link,
+.ff-topbar__action,
+.ff-card--clickable {
+  -webkit-tap-highlight-color: var(--tap-color);
+}
+
+/* ─── Focus visível universal (WCAG 2.4.7) ─────────────────────────────
+   Override do default do browser por um anel forte e contrastante.
+   Aplica apenas com :focus-visible (não com clique de mouse) → reduz ruído. */
+*:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Componentes que precisam de focus com fundo claro/escuro definido */
+.ff-sidebar__link:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: -4px; /* anel interno pq sidebar é colorida */
+}
+.ff-topbar__action:focus-visible,
+.ff-topbar__user:focus-visible {
+  outline-color: var(--brand-primary);
+  outline-offset: 2px;
+}
+.ff-btn:focus-visible,
+.ff-input:focus-visible,
+.ff-select:focus-visible,
+.ff-textarea:focus-visible {
+  outline-offset: 2px;
+}
+.ff-choice:focus-within {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+
+/* ─── Skip link (WCAG 2.4.1) ───────────────────────────────────────────
+   Já declarado em layout.css; reforçar visibilidade no foco. */
+.ff-skip-link:focus,
+.ff-skip-link:focus-visible {
+  top: var(--space-4) !important;
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+
+/* ─── Utilitários sr-only (WCAG 1.1.1, 4.1.2) ──────────────────────────
+   Texto visível apenas para leitores de tela. Usar para descrever
+   ícones-apenas, ações de botão, etc. */
+.ff-sr-only,
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.ff-sr-only-focusable:focus,
+.ff-sr-only-focusable:focus-visible {
+  position: static;
+  width: auto;
+  height: auto;
+  margin: 0;
+  clip: auto;
+  white-space: normal;
+}
+
+/* ─── Touch targets mínimos (WCAG 2.5.5 — 44×44 CSS pixels) ────────────
+   ff-btn--icon e ff-btn--sm icon-only ficavam abaixo do limite em mobile. */
+@media (pointer: coarse) {
+  .ff-btn--icon,
+  .ff-btn--icon.ff-btn--sm,
+  .ff-topbar__action {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  /* Links da sidebar ganham padding extra no touch */
+  .ff-sidebar__link {
+    min-height: 44px;
+  }
+  /* Items de tabela mantêm row clicável grande */
+  .ff-table tbody td {
+    padding-top: var(--space-3);
+    padding-bottom: var(--space-3);
+  }
+}
+
+/* ─── High contrast / forced colors (Windows High Contrast Mode) ──────── */
+@media (forced-colors: active) {
+  .ff-btn--primary,
+  .ff-btn--danger,
+  .ff-badge {
+    border: 1px solid CanvasText;
+  }
+  .ff-card,
+  .ff-kpi,
+  .ff-table-wrapper,
+  .ff-input,
+  .ff-select,
+  .ff-textarea {
+    border: 1px solid CanvasText;
+  }
+  *:focus-visible {
+    outline: 3px solid Highlight;
+  }
+}
+
+/* ─── Reduced motion (WCAG 2.3.3) — já em reset.css, reforço aqui ────── */
+@media (prefers-reduced-motion: reduce) {
+  .ff-card--clickable:hover,
+  .ff-choice:hover,
+  .ff-btn:active {
+    transform: none !important;
+  }
+  .ff-stepper__step--current .ff-stepper__number {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand-primary) 18%, transparent);
+    animation: none !important;
+  }
+}
+
+/* ─── Print (limpa cores de fundo, mostra apenas conteúdo) ───────────── */
+@media print {
+  .ff-sidebar,
+  .ff-topbar,
+  .ff-onboarding__header,
+  .ff-skip-link,
+  .ff-btn,
+  .ff-topbar__action {
+    display: none !important;
+  }
+  body, .ff-layout, .ff-main, .ff-content {
+    display: block !important;
+    background: #fff !important;
+    color: #000 !important;
+  }
+  a {
+    color: #000 !important;
+    text-decoration: underline;
+  }
+}

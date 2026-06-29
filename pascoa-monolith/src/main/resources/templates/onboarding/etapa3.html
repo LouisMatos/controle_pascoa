@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout-fullscreen :: layout(~{::title}, ~{::#pageContent}, ${etapaAtual}, ${totalEtapas})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head><title>Etapa 3 — Catálogo · FoodFlow</title></head>
+<body>
+<div id="pageContent">
+    <h1 class="ff-onboarding__title">Revise seu catálogo inicial</h1>
+    <p class="ff-onboarding__subtitle">Pré-carregamos alguns produtos comuns do seu segmento. Edite os nomes e preços, remova o que não usar — você pode adicionar mais depois.</p>
+
+    <form th:action="@{/onboarding/etapa3}" method="post" class="ff-onboarding__card">
+
+        <div class="ff-table-wrapper">
+            <table class="ff-table">
+                <thead>
+                    <tr>
+                        <th>Nome do produto</th>
+                        <th class="ff-col-center">Categoria</th>
+                        <th class="ff-col-num">Preço (R$)</th>
+                        <th class="ff-col-actions">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="produtosBody">
+                    <tr th:each="p : ${produtos}">
+                        <td><input type="text" class="ff-input" th:value="${p.nome}" name="nome"></td>
+                        <td class="ff-col-center">
+                            <span class="badge text-white" th:classappend="'badge-' + ${p.categoria}" th:text="${p.categoria}"></span>
+                        </td>
+                        <td class="ff-col-num">
+                            <input type="text" class="ff-input" th:value="${p.preco}" name="preco" style="text-align:right;">
+                        </td>
+                        <td class="ff-col-actions">
+                            <button type="button" class="ff-btn ff-btn--danger ff-btn--icon ff-btn--sm"
+                                    onclick="this.closest('tr').remove()">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <button type="button" class="ff-btn ff-btn--secondary mt-3" onclick="adicionar()">
+            <i class="bi bi-plus-lg"></i>
+            <span>Adicionar produto</span>
+        </button>
+
+        <div class="ff-onboarding__nav">
+            <a th:href="@{/onboarding/etapa2}" class="ff-btn ff-btn--ghost">
+                <i class="bi bi-arrow-left"></i><span>Voltar</span>
+            </a>
+            <button type="submit" class="ff-btn ff-btn--primary ff-btn--lg">
+                <span>Próxima etapa</span><i class="bi bi-arrow-right"></i>
+            </button>
+        </div>
+    </form>
+
+<script>
+  function adicionar() {
+    const tbody = document.getElementById('produtosBody');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" class="ff-input" placeholder="Nome do produto" name="nome"></td>
+      <td class="ff-col-center"><span class="badge bg-secondary">CUSTOM</span></td>
+      <td class="ff-col-num"><input type="text" class="ff-input" placeholder="0,00" name="preco" style="text-align:right;"></td>
+      <td class="ff-col-actions"><button type="button" class="ff-btn ff-btn--danger ff-btn--icon ff-btn--sm" onclick="this.closest('tr').remove()"><i class="bi bi-trash"></i></button></td>`;
+    tbody.appendChild(tr);
+  }
+</script>
+</div>
+</body>
+</html>

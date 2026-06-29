@@ -38,6 +38,23 @@ public class OrdemProducaoJpaEntity {
     @Column(length = 500)
     private String observacoes;
 
+    // ── v6 Etapa 9: fases configuráveis por tenant ──
+    @Column(name = "tenant_id", length = 50)
+    private String tenantId;
+
+    /** Nome da fase atual conforme {@code config-engine}. Coexiste com {@link StatusOrdem}. */
+    @Column(name = "fase_atual", length = 80)
+    private String faseAtual;
+
+    @Column(name = "fase_ordem", nullable = false)
+    private int faseOrdem = 0;
+
+    @Column(name = "iniciada_em")
+    private LocalDateTime iniciadaEm;
+
+    @Column(name = "concluida_em")
+    private LocalDateTime concluidaEm;
+
     @OneToMany(mappedBy = "ordem", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<ItemOrdemJpaEntity> itens = new ArrayList<>();
 

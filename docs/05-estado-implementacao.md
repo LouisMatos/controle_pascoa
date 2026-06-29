@@ -273,6 +273,18 @@ Auditoria página a página das 7 etapas do design v9 §8 concluída. **Resultad
 
 **Total de alterações de código na v9: 0.** O monólito compila (`mvn -pl pascoa-monolith compile` → BUILD SUCCESS na ETAPA 1, sem mudanças posteriores). A v9 foi uma **auditoria de validação** confirmando que o front-end do monólito não tem telas em branco; o único gap aberto é a suíte E2E Playwright (7.5), opcional e não-emergencial. As correções estruturais da ETAPA 1 (SecurityConfig static permitAll, GlobalModelAdvice, TenantInfo.defaultTenant, AppErrorController, error/{500,404,403}.html) seguem como artefatos novos a commitar.
 
+### 🐛 Bugfix v9.1 — HTTP 500 universal por `#httpServletRequest` removido no Thymeleaf 3.1 (2026-06-02)
+
+**Sintoma:** *toda* página autenticada do monólito (dashboard, pedidos, orçamentos, produção/kanban, matérias-primas, CRM, financeiro, analytics, qualidade, catálogo, gastos, produção/mobile) renderizava o `error/500.html` ("Algo deu errado") em vez do conteúdo. A sidebar/topbar apareciam porque o `error/500.html` é renderizado fora do fluxo de breadcrumb.
+
+**Causa raiz:** o fragmento `fragments/breadcrumb.html` (incluído no `fragments/layout.html`, ou seja, em **todas** as telas internas) usava `th:with="path=${#httpServletRequest.requestURI}"`. O objeto de expressão `#httpServletRequest` (e também `#request`, `#session`, `#response`, `#servletContext`) **foi removido no Thymeleaf 3.1**, bundle do Spring Boot 3.3.4. Resultado: `SpelEvaluationException: EL1007E: Property or field 'requestURI' cannot be found on null` em `fragments/breadcrumb` linha 14 → `TemplateInputException` → HTTP 500 em cada request.
+
+**Correção (2 arquivos):**
+- `config/GlobalModelAdvice.java` — novo `@ModelAttribute("currentUri")` que injeta `request.getRequestURI()` (com fallback `"/"`) no model de todo request via `@ControllerAdvice`. Reaproveita o `HttpServletRequest` que o advice já consumia em `activePage`.
+- `fragments/breadcrumb.html` — linha 14 passa a usar `th:with="path=${currentUri} ?: '/'"` (model attribute null-safe), eliminando a dependência do objeto de expressão removido.
+
+**Verificação:** varredura `grep` em todos os `*.html` do repositório confirmou **zero** usos remanescentes de `#httpServletRequest`/`#request`/`#session`/`#response`/`#servletContext` (monólito e microsserviços). Após recompilar (`mvn -pl pascoa-monolith compile`, **JDK 21** — o `mvn` do Homebrew aponta para JDK 26 e quebra o Lombok com `ExceptionInInitializerError: TypeTag :: UNKNOWN`; usar `JAVA_HOME=$(/usr/libexec/java_home -v 21)`) e reiniciar, fluxo autenticado completo (login + TOTP) retornou **HTTP 200** em `/dashboard`, `/producao/kanban`, `/pedidos`, `/orcamentos`, `/materias-primas`, `/crm`, `/financeiro/dashboard`, `/analytics`, `/qualidade`, `/producao`, `/producao/mobile`, `/catalogo`, `/gastos`. Log sem nenhum `EL1007E`.
+
 ### Microsserviços v5 — Migração Strangler Fig (design doc v5)
 | Serviço | Status | Porta | Checklist 11.1 |
 |---------|--------|-------|----------------|

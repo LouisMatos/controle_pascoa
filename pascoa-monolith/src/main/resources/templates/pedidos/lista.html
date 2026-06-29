@@ -7,97 +7,98 @@
 <body>
 <div id="pageContent">
 
-    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-        <h2 class="mb-0"><i class="bi bi-cart3 me-2 text-warning"></i>Pedidos</h2>
-        <div class="d-flex gap-2 flex-wrap">
-            <a th:href="@{/pedidos/wizard}" class="btn btn-success">
-                <i class="bi bi-magic me-1"></i>Novo Pedido (Wizard)
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h1 class="ff-heading-1 mb-0 d-flex align-items-center gap-2">
+            <i class="bi bi-cart3" style="color: var(--brand-primary);"></i>Pedidos
+        </h1>
+        <div class="ff-btn-group">
+            <a th:href="@{/pedidos/wizard}" class="ff-btn ff-btn--primary">
+                <i class="bi bi-magic"></i>
+                <span>Novo Pedido (Wizard)</span>
             </a>
-            <a th:href="@{/pedidos/novo}" class="btn btn-outline-success btn-sm">
-                <i class="bi bi-plus-lg me-1"></i>Formulário simples
+            <a th:href="@{/pedidos/novo}" class="ff-btn ff-btn--secondary ff-btn--sm">
+                <i class="bi bi-plus-lg"></i>
+                <span>Formulário simples</span>
             </a>
-            <!-- Exportar Excel — preserva o filtro de status ativo -->
             <a th:href="${statusFiltro != null}
                         ? @{/export/pedidos/excel(status=${statusFiltro.name()})}
                         : @{/export/pedidos/excel}"
-               class="btn btn-outline-secondary btn-sm" title="Exportar para Excel">
-                <i class="bi bi-file-earmark-excel me-1 text-success"></i>Excel
+               class="ff-btn ff-btn--secondary ff-btn--sm" title="Exportar para Excel">
+                <i class="bi bi-file-earmark-excel" style="color: #198754;"></i>
+                <span>Excel</span>
             </a>
         </div>
     </div>
 
-    <!-- Filtro por status -->
-    <div class="card mb-3">
-        <div class="card-body py-2">
-            <div class="d-flex flex-wrap gap-2 align-items-center">
-                <span class="text-muted small fw-semibold">Filtrar:</span>
-                <a th:href="@{/pedidos}" class="btn btn-sm"
-                   th:classappend="${statusFiltro == null} ? 'btn-dark' : 'btn-outline-dark'">Todos</a>
-                <a th:each="s : ${statusValues}"
-                   th:href="@{/pedidos(status=${s.name()})}"
-                   class="btn btn-sm"
-                   th:classappend="${statusFiltro == s} ? 'btn-secondary' : 'btn-outline-secondary'"
-                   th:text="${s.descricao}"></a>
-            </div>
+    <!-- Filtro por status (pills) -->
+    <div class="ff-card mb-3" style="padding: var(--space-3) var(--space-4);">
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <span class="ff-text-sm ff-text-muted fw-semibold">Filtrar:</span>
+            <a th:href="@{/pedidos}"
+               class="ff-btn ff-btn--sm"
+               th:classappend="${statusFiltro == null} ? 'ff-btn--primary' : 'ff-btn--ghost'">Todos</a>
+            <a th:each="s : ${statusValues}"
+               th:href="@{/pedidos(status=${s.name()})}"
+               class="ff-btn ff-btn--sm"
+               th:classappend="${statusFiltro == s} ? 'ff-btn--primary' : 'ff-btn--ghost'"
+               th:text="${s.descricao}"></a>
         </div>
     </div>
 
-    <div class="card">
-        <div class="card-body p-0">
-          <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+    <div class="ff-table-wrapper">
+        <div class="ff-table-wrapper--scroll" style="overflow-x:auto;">
+            <table class="ff-table">
                 <thead>
                     <tr>
-                        <th class="ps-3">#</th>
+                        <th>#</th>
                         <th>Cliente</th>
                         <th>Data Pedido</th>
                         <th>Entrega</th>
-                        <th class="text-center">Status</th>
-                        <th class="text-end">Total</th>
-                        <th class="text-center pe-3">Ações</th>
+                        <th class="ff-col-center">Status</th>
+                        <th class="ff-col-num">Total</th>
+                        <th class="ff-col-actions">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr th:each="p : ${pedidos}">
-                        <td class="ps-3 fw-bold text-muted" th:text="'#' + ${p.id}"></td>
+                        <td class="ff-text-muted fw-bold" th:text="'#' + ${p.id}"></td>
                         <td class="fw-semibold" th:text="${p.cliente.nome}"></td>
                         <td th:text="${#temporals.format(p.dataPedido, 'dd/MM/yyyy HH:mm')}"></td>
                         <td>
                             <span th:if="${p.dataEntrega != null}"
                                   th:text="${#temporals.format(p.dataEntrega, 'dd/MM/yyyy')}"></span>
-                            <span th:if="${p.dataEntrega == null}" class="text-muted">—</span>
+                            <span th:if="${p.dataEntrega == null}" class="ff-text-muted">—</span>
                         </td>
-                        <td class="text-center">
-                            <span class="badge"
-                                  th:classappend="${p.status.name() == 'NOVO'        ? 'bg-primary'         :
-                                                   p.status.name() == 'CONFIRMADO'   ? 'bg-info text-dark'  :
-                                                   p.status.name() == 'EM_PRODUCAO'  ? 'bg-warning text-dark':
-                                                   p.status.name() == 'PRONTO'       ? 'bg-success'         :
-                                                   p.status.name() == 'ENTREGUE'     ? 'bg-dark'            :
-                                                                                        'bg-danger'}"
+                        <td class="ff-col-center">
+                            <span class="ff-badge ff-badge--bullet"
+                                  th:classappend="${p.status.name() == 'NOVO'        ? 'ff-badge--novo'         :
+                                                   p.status.name() == 'CONFIRMADO'   ? 'ff-badge--confirmado'   :
+                                                   p.status.name() == 'EM_PRODUCAO'  ? 'ff-badge--em-producao'  :
+                                                   p.status.name() == 'PRONTO'       ? 'ff-badge--pronto'       :
+                                                   p.status.name() == 'ENTREGUE'     ? 'ff-badge--entregue'     :
+                                                                                        'ff-badge--cancelado'}"
                                   th:text="${p.status.descricao}"></span>
                         </td>
-                        <td class="text-end fw-semibold">
+                        <td class="ff-col-num fw-semibold">
                             R$ <span th:text="${#numbers.formatDecimal(p.totalPedido, 1, 'POINT', 2, 'COMMA')}"></span>
                         </td>
-                        <td class="text-center pe-3">
+                        <td class="ff-col-actions">
                             <a th:href="@{/pedidos/{id}(id=${p.id})}"
-                               class="btn btn-sm btn-outline-primary" title="Ver detalhes">
+                               class="ff-btn ff-btn--ghost ff-btn--icon ff-btn--sm" title="Ver detalhes">
                                 <i class="bi bi-eye"></i>
                             </a>
                         </td>
                     </tr>
-                    <tr th:if="${#lists.isEmpty(pedidos)}">
-                        <td colspan="7" class="text-center text-muted py-5">
-                            <i class="bi bi-cart3 fs-3 d-block mb-2 opacity-50"></i>
+                    <tr th:if="${#lists.isEmpty(pedidos)}" class="ff-table__empty">
+                        <td colspan="7">
+                            <i class="bi bi-cart3" style="font-size: 2rem; opacity: 0.4; display:block; margin-bottom: var(--space-2);"></i>
                             Nenhum pedido encontrado.
                         </td>
                     </tr>
                 </tbody>
             </table>
-          </div>
         </div>
-        <div class="card-footer text-muted small" th:if="${!#lists.isEmpty(pedidos)}">
+        <div class="ff-table-footer" th:if="${!#lists.isEmpty(pedidos)}">
             <span th:text="${#lists.size(pedidos)}"></span> pedido(s).
         </div>
     </div>

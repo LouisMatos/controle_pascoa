@@ -1,0 +1,49 @@
+/* ═══════════════════════════════════════════════════════════════════
+   M-10 — Safe area insets para iPhone com notch / Dynamic Island.
+
+   Requer `viewport-fit=cover` na meta viewport (já configurado nos
+   layouts). `env(safe-area-inset-*)` retorna 0 em dispositivos sem
+   notch, então as regras abaixo são no-op fora de iPhone X+.
+
+   Estratégia: usar `max()` para somar o padding/inset ao valor
+   existente sem encolher o layout em telas normais.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Layout autenticado — topbar sticky absorve a área superior do notch. */
+.ff-topbar {
+  padding-top:   env(safe-area-inset-top, 0);
+  padding-left:  max(var(--space-5, 1.25rem), env(safe-area-inset-left, 0));
+  padding-right: max(var(--space-5, 1.25rem), env(safe-area-inset-right, 0));
+}
+
+/* Header dos layouts públicos (catálogo, orçamento) — texto centralizado
+   afasta-se do notch. */
+.ff-layout-public__header,
+header.ff-public-header {
+  padding-top: max(var(--space-5, 1.25rem), env(safe-area-inset-top, 0));
+  padding-left:  max(var(--space-4, 1rem), env(safe-area-inset-left, 0));
+  padding-right: max(var(--space-4, 1rem), env(safe-area-inset-right, 0));
+}
+
+/* Footer dos layouts públicos — fica acima do Home Indicator. */
+.ff-layout-public__footer,
+footer.ff-public-footer {
+  padding-bottom: max(var(--space-4, 1rem), env(safe-area-inset-bottom, 0));
+  padding-left:  max(var(--space-4, 1rem), env(safe-area-inset-left, 0));
+  padding-right: max(var(--space-4, 1rem), env(safe-area-inset-right, 0));
+}
+
+/* Header do onboarding wizard. */
+.ff-onboarding__header {
+  padding-top: max(var(--space-4, 1rem), env(safe-area-inset-top, 0));
+  padding-left:  max(var(--space-4, 1rem), env(safe-area-inset-left, 0));
+  padding-right: max(var(--space-4, 1rem), env(safe-area-inset-right, 0));
+}
+
+/* Tela de auth fullscreen — todos os 4 lados. */
+.ff-auth {
+  padding-top:    max(var(--space-6, 1.5rem), env(safe-area-inset-top, 0));
+  padding-bottom: max(var(--space-6, 1.5rem), env(safe-area-inset-bottom, 0));
+  padding-left:   max(var(--space-6, 1.5rem), env(safe-area-inset-left, 0));
+  padding-right:  max(var(--space-6, 1.5rem), env(safe-area-inset-right, 0));
+}

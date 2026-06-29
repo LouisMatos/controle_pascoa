@@ -1,28 +1,16 @@
 <!DOCTYPE html>
-<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<!--
+  MO-01 — migrado para fragments/layout-public (Design System v7 + white-label).
+  Header verde hardcoded substituído pelo header brand do layout.
+-->
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout-public :: layout(~{::title}, ~{::main})}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Orçamento — Páscoa Gestão</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <style>
-        body { background-color: #f8f9fa; font-size: 0.93rem; }
-        .brand-bar { background-color: #198754; }
-        .card { border: none; box-shadow: 0 2px 8px rgba(0,0,0,.10); }
-    </style>
+    <title>Orçamento — <span th:text="${tenant != null ? tenant.nomeApp : 'Páscoa Gestão'}">Páscoa Gestão</span></title>
 </head>
 <body>
 
-<!-- Barra de marca simples -->
-<div class="brand-bar text-white py-3 mb-4">
-    <div class="container text-center">
-        <i class="bi bi-egg-fill me-2 fs-4"></i>
-        <span class="fw-bold fs-5">Páscoa Gestão</span>
-    </div>
-</div>
-
-<div class="container" style="max-width: 720px;">
+<main>
 
     <!-- Erros (link inválido — apenas quando orçamento não foi encontrado) -->
     <div th:if="${orc == null and erro != null}" class="alert alert-danger text-center">
@@ -44,12 +32,12 @@
         </div>
 
         <!-- Cabeçalho do orçamento -->
-        <div class="card mb-4">
+        <div class="card mb-4 shadow-sm">
             <div class="card-body">
                 <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
                     <div>
                         <h4 class="mb-1">
-                            <i class="bi bi-file-earmark-text me-2 text-warning"></i>
+                            <i class="bi bi-file-earmark-text me-2" style="color: var(--brand-primary);"></i>
                             Orçamento <span th:text="'#' + ${orc.id}"></span>
                         </h4>
                         <p class="text-muted mb-0 small">
@@ -87,7 +75,7 @@
         </div>
 
         <!-- Itens -->
-        <div class="card mb-4">
+        <div class="card mb-4 shadow-sm">
             <div class="card-header fw-semibold">
                 <i class="bi bi-list-ul me-2"></i>Itens
             </div>
@@ -108,7 +96,7 @@
                             <td class="text-end">
                                 R$ <span th:text="${#numbers.formatDecimal(item.precoUnitario, 1, 'POINT', 2, 'COMMA')}"></span>
                             </td>
-                            <td class="text-end pe-3 text-success fw-semibold">
+                            <td class="text-end pe-3 fw-semibold" style="color: var(--brand-primary);">
                                 R$ <span th:text="${#numbers.formatDecimal(item.subtotal, 1, 'POINT', 2, 'COMMA')}"></span>
                             </td>
                         </tr>
@@ -116,7 +104,7 @@
                     <tfoot>
                         <tr class="table-light">
                             <td colspan="3" class="text-end fw-bold pe-2">Total</td>
-                            <td class="text-end pe-3 fw-bold text-success fs-5">
+                            <td class="text-end pe-3 fw-bold fs-5" style="color: var(--brand-primary);">
                                 R$ <span th:text="${#numbers.formatDecimal(orc.total, 1, 'POINT', 2, 'COMMA')}"></span>
                             </td>
                         </tr>
@@ -166,11 +154,6 @@
 
     </div>
 
-    <p class="text-center text-muted small mt-4">
-        <i class="bi bi-egg-fill me-1 text-success"></i>Páscoa Gestão — Sistema de Gestão de Ovos de Páscoa
-    </p>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</main>
 </body>
 </html>

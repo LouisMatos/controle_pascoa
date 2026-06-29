@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout-fullscreen :: layout(~{::title}, ~{::#pageContent}, ${etapaAtual}, ${totalEtapas})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head><title>Etapa 6 — Notificações · FoodFlow</title></head>
+<body>
+<div id="pageContent">
+    <h1 class="ff-onboarding__title">Configure suas notificações</h1>
+    <p class="ff-onboarding__subtitle">Como você quer comunicar com seus clientes? Você pode habilitar e configurar mais canais depois.</p>
+
+    <form th:action="@{/onboarding/etapa6}" method="post" class="ff-onboarding__card">
+
+        <div class="row g-3">
+
+            <!-- WhatsApp -->
+            <div class="col-md-6">
+                <div class="ff-card h-100" style="padding: var(--space-5); border: 2px solid var(--color-green-600);">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div style="width:48px; height:48px; border-radius:var(--radius-lg); background: var(--color-green-50); color: var(--color-green-600); display:flex; align-items:center; justify-content:center; font-size:1.5rem;">
+                            <i class="bi bi-whatsapp"></i>
+                        </div>
+                        <div>
+                            <div class="ff-heading-3">WhatsApp</div>
+                            <div class="ff-text-xs ff-text-muted">Canal principal recomendado</div>
+                        </div>
+                    </div>
+                    <div class="ff-field">
+                        <label class="ff-label">Número de envio</label>
+                        <input type="tel" name="whatsapp" class="ff-input" placeholder="(11) 99999-9999">
+                    </div>
+                    <label class="ff-check mb-3">
+                        <input type="checkbox" name="habilitarWhatsapp" checked>
+                        <span>Habilitar notificações por WhatsApp</span>
+                    </label>
+                    <button type="button" class="ff-btn ff-btn--secondary ff-btn--sm" onclick="testarWhatsapp()">
+                        <i class="bi bi-send"></i>
+                        <span>Enviar mensagem de teste</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Email -->
+            <div class="col-md-6">
+                <div class="ff-card h-100" style="padding: var(--space-5);">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div style="width:48px; height:48px; border-radius:var(--radius-lg); background: var(--brand-secondary); color: var(--brand-primary); display:flex; align-items:center; justify-content:center; font-size:1.5rem;">
+                            <i class="bi bi-envelope"></i>
+                        </div>
+                        <div>
+                            <div class="ff-heading-3">E-mail</div>
+                            <div class="ff-text-xs ff-text-muted">Confirmações e recibos formais</div>
+                        </div>
+                    </div>
+                    <div class="ff-field">
+                        <label class="ff-label">E-mail remetente</label>
+                        <input type="email" name="emailRemetente" class="ff-input" placeholder="contato@empresa.com">
+                    </div>
+                    <label class="ff-check mb-3">
+                        <input type="checkbox" name="habilitarEmail" checked>
+                        <span>Habilitar notificações por e-mail</span>
+                    </label>
+                    <button type="button" class="ff-btn ff-btn--secondary ff-btn--sm">
+                        <i class="bi bi-send"></i>
+                        <span>Enviar e-mail de teste</span>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="ff-onboarding__nav">
+            <a th:href="@{/onboarding/etapa5}" class="ff-btn ff-btn--ghost">
+                <i class="bi bi-arrow-left"></i><span>Voltar</span>
+            </a>
+            <button type="submit" class="ff-btn ff-btn--primary ff-btn--lg">
+                <span>Próxima etapa</span><i class="bi bi-arrow-right"></i>
+            </button>
+        </div>
+    </form>
+
+<script>
+  function testarWhatsapp() {
+    alert('Mensagem de teste será enviada quando o canal WhatsApp estiver integrado ao notification-service.');
+  }
+</script>
+</div>
+</body>
+</html>

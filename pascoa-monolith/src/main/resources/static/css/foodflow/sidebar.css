@@ -1,0 +1,209 @@
+/* ═══════════════════════════════════════════════════════════════════
+   FoodFlow Design System v7 — Sidebar
+   3 variantes:
+     • Desktop ≥1024px  → completa (240px), texto + ícone visíveis
+     • Tablet  768-1023 → colapsada (64px), apenas ícones + tooltip
+     • Mobile  <768     → drawer overlay (toggle via .ff-sidebar--open)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.ff-sidebar {
+  background: var(--color-sidebar-bg);
+  color: var(--color-sidebar-text);
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 0;
+  /* M-02 — svh evita scroll vertical fantasma no mobile. */
+  height: 100vh;
+  height: 100svh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  z-index: var(--z-sidebar);
+  box-shadow: var(--shadow-md);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.25) transparent;
+}
+
+.ff-sidebar::-webkit-scrollbar { width: 6px; }
+.ff-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.25);
+  border-radius: var(--radius-full);
+}
+
+/* ─── Brand (topo da sidebar) ─────────────────────────────────────── */
+.ff-sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  font-size: var(--text-heading-3);
+  font-weight: 700;
+  color: var(--color-text-inverse);
+  text-decoration: none;
+  min-height: var(--ff-topbar-height);
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+}
+.ff-sidebar__brand-logo {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  object-fit: contain;
+  background: rgba(255,255,255,0.1);
+  padding: 2px;
+}
+/* W-03 — logo customizado do tenant (img). Restrições obrigatórias para
+   evitar que logos grandes (1200x600+) expandam a sidebar além de 240px e
+   quebrem o grid principal. Validação dimensional adicional deve ocorrer no
+   upload (tenant-service / config-engine-service). */
+.ff-sidebar__logo {
+  display: block;
+  max-width: 140px;
+  max-height: 48px;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.ff-sidebar__brand-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ─── Navegação ───────────────────────────────────────────────────── */
+.ff-sidebar__nav {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-3) 0;
+  flex: 1;
+}
+
+/* L-07 — Safari < 14.1 não suportava `gap` em Flexbox; aplica margin-top
+   nos itens irmãos só quando o browser NÃO entender gap (Safari/Catalina). */
+@supports not (gap: 1px) {
+  .ff-sidebar__item + .ff-sidebar__item { margin-top: var(--space-2); }
+}
+
+.ff-sidebar__group {
+  margin-bottom: var(--space-2);
+}
+
+.ff-sidebar__group-title {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255,255,255,0.55);
+  padding: var(--space-3) var(--space-4) var(--space-1);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.ff-sidebar__item {
+  list-style: none;
+}
+
+.ff-sidebar__link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  color: rgba(255,255,255,0.85);
+  text-decoration: none;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  border-left: 3px solid transparent;
+  transition: background var(--transition-fast), color var(--transition-fast);
+  white-space: nowrap;
+}
+.ff-sidebar__link:hover {
+  background: rgba(255,255,255,0.08);
+  color: var(--color-text-inverse);
+}
+.ff-sidebar__link.is-active {
+  background: var(--color-sidebar-active);
+  color: var(--color-text-inverse);
+  border-left-color: var(--color-text-inverse);
+}
+
+.ff-sidebar__icon {
+  font-size: 1.05rem;
+  flex-shrink: 0;
+  width: 20px;
+  text-align: center;
+}
+
+.ff-sidebar__label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ─── Footer (versão / sair) ──────────────────────────────────────── */
+.ff-sidebar__footer {
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid rgba(255,255,255,0.12);
+  font-size: var(--text-xs);
+  color: rgba(255,255,255,0.55);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* ═══════ Mobile: backdrop do drawer ═══════ */
+.ff-sidebar__backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: var(--z-sidebar-backdrop);
+}
+
+/* ═══════ Tablet — só ícones ═══════ */
+@media (max-width: 1023.98px) and (min-width: 768px) {
+  .ff-sidebar__brand-text,
+  .ff-sidebar__label,
+  .ff-sidebar__group-title,
+  .ff-sidebar__footer {
+    display: none;
+  }
+  .ff-sidebar__link {
+    justify-content: center;
+    padding: var(--space-3);
+    border-left-width: 0;
+    border-right: 3px solid transparent;
+  }
+  .ff-sidebar__link.is-active {
+    border-right-color: var(--color-text-inverse);
+    border-left-color: transparent;
+  }
+  .ff-sidebar__brand {
+    justify-content: center;
+    padding: var(--space-3);
+  }
+  /* Tooltip nativo via title attribute fica visível no hover */
+}
+
+/* ═══════ Mobile — drawer ═══════ */
+@media (max-width: 767.98px) {
+  .ff-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: var(--ff-sidebar-width);
+    height: 100vh;
+    height: 100svh;
+    transform: translateX(-100%);
+    transition: transform var(--transition-base);
+    /* L-01 — força novo stacking context no Safari (mobile + iOS) para que
+       o conteúdo principal não vaze por cima da sidebar ao rolar. */
+    isolation: isolate;
+    will-change: transform;
+  }
+  .ff-sidebar--open {
+    transform: translateX(0);
+  }
+  .ff-sidebar--open + .ff-sidebar__backdrop {
+    display: block;
+  }
+  /* Hambúrguer mostrado apenas no mobile (controlado em topbar.css) */
+}

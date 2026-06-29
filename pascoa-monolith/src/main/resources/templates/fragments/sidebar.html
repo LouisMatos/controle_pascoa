@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+
+<!--
+  Sidebar FoodFlow v7 — 7 grupos fixos.
+  th:fragment="sidebar" — incluir via th:replace="~{fragments/sidebar :: sidebar}"
+  Visibilidade dos grupos via sec:authorize segue o mesmo mapa de roles do
+  layout anterior (Cadastros, Comercial, Produção, Estoque, Financeiro, Admin, Catálogo).
+-->
+<aside th:fragment="sidebar" class="ff-sidebar" id="ffSidebar" aria-label="Menu de navegação principal" role="navigation">
+
+    <!-- Brand
+         W-03 — quando o tenant tem logo customizado, exibe a <img> com
+         restrições de tamanho (.ff-sidebar__logo: max 140x48, object-fit
+         contain). Sem isso, logos 1200x600 quebravam o grid da sidebar. -->
+    <a class="ff-sidebar__brand" th:href="@{/dashboard}"
+       th:title="${tenant != null and tenant.nomeApp != null ? tenant.nomeApp : 'Páscoa Gestão'}">
+        <img th:if="${tenant != null and tenant.logoUrl != null and !tenant.logoUrl.isBlank()}"
+             class="ff-sidebar__logo"
+             th:src="@{${tenant.logoUrl}}"
+             th:alt="${tenant.nomeApp != null ? tenant.nomeApp : 'Logo'}"/>
+        <i th:unless="${tenant != null and tenant.logoUrl != null and !tenant.logoUrl.isBlank()}"
+           class="bi bi-egg-fill ff-sidebar__brand-logo d-flex align-items-center justify-content-center"
+           style="font-size: 1.2rem;"></i>
+        <span class="ff-sidebar__brand-text"
+              th:text="${tenant != null and tenant.nomeApp != null ? tenant.nomeApp : 'Páscoa Gestão'}">Páscoa Gestão</span>
+    </a>
+
+    <ul class="ff-sidebar__nav">
+
+        <!-- ═══ CADASTROS ═══ -->
+        <li class="ff-sidebar__group">
+            <div class="ff-sidebar__group-title">Cadastros</div>
+            <ul class="ff-sidebar__nav" style="padding:0;">
+                <li class="ff-sidebar__item" sec:authorize="hasAnyRole('ADMIN', 'ATENDENTE')">
+                    <a class="ff-sidebar__link" th:href="@{/clientes}" title="Clientes">
+                        <i class="bi bi-people ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">Clientes</span>
+                    </a>
+                </li>
+                <li class="ff-sidebar__item">
+                    <a class="ff-sidebar__link" th:href="@{/produtos}" title="Produtos">
+                        <i class="bi bi-box-seam ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">Produtos</span>
+                    </a>
+                </li>
+                <li class="ff-sidebar__item">
+                    <a class="ff-sidebar__link" th:href="@{/materias-primas}" title="Matérias-Primas">
+                        <i class="bi bi-stack ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">Matérias-Primas</span>
+                    </a>
+                </li>
+                <li class="ff-sidebar__item" sec:authorize="hasAnyRole('ADMIN', 'ATENDENTE')">
+                    <a class="ff-sidebar__link" th:href="@{/fornecedores}" title="Fornecedores">
+                        <i class="bi bi-truck ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">Fornecedores</span>
+                    </a>
+                </li>
+            </ul>
+        </li>
+
+        <!-- ═══ COMERCIAL ═══ -->
+        <li class="ff-sidebar__group" sec:authorize="hasAnyRole('ADMIN', 'ATENDENTE')">
+            <div class="ff-sidebar__group-title">Comercial</div>
+            <ul class="ff-sidebar__nav" style="padding:0;">
+                <li class="ff-sidebar__item">
+                    <a class="ff-sidebar__link" th:href="@{/pedidos}" title="Pedidos">
+                        <i class="bi bi-cart3 ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">Pedidos</span>
+                    </a>
+                </li>
+                <li class="ff-sidebar__item">
+                    <a class="ff-sidebar__link" th:href="@{/orcamentos}" title="Orçamentos">
+                        <i class="bi bi-file-earmark-text ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">Orçamentos</span>
+                    </a>
+                </li>
+                <li class="ff-sidebar__item">
+                    <a class="ff-sidebar__link" th:href="@{/crm}" title="CRM">
+                        <i class="bi bi-people-fill ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">CRM</span>
+                    </a>
+                </li>
+                <li class="ff-sidebar__item">
+                    <a class="ff-sidebar__link" th:href="@{/crm/campanhas}" title="Campanhas">
+                        <i class="bi bi-megaphone ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">Campanhas</span>
+                    </a>
+                </li>
+            </ul>
+        </li>
+
+        <!-- ═══ PRODUÇÃO ═══ -->
+        <li class="ff-sidebar__group" sec:authorize="hasAnyRole('ADMIN', 'CONFEITEIRO', 'GESTOR_QUALIDADE')">
+            <div class="ff-sidebar__group-title">Produção</div>
+            <ul class="ff-sidebar__nav" style="padding:0;">
+                <li class="ff-sidebar__item">
+                    <a class="ff-sidebar__link" th:href="@{/producao/kanban}" title="Kanban de Produção">
+                        <i class="bi bi-kanban ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">Kanban</span>
+                    </a>
+                </li>
+                <li class="ff-sidebar__item">
+                    <a class="ff-sidebar__link" th:href="@{/producao}" title="Lista de Ordens">
+                        <i class="bi bi-list-ul ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">Ordens</span>
+                    </a>
+                </li>
+                <li class="ff-sidebar__item">
+                    <a class="ff-sidebar__link" th:href="@{/qualidade}" title="Controle de Qualidade">
+                        <i class="bi bi-clipboard2-check ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">Qualidade</span>
+                    </a>
+                </li>
+            </ul>
+        </li>
+
+        <!-- ═══ ESTOQUE ═══ -->
+        <li class="ff-sidebar__group">
+            <div class="ff-sidebar__group-title">Estoque</div>
+            <ul class="ff-sidebar__nav" style="padding:0;">
+                <li class="ff-sidebar__item">
+                    <a class="ff-sidebar__link" th:href="@{/estoque/movimentacoes}" title="Movimentações">
+                        <i class="bi bi-clipboard-data ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">Movimentações</span>
+                    </a>
+                </li>
+                <li class="ff-sidebar__item">
+                    <a class="ff-sidebar__link" th:href="@{/estoque/entrada}" title="Entrada de MP">
+                        <i class="bi bi-box-arrow-in-down ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">Entrada</span>
+                    </a>
+                </li>
+                <li class="ff-sidebar__item">
+                    <a class="ff-sidebar__link" th:href="@{/estoque/ajuste}" title="Ajuste de Inventário">
+                        <i class="bi bi-pencil-square ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">Ajuste</span>
+                    </a>
+                </li>
+            </ul>
+        </li>
+
+        <!-- ═══ FINANCEIRO ═══ -->
+        <li class="ff-sidebar__group" sec:authorize="hasAnyRole('ADMIN', 'FINANCEIRO', 'ANALISTA')">
+            <div class="ff-sidebar__group-title">Financeiro</div>
+            <ul class="ff-sidebar__nav" style="padding:0;">
+                <li class="ff-sidebar__item">
+                    <a class="ff-sidebar__link" th:href="@{/financeiro/dashboard}" title="Dashboard Financeiro">
+                        <i class="bi bi-speedometer2 ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">Dashboard</span>
+                    </a>
+                </li>
+                <li class="ff-sidebar__item">
+                    <a class="ff-sidebar__link" th:href="@{/financeiro/fluxo-caixa}" title="Fluxo de Caixa">
+                        <i class="bi bi-arrow-left-right ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">Fluxo de Caixa</span>
+                    </a>
+                </li>
+                <li class="ff-sidebar__item">
+                    <a class="ff-sidebar__link" th:href="@{/financeiro/breakeven}" title="Ponto de Equilíbrio">
+                        <i class="bi bi-bullseye ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">Break-even</span>
+                    </a>
+                </li>
+                <li class="ff-sidebar__item">
+                    <a class="ff-sidebar__link" th:href="@{/financeiro/projecao-safra}" title="Projeção de Safra">
+                        <i class="bi bi-egg-fill ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">Projeção Safra</span>
+                    </a>
+                </li>
+                <li class="ff-sidebar__item">
+                    <a class="ff-sidebar__link" th:href="@{/financeiro/aging}" title="Aging de Recebíveis">
+                        <i class="bi bi-clock-history ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">Aging</span>
+                    </a>
+                </li>
+                <li class="ff-sidebar__item">
+                    <a class="ff-sidebar__link" th:href="@{/financeiro/contas-pagar}" title="Contas a Pagar">
+                        <i class="bi bi-cash-stack ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">Contas a Pagar</span>
+                    </a>
+                </li>
+                <li class="ff-sidebar__item">
+                    <a class="ff-sidebar__link" th:href="@{/analytics}" title="Analytics de Vendas">
+                        <i class="bi bi-bar-chart-line ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">Analytics</span>
+                    </a>
+                </li>
+                <li class="ff-sidebar__item" sec:authorize="hasAnyRole('ADMIN', 'FINANCEIRO')">
+                    <a class="ff-sidebar__link" th:href="@{/gastos}" title="Gastos Variáveis">
+                        <i class="bi bi-receipt ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">Gastos</span>
+                    </a>
+                </li>
+                <li class="ff-sidebar__item" sec:authorize="hasAnyRole('ADMIN', 'FINANCEIRO')">
+                    <a class="ff-sidebar__link" th:href="@{/gastos/dashboard}" title="Dashboard de Gastos">
+                        <i class="bi bi-bar-chart ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">Gastos Dashboard</span>
+                    </a>
+                </li>
+            </ul>
+        </li>
+
+        <!-- ═══ ADMIN ═══ -->
+        <li class="ff-sidebar__group" sec:authorize="hasRole('ADMIN')">
+            <div class="ff-sidebar__group-title">Admin</div>
+            <ul class="ff-sidebar__nav" style="padding:0;">
+                <li class="ff-sidebar__item">
+                    <a class="ff-sidebar__link" th:href="@{/notificacoes/templates}" title="Templates de Notificação">
+                        <i class="bi bi-file-text ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">Templates</span>
+                    </a>
+                </li>
+                <li class="ff-sidebar__item">
+                    <a class="ff-sidebar__link" th:href="@{/notificacoes/historico}" title="Histórico de Envios">
+                        <i class="bi bi-clock-history ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">Histórico Notif.</span>
+                    </a>
+                </li>
+                <li class="ff-sidebar__item">
+                    <a class="ff-sidebar__link" th:href="@{/notificacoes/configuracao}" title="Configurar Canais">
+                        <i class="bi bi-toggles ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">Canais</span>
+                    </a>
+                </li>
+                <li class="ff-sidebar__item">
+                    <a class="ff-sidebar__link" th:href="@{/usuarios}" title="Usuários">
+                        <i class="bi bi-people ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">Usuários</span>
+                    </a>
+                </li>
+                <li class="ff-sidebar__item">
+                    <a class="ff-sidebar__link" th:href="@{/auditoria}" title="Audit Log">
+                        <i class="bi bi-shield-check ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">Auditoria</span>
+                    </a>
+                </li>
+                <li class="ff-sidebar__item">
+                    <a class="ff-sidebar__link" th:href="@{/lgpd}" title="LGPD">
+                        <i class="bi bi-shield-shaded ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">LGPD</span>
+                    </a>
+                </li>
+                <li class="ff-sidebar__item">
+                    <a class="ff-sidebar__link" th:href="@{/admin/sistema}" title="Configurações do Sistema">
+                        <i class="bi bi-gear-wide-connected ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">Configurações</span>
+                    </a>
+                </li>
+            </ul>
+        </li>
+
+        <!-- ═══ TENANT (FASE 7 — painel admin) ═══ -->
+        <li class="ff-sidebar__group" sec:authorize="hasRole('ADMIN')">
+            <div class="ff-sidebar__group-title">Tenant</div>
+            <ul class="ff-sidebar__nav" style="padding:0;">
+                <li class="ff-sidebar__item">
+                    <a class="ff-sidebar__link" th:href="@{/admin/tenant/identidade}" title="Identidade Visual">
+                        <i class="bi bi-palette ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">Identidade</span>
+                    </a>
+                </li>
+                <li class="ff-sidebar__item">
+                    <a class="ff-sidebar__link" th:href="@{/admin/tenant/fases}" title="Fases de Produção">
+                        <i class="bi bi-diagram-3 ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">Fases Produção</span>
+                    </a>
+                </li>
+                <li class="ff-sidebar__item">
+                    <a class="ff-sidebar__link" th:href="@{/admin/tenant/atributos}" title="Atributos de Produto">
+                        <i class="bi bi-tags ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">Atributos</span>
+                    </a>
+                </li>
+                <li class="ff-sidebar__item">
+                    <a class="ff-sidebar__link" th:href="@{/admin/tenant/notificacoes}" title="Templates de Notificação">
+                        <i class="bi bi-envelope-paper ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">Templates Notif.</span>
+                    </a>
+                </li>
+                <li class="ff-sidebar__item">
+                    <a class="ff-sidebar__link" th:href="@{/admin/tenant/plano}" title="Plano e Recursos">
+                        <i class="bi bi-credit-card ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">Plano</span>
+                    </a>
+                </li>
+            </ul>
+        </li>
+
+        <!-- ═══ CATÁLOGO (link externo) ═══ -->
+        <li class="ff-sidebar__group">
+            <ul class="ff-sidebar__nav" style="padding:0;">
+                <li class="ff-sidebar__item">
+                    <a class="ff-sidebar__link" th:href="@{/catalogo}" target="_blank" title="Catálogo Público (nova aba)">
+                        <i class="bi bi-shop ff-sidebar__icon"></i>
+                        <span class="ff-sidebar__label">Catálogo</span>
+                    </a>
+                </li>
+            </ul>
+        </li>
+
+    </ul>
+
+    <div class="ff-sidebar__footer">
+        v7.0 · FoodFlow
+    </div>
+</aside>
+
+<!-- Backdrop do drawer mobile (irmão da sidebar para o seletor + funcionar) -->
+<div th:fragment="sidebar-backdrop" class="ff-sidebar__backdrop" id="ffSidebarBackdrop" aria-hidden="true"></div>
+
+</body>
+</html>

@@ -1,0 +1,141 @@
+/* ═══════════════════════════════════════════════════════════════════
+   FoodFlow Design System v7 — Cards (genéricos e KPI)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.ff-card {
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.ff-card--clickable {
+  cursor: pointer;
+  transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+}
+.ff-card--clickable:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.ff-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.ff-card__title {
+  font-size: var(--text-heading-3);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+.ff-card__subtitle {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+.ff-card__body { flex: 1; }
+.ff-card__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-card-border);
+}
+
+/* ── KPI Grid ──
+   L-04 — auto-fit + minmax(200px) impede overflow do valor monetário em
+   viewports estreitos (tablet 992-1100px). Cards quebram naturalmente em
+   nova linha em vez de comprimir o conteúdo. */
+.ff-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
+}
+
+/* ── KPI Card ── */
+.ff-kpi {
+  position: relative;
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  box-shadow: var(--shadow-sm);
+}
+/* L-09 — Safari não interpola box-shadow com CSS vars; o pattern oficial
+   é animar a opacity de um ::after que carrega a sombra maior. */
+.ff-kpi::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  box-shadow: var(--shadow-md);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+  pointer-events: none;
+}
+.ff-kpi:hover::after { opacity: 1; }
+
+.ff-kpi__icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--brand-secondary);
+  color: var(--brand-primary);
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.ff-kpi__content { flex: 1; min-width: 0; }
+
+.ff-kpi__label {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.ff-kpi__value {
+  font-size: var(--text-heading-1);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.1;
+  margin-top: var(--space-1);
+  /* L-04 — em casos extremos (R$ 1.234.567,89) elipsis evita overflow do card. */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ff-kpi__trend {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  margin-top: var(--space-2);
+}
+.ff-kpi__trend--up   { color: var(--color-success); }
+.ff-kpi__trend--down { color: var(--color-danger); }
+.ff-kpi__trend--flat { color: var(--color-text-secondary); }
+
+/* ── Variantes de KPI por status semântico ── */
+.ff-kpi--success .ff-kpi__icon { background: var(--color-green-50);  color: var(--color-green-700); }
+.ff-kpi--danger  .ff-kpi__icon { background: var(--color-red-50);    color: var(--color-red-700); }
+.ff-kpi--warning .ff-kpi__icon { background: var(--color-amber-50);  color: var(--color-amber-700); }
+.ff-kpi--info    .ff-kpi__icon { background: #dbeafe;                color: #1e40af; }
+
+/* ── Grid de KPIs ── */
+.ff-kpi-grid {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}

@@ -79,6 +79,19 @@ Cada microsserviço possui seu próprio banco de dados, criados automaticamente 
 
 Script de init: `infra/postgres/init-databases.sql` (executado na primeira inicialização do container).
 
+#### Banco da Plataforma v6 — `foodflow_platform`
+
+Instância PostgreSQL separada para dados cross-tenant (registro de tenants, configs, feature flags, billing). Roda no container `postgres-platform` na porta **5441** (host) → 5432 (container).
+
+| Schema | Conteúdo | Serviço dono |
+|--------|----------|--------------|
+| `platform` | Tabelas de tenant, config, feature flags, subscription | tenant-service, config-engine-service, subscription-service |
+| `public` | Extensions (`uuid-ossp`, `pgcrypto`) e objetos compartilhados | — |
+
+Script de init: `infra/postgres-platform/init-platform.sql`.
+
+> **Por que outro container PostgreSQL?** Isolamento físico entre dados de plataforma e dados de tenants. Os schemas por tenant (criados na Etapa 4) ficam nos bancos `pascoa_*` da instância principal, controlados via `TenantContext` + `TenantAwareDataSource`.
+
 ### 2.2 Migrations Flyway
 
 Localização: `src/main/resources/db/migration/`

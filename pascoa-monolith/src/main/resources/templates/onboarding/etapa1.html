@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout-fullscreen :: layout(~{::title}, ~{::#pageContent}, ${etapaAtual}, ${totalEtapas})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head><title>Etapa 1 — Dados da Empresa · FoodFlow</title></head>
+<body>
+<div id="pageContent">
+    <h1 class="ff-onboarding__title">Vamos começar! Quem é você?</h1>
+    <p class="ff-onboarding__subtitle">Conte-nos os dados básicos da sua empresa. Isso aparecerá no seu PWA, PDFs e notificações.</p>
+
+    <form th:action="@{/onboarding/etapa1}" method="post" class="ff-onboarding__card">
+
+        <div class="ff-form-row">
+            <div class="ff-field">
+                <label class="ff-label">Nome da empresa <span class="ff-label__required">*</span></label>
+                <input type="text" name="nomeEmpresa" class="ff-input" placeholder="Ex.: Doces da Maria" required>
+                <span class="ff-hint">Como você quer que apareça no seu sistema</span>
+            </div>
+            <div class="ff-field">
+                <label class="ff-label">CNPJ</label>
+                <input type="text" name="cnpj" class="ff-input" placeholder="00.000.000/0001-00">
+                <span class="ff-hint">Opcional — pode preencher depois</span>
+            </div>
+        </div>
+
+        <div class="ff-form-row">
+            <div class="ff-field">
+                <label class="ff-label">Responsável <span class="ff-label__required">*</span></label>
+                <input type="text" name="responsavel" class="ff-input" placeholder="Seu nome" required>
+            </div>
+            <div class="ff-field">
+                <label class="ff-label">E-mail <span class="ff-label__required">*</span></label>
+                <input type="email" name="email" class="ff-input" placeholder="voce@empresa.com" required>
+                <span class="ff-hint">Será o login do administrador</span>
+            </div>
+        </div>
+
+        <div class="ff-field">
+            <label class="ff-label">WhatsApp</label>
+            <input type="tel" name="whatsapp" class="ff-input" placeholder="(11) 99999-9999">
+            <span class="ff-hint">Usado para notificações ao cliente; pode configurar depois</span>
+        </div>
+
+        <div class="ff-onboarding__nav">
+            <span class="ff-text-sm ff-text-muted">Etapa 1 de 7</span>
+            <button type="submit" class="ff-btn ff-btn--primary ff-btn--lg">
+                <span>Próxima etapa</span>
+                <i class="bi bi-arrow-right"></i>
+            </button>
+        </div>
+    </form>
+</div>
+</body>
+</html>

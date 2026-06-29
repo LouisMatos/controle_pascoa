@@ -31,8 +31,11 @@ Identificar os arquivos alterados e classificá-los:
 | `docker-compose.yml` ou `infra/**` | `01-infraestrutura.md` |
 | `fragments/layout.html` (novo item de menu) | `04-rotas-endpoints.md` |
 | Novo módulo monólito | `02-arquitetura-tecnica.md`, `03-fluxos-negocio.md`, `04-rotas-endpoints.md`, `05-estado-implementacao.md` |
-| Novo microsserviço | `00-indice.md`, `01-infraestrutura.md`, `02-arquitetura-tecnica.md`, `04-rotas-endpoints.md`, `05-estado-implementacao.md`, `06-schema-banco.md` |
+| Novo microsserviço | `00-indice.md`, `01-infraestrutura.md`, `02-arquitetura-tecnica.md`, `04-rotas-endpoints.md`, `05-estado-implementacao.md`, `06-schema-banco.md`, **`start-all.sh`** |
+| Novo container no `docker-compose.yml` | `01-infraestrutura.md`, **`start-all.sh`** (adicionar `wait_port` da porta exposta) |
 | `CLAUDE.md` (roadmap) | Atualizar quando items do roadmap concluídos |
+
+> **`start-all.sh` é obrigatório** em qualquer mudança que envolva subir um serviço novo (Java ou container). Verificar: (a) lista `V6_SERVICES`/`MICROSERVICES`, (b) `wait_port` da infra, (c) banner de URLs no fim do `up`.
 
 ---
 

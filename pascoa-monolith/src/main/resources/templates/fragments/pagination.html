@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+  FoodFlow Paginação Acessível v7
+
+  Uso com Spring Data Page<T>:
+    <div th:replace="~{fragments/pagination :: paginate(page=${pedidosPage}, baseUrl='/pedidos')}"></div>
+
+    Onde ${pedidosPage} é um org.springframework.data.domain.Page:
+      - page.number       (zero-based)
+      - page.totalPages
+      - page.first / page.last / page.hasPrevious / page.hasNext
+
+  Mantém query params existentes adicionando ?page=N na URL base.
+-->
+
+<nav th:fragment="paginate(page, baseUrl)"
+     th:if="${page != null and page.totalPages > 1}"
+     class="ff-pagination"
+     aria-label="Navegação por páginas"
+     style="display:flex; justify-content:center; gap:var(--space-1); padding:var(--space-4) 0; flex-wrap:wrap;">
+
+    <!-- Anterior -->
+    <a th:if="${page.hasPrevious()}"
+       th:href="@{${baseUrl}(page=${page.number - 1})}"
+       class="ff-btn ff-btn--secondary ff-btn--sm"
+       aria-label="Página anterior">
+        <i class="bi bi-chevron-left"></i>
+    </a>
+    <span th:unless="${page.hasPrevious()}"
+          class="ff-btn ff-btn--secondary ff-btn--sm is-disabled"
+          aria-hidden="true">
+        <i class="bi bi-chevron-left"></i>
+    </span>
+
+    <!-- Números das páginas (até 7 visíveis: 1 ... N-1 N N+1 ... Total) -->
+    <th:block th:with="total=${page.totalPages}, current=${page.number}">
+        <th:block th:each="i : ${#numbers.sequence(0, total - 1)}"
+                  th:if="${i == 0 or i == total - 1 or (i >= current - 2 and i <= current + 2)}">
+            <a th:if="${i != current}"
+               th:href="@{${baseUrl}(page=${i})}"
+               class="ff-btn ff-btn--ghost ff-btn--sm"
+               th:text="${i + 1}"
+               th:aria-label="'Página ' + ${i + 1}"></a>
+            <span th:if="${i == current}"
+                  class="ff-btn ff-btn--primary ff-btn--sm"
+                  aria-current="page"
+                  th:text="${i + 1}"></span>
+        </th:block>
+    </th:block>
+
+    <!-- Próxima -->
+    <a th:if="${page.hasNext()}"
+       th:href="@{${baseUrl}(page=${page.number + 1})}"
+       class="ff-btn ff-btn--secondary ff-btn--sm"
+       aria-label="Próxima página">
+        <i class="bi bi-chevron-right"></i>
+    </a>
+    <span th:unless="${page.hasNext()}"
+          class="ff-btn ff-btn--secondary ff-btn--sm is-disabled"
+          aria-hidden="true">
+        <i class="bi bi-chevron-right"></i>
+    </span>
+
+    <span class="ff-text-xs ff-text-muted ms-3"
+          style="align-self:center;"
+          th:text="'Página ' + (${page.number + 1}) + ' de ' + ${page.totalPages}"></span>
+</nav>
+
+</body>
+</html>

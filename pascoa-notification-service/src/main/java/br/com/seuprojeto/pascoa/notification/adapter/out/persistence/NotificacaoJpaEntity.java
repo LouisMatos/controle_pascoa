@@ -42,6 +42,10 @@ public class NotificacaoJpaEntity {
     @Column(length = 50)
     private String evento;
 
+    /** v6: tenant que originou a notificação (white-label resolution). Nullable durante transição. */
+    @Column(name = "tenant_id", length = 50)
+    private String tenantId;
+
     @Column(name = "referencia_id", length = 50)
     private String referenciaId;
 

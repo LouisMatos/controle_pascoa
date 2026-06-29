@@ -25,6 +25,11 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>br.com.seuprojeto</groupId>
+            <artifactId>pascoa-commons</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <!-- Web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

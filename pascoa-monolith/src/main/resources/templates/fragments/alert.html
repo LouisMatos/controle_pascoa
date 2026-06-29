@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+  FoodFlow Alert/Toast Fragment v7
+
+  Uso 1 — Alert inline (já vem por padrão no layout.html para "sucesso"/"erro"):
+    <div th:replace="~{fragments/alert :: inline('success', 'Pedido salvo!')}"></div>
+
+  Uso 2 — Toast container global (incluir uma vez por página):
+    <div th:replace="~{fragments/alert :: toasts}"></div>
+    Em seguida disparar via JS: ffToast('success', 'Mensagem')
+
+  Sem dependência externa: implementação pura em CSS + um único script
+  utilitário. Toastify.js pode ser adicionado no futuro se desejado.
+-->
+
+<!-- ── ALERT INLINE ── -->
+<div th:fragment="inline(tipo, mensagem)"
+     th:classappend="${tipo == 'success'} ? 'alert-success' : (${tipo == 'danger' or tipo == 'erro'} ? 'alert-danger' : (${tipo == 'warning'} ? 'alert-warning' : 'alert-info'))"
+     class="alert alert-dismissible fade show d-flex align-items-center gap-2"
+     role="alert">
+    <i th:classappend="${tipo == 'success'} ? 'bi-check-circle-fill' : (${tipo == 'danger' or tipo == 'erro'} ? 'bi-exclamation-triangle-fill' : 'bi-info-circle-fill')"
+       class="bi"></i>
+    <span th:text="${mensagem}">Mensagem</span>
+    <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Fechar"></button>
+</div>
+
+<!-- ── CONTAINER DE TOASTS GLOBAIS ── -->
+<div th:fragment="toasts">
+    <div id="ffToastContainer"
+         class="position-fixed top-0 end-0 p-3"
+         style="z-index: 1090;"
+         aria-live="polite"
+         aria-atomic="true"></div>
+    <script>
+      window.ffToast = function (tipo, mensagem, opts) {
+        opts = opts || {};
+        var dur = opts.duration || 4000;
+        var iconMap = {
+          success: 'bi-check-circle-fill',
+          danger:  'bi-exclamation-triangle-fill',
+          erro:    'bi-exclamation-triangle-fill',
+          warning: 'bi-exclamation-triangle-fill',
+          info:    'bi-info-circle-fill'
+        };
+        var colorMap = {
+          success: 'text-bg-success',
+          danger:  'text-bg-danger',
+          erro:    'text-bg-danger',
+          warning: 'text-bg-warning',
+          info:    'text-bg-info'
+        };
+        var icon  = iconMap[tipo]  || 'bi-info-circle-fill';
+        var color = colorMap[tipo] || 'text-bg-info';
+        var el = document.createElement('div');
+        el.className = 'toast align-items-center ' + color + ' border-0 mb-2';
+        el.setAttribute('role', 'alert');
+        el.setAttribute('aria-live', 'assertive');
+        el.setAttribute('aria-atomic', 'true');
+        el.innerHTML =
+          '<div class="d-flex">' +
+            '<div class="toast-body">' +
+              '<i class="bi ' + icon + ' me-2"></i>' + mensagem +
+            '</div>' +
+            '<button type="button" class="btn-close btn-close-white me-2 m-auto"' +
+              ' data-bs-dismiss="toast" aria-label="Fechar"></button>' +
+          '</div>';
+        document.getElementById('ffToastContainer').appendChild(el);
+        var toast = new bootstrap.Toast(el, { delay: dur });
+        toast.show();
+        el.addEventListener('hidden.bs.toast', function () { el.remove(); });
+      };
+    </script>
+</div>
+
+</body>
+</html>

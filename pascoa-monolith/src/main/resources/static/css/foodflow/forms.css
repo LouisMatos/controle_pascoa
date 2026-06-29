@@ -1,0 +1,266 @@
+/* ═══════════════════════════════════════════════════════════════════
+   FoodFlow Design System v7 — Forms
+   Inputs, selects, textareas, checkboxes, radios + estados de erro
+   ═══════════════════════════════════════════════════════════════════ */
+
+.ff-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+}
+
+.ff-label {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+.ff-label__required {
+  color: var(--color-danger);
+  margin-left: var(--space-1);
+}
+
+.ff-hint {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+}
+
+.ff-input,
+.ff-select,
+.ff-textarea {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  font-family: var(--font-family-sans);
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+  background: #fff;
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-md);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.ff-input:focus,
+.ff-select:focus,
+.ff-textarea:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary) 18%, transparent);
+}
+.ff-input:disabled,
+.ff-select:disabled,
+.ff-textarea:disabled {
+  background: var(--color-slate-50);
+  color: var(--color-text-secondary);
+  cursor: not-allowed;
+}
+/* F-05 — Placeholder cross-browser com contraste WCAG AA.
+   Firefox aplica opacity 0.54 por default, deixando o placeholder mais
+   claro que o configurado. Forçamos opacity: 1 e usamos #6b7280
+   (>= 4.5:1 em fundo branco). Vendor prefixes garantem Firefox < 19. */
+.ff-input::placeholder,
+.ff-textarea::placeholder,
+.ff-input::-webkit-input-placeholder,
+.ff-textarea::-webkit-input-placeholder {
+  color: #6b7280;
+  opacity: 1;
+}
+.ff-input::-moz-placeholder,
+.ff-textarea::-moz-placeholder {
+  color: #6b7280;
+  opacity: 1;
+}
+.ff-input:-ms-input-placeholder,
+.ff-textarea:-ms-input-placeholder {
+  color: #6b7280;
+}
+
+.ff-textarea {
+  /* F-10 — resize só vertical (nunca quebra o layout em colunas) com
+     min/max-height controlados. Em mobile a tela é curta, então o
+     usuário não pode arrastar o canto até cobrir tudo. */
+  min-height: 96px;
+  max-height: 360px;
+  resize: vertical;
+}
+
+.ff-select {
+  /* F-04 — appearance:none cross-browser (inclui -moz- e -webkit-) para
+     remover a aparência nativa do iOS Safari e Android Chrome, que
+     ignoram a maioria das propriedades CSS no <select>. */
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: #fff; /* iOS aplica cinza por default — força branco */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1.5 3.5l1-1L6 6l3.5-3.5 1 1z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--space-3) center;
+  background-size: 12px;
+  padding-right: var(--space-8);
+}
+/* Esconde a seta do IE legado, se algum dia ainda aparecer. */
+.ff-select::-ms-expand { display: none; }
+
+/* ── Erro ── */
+.ff-input--error,
+.ff-select--error,
+.ff-textarea--error,
+.ff-input.is-invalid,
+.ff-select.is-invalid,
+.ff-textarea.is-invalid {
+  border-color: var(--color-danger);
+}
+.ff-input--error:focus,
+.ff-select--error:focus,
+.ff-textarea--error:focus,
+.ff-input.is-invalid:focus,
+.ff-select.is-invalid:focus,
+.ff-textarea.is-invalid:focus {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-danger) 20%, transparent);
+}
+.ff-error {
+  font-size: var(--text-xs);
+  color: var(--color-danger);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* ── Checkbox & Radio ── */
+.ff-check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  user-select: none;
+}
+.ff-check input[type="checkbox"],
+.ff-check input[type="radio"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--brand-primary);
+  cursor: pointer;
+  margin: 0;
+}
+
+/* ── Input-group (prefix/suffix) ── */
+.ff-input-group {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-md);
+  background: #fff;
+  overflow: hidden;
+}
+.ff-input-group:focus-within {
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary) 18%, transparent);
+}
+.ff-input-group__addon {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-3);
+  background: var(--color-slate-50);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  border-right: 1px solid var(--color-card-border);
+}
+.ff-input-group .ff-input {
+  border: none;
+  border-radius: 0;
+  flex: 1;
+}
+.ff-input-group .ff-input:focus { box-shadow: none; }
+
+/* ── Layout em colunas ── */
+.ff-form-row {
+  display: grid;
+  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   F-09 — File upload estilizado e cross-browser.
+
+   input[type=file] tem aparência nativa (incompatível com DS). O padrão
+   é esconder o input com clip e expor um label estilizado como botão.
+   O JS (file-upload-init.js) preenche o nome do arquivo selecionado em
+   .ff-file-upload__name.
+   ════════════════════════════════════════════════════════════════════ */
+.ff-file-upload {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.ff-file-upload__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.ff-file-upload__label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  background: #fff;
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+.ff-file-upload__label:hover { background: var(--color-slate-50); }
+/* Focus visível quando o input invisível recebe foco via teclado (tab). */
+.ff-file-upload__input:focus-visible + .ff-file-upload__label {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+.ff-file-upload__name {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+.ff-file-upload__name--empty { font-style: italic; }
+
+/* ════════════════════════════════════════════════════════════════════
+   F-07 — Esconde as setas (spinners) do input[type=number] em todos os
+   browsers. O Firefox posiciona as setas de forma diferente do Chrome,
+   quebrando o alinhamento e a aparência consistente do design system.
+   Use os botões +/- customizados onde for necessário incrementar.
+   ════════════════════════════════════════════════════════════════════ */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   F-03 — Neutraliza o background azul que Chrome/Edge aplicam aos
+   campos preenchidos por autofill (:-webkit-autofill).
+
+   WebKit não permite remover o autofill; o truque é mascarar com
+   `box-shadow inset` na cor do design system. A transição absurda
+   (9999s) impede o "flash azul" ao perder o foco.
+   ════════════════════════════════════════════════════════════════════ */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px var(--color-card-bg, #fff) inset !important;
+  -webkit-text-fill-color: var(--color-text-primary, #0f172a) !important;
+  caret-color: var(--color-text-primary, #0f172a);
+  transition: background-color 9999s ease-out 0s;
+}

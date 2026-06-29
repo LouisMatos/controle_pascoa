@@ -437,6 +437,8 @@ th:text="${condicao} ? 'texto true' : 'texto false'"
 </form>
 ```
 
+> ⚠️ **Lição aprendida (Thymeleaf 3.1 / Spring Boot 3.x): NÃO usar `#httpServletRequest`, `#request`, `#session`, `#response` nem `#servletContext` nos templates.** Esses objetos de expressão foram **removidos** no Thymeleaf 3.1 — qualquer uso quebra a página com `SpelEvaluationException: EL1007E: ... cannot be found on null` (HTTP 500). Se um template precisar da URI atual ou de dados do request, exponha-os via `@ModelAttribute` num `@ControllerAdvice` (ver `currentUri` em `GlobalModelAdvice`) e consuma `${currentUri}` no template. Bug histórico: bugfix v9.1 — o `fragments/breadcrumb` usava `#httpServletRequest.requestURI` e derrubava **todas** as telas internas (está no layout compartilhado).
+
 ### Formulário com binding Thymeleaf
 
 ```html

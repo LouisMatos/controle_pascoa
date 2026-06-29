@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout-fullscreen :: layout(~{::title}, ~{::#pageContent}, ${etapaAtual}, ${totalEtapas})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head><title>Etapa 7 — Equipe · FoodFlow</title></head>
+<body>
+<div id="pageContent">
+    <h1 class="ff-onboarding__title">Convide sua equipe</h1>
+    <p class="ff-onboarding__subtitle">Adicione colaboradores agora ou pule e convide depois pelo painel admin.</p>
+
+    <form th:action="@{/onboarding/etapa7}" method="post" class="ff-onboarding__card">
+
+        <div id="convidesList">
+            <div class="ff-form-row mb-2 convite-item">
+                <div class="ff-field">
+                    <label class="ff-label">E-mail do convidado</label>
+                    <input type="email" name="email" class="ff-input" placeholder="colaborador@empresa.com">
+                </div>
+                <div class="ff-field">
+                    <label class="ff-label">Papel</label>
+                    <select name="role" class="ff-select">
+                        <option value="ATENDENTE">Atendente</option>
+                        <option value="CONFEITEIRO">Confeiteiro</option>
+                        <option value="GESTOR_QUALIDADE">Gestor Qualidade</option>
+                        <option value="FINANCEIRO">Financeiro</option>
+                        <option value="ANALISTA">Analista</option>
+                        <option value="ADMIN">Administrador</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <button type="button" class="ff-btn ff-btn--secondary mt-2" onclick="adicionarConvite()">
+            <i class="bi bi-plus-lg"></i><span>Adicionar outro convite</span>
+        </button>
+
+        <div class="ff-text-xs ff-text-muted mt-4">
+            <i class="bi bi-info-circle me-1"></i>
+            Os convidados receberão e-mail com link de cadastro válido por 7 dias.
+        </div>
+
+        <div class="ff-onboarding__nav">
+            <a th:href="@{/onboarding/etapa6}" class="ff-btn ff-btn--ghost">
+                <i class="bi bi-arrow-left"></i><span>Voltar</span>
+            </a>
+            <div class="d-flex gap-2">
+                <button type="submit" formnovalidate class="ff-btn ff-btn--ghost">Pular</button>
+                <button type="submit" class="ff-btn ff-btn--primary ff-btn--lg">
+                    <i class="bi bi-check-circle"></i>
+                    <span>Concluir onboarding</span>
+                </button>
+            </div>
+        </div>
+    </form>
+
+<script>
+  function adicionarConvite() {
+    const list = document.getElementById('convidesList');
+    const div = document.createElement('div');
+    div.className = 'ff-form-row mb-2 convite-item';
+    div.innerHTML = `
+      <div class="ff-field">
+        <label class="ff-label">E-mail do convidado</label>
+        <input type="email" name="email" class="ff-input" placeholder="colaborador@empresa.com">
+      </div>
+      <div class="ff-field">
+        <label class="ff-label">Papel</label>
+        <select name="role" class="ff-select">
+          <option value="ATENDENTE">Atendente</option>
+          <option value="CONFEITEIRO">Confeiteiro</option>
+          <option value="GESTOR_QUALIDADE">Gestor Qualidade</option>
+          <option value="FINANCEIRO">Financeiro</option>
+          <option value="ANALISTA">Analista</option>
+          <option value="ADMIN">Administrador</option>
+        </select>
+      </div>`;
+    list.appendChild(div);
+  }
+</script>
+</div>
+</body>
+</html>

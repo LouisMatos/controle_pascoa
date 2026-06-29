@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout-fullscreen :: layout(~{::title}, ~{::#pageContent}, ${etapaAtual}, ${totalEtapas})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head><title>Etapa 2 — Tipo de Negócio · FoodFlow</title></head>
+<body>
+<div id="pageContent">
+    <h1 class="ff-onboarding__title">Qual o seu tipo de negócio?</h1>
+    <p class="ff-onboarding__subtitle">Escolha um template para começar com catálogo, fases de produção e atributos pré-configurados. Você poderá ajustar tudo depois.</p>
+
+    <form th:action="@{/onboarding/etapa2}" method="post">
+
+        <div class="ff-choice-grid">
+            <label class="ff-choice" th:each="t : ${templates}">
+                <input type="radio" name="tipoNegocio" th:value="${t.codigo}" required>
+                <i class="bi ff-choice__icon" th:classappend="${t.icone}"></i>
+                <div class="ff-choice__title" th:text="${t.nome}">Template</div>
+                <div class="ff-choice__description" th:text="${t.descricao}">Descrição</div>
+            </label>
+        </div>
+
+        <div class="ff-onboarding__nav">
+            <a th:href="@{/onboarding/etapa1}" class="ff-btn ff-btn--ghost">
+                <i class="bi bi-arrow-left"></i>
+                <span>Voltar</span>
+            </a>
+            <button type="submit" class="ff-btn ff-btn--primary ff-btn--lg">
+                <span>Próxima etapa</span>
+                <i class="bi bi-arrow-right"></i>
+            </button>
+        </div>
+    </form>
+</div>
+</body>
+</html>

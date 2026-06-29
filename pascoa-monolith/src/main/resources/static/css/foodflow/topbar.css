@@ -1,0 +1,191 @@
+/* ═══════════════════════════════════════════════════════════════════
+   FoodFlow Design System v7 — Topbar
+   Barra superior fixa no topo da área principal: hambúrguer (mobile),
+   busca, sino de alertas, menu do usuário.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.ff-topbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background: var(--color-topbar-bg);
+  border-bottom: 1px solid var(--color-card-border);
+  padding: 0 var(--space-5);
+  min-height: var(--ff-topbar-height);
+  position: sticky;
+  top: 0;
+  z-index: var(--z-topbar);
+  box-shadow: var(--shadow-sm);
+}
+
+.ff-topbar__hamburger {
+  /* M-03 — touch target ≥44×44px (WCAG 2.5.5 / iOS HIG).
+     Ícone visual fica em 24px; o restante é padding clicável. */
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 10px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.ff-topbar__search {
+  flex: 1;
+  max-width: 480px;
+  position: relative;
+}
+.ff-topbar__search input {
+  width: 100%;
+  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-8);
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-md);
+  background: var(--color-slate-50);
+  font-size: var(--text-sm);
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.ff-topbar__search input:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary) 20%, transparent);
+  background: #fff;
+}
+.ff-topbar__search-icon {
+  position: absolute;
+  left: var(--space-3);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-secondary);
+  pointer-events: none;
+}
+
+.ff-topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.ff-topbar__action {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  border: none;
+  background: transparent;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+.ff-topbar__action:hover {
+  background: var(--color-slate-100);
+}
+
+.ff-topbar__badge {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--radius-full);
+  background: var(--color-danger);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.ff-topbar__user {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+}
+.ff-topbar__user:hover {
+  background: var(--color-slate-100);
+}
+.ff-topbar__user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  background: var(--brand-secondary);
+  color: var(--brand-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: var(--text-sm);
+}
+.ff-topbar__user-name {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+/* ═══════ Breadcrumb ═══════ */
+.ff-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-5);
+  background: transparent;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  list-style: none;
+  margin: 0;
+  flex-wrap: wrap;
+}
+.ff-breadcrumb__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.ff-breadcrumb__item:not(:last-child)::after {
+  content: '/';
+  /* W-05 — fallback literal antes do var() para Safari 15- em pseudo-elementos */
+  color: #cbd5e1;
+  color: var(--color-card-border, #cbd5e1);
+}
+.ff-breadcrumb__link {
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+.ff-breadcrumb__link:hover {
+  color: var(--brand-primary);
+}
+.ff-breadcrumb__item--current {
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+
+/* ═══════ Mobile ═══════ */
+@media (max-width: 767.98px) {
+  .ff-topbar__hamburger {
+    display: inline-flex;
+  }
+  .ff-topbar__search {
+    display: none;
+  }
+  .ff-topbar__user-name {
+    display: none;
+  }
+  .ff-breadcrumb {
+    padding: var(--space-2) var(--space-4);
+    font-size: var(--text-xs);
+  }
+}

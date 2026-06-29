@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+  FoodFlow Modal de Confirmação Reutilizável v7
+
+  Uso 1 — Modal global (incluir uma vez no layout):
+    <div th:replace="~{fragments/modal-confirm :: modal}"></div>
+
+    Em qualquer botão para confirmar uma ação:
+      <button type="button" class="ff-btn ff-btn--danger"
+              onclick="ffConfirm({ title:'Excluir produto?',
+                                    message:'Esta ação não pode ser desfeita.',
+                                    action:'/produtos/42/excluir',
+                                    confirmLabel:'Excluir',
+                                    confirmVariant:'danger' })">
+        Excluir
+      </button>
+
+  Uso 2 — Modal específico (botão data-attributes via Bootstrap nativo):
+    veja abaixo o exemplo data-bs-target.
+-->
+
+<div th:fragment="modal" id="ffConfirmModal"
+     class="modal fade" tabindex="-1"
+     aria-labelledby="ffConfirmTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: var(--radius-lg); border: none; box-shadow: var(--shadow-xl);">
+            <div class="modal-header" style="border-bottom: 1px solid var(--color-card-border);">
+                <h5 class="modal-title fw-semibold" id="ffConfirmTitle">Confirmar ação</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body" id="ffConfirmMessage">
+                Tem certeza?
+            </div>
+            <form id="ffConfirmForm" method="post" class="modal-footer" style="border-top: 1px solid var(--color-card-border);">
+                <button type="button" class="ff-btn ff-btn--secondary" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+                <button type="submit" id="ffConfirmButton" class="ff-btn ff-btn--danger">
+                    Confirmar
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script th:fragment="script">
+  window.ffConfirm = function (opts) {
+    opts = opts || {};
+    var modalEl   = document.getElementById('ffConfirmModal');
+    var titleEl   = document.getElementById('ffConfirmTitle');
+    var messageEl = document.getElementById('ffConfirmMessage');
+    var formEl    = document.getElementById('ffConfirmForm');
+    var btnEl     = document.getElementById('ffConfirmButton');
+
+    titleEl.textContent   = opts.title   || 'Confirmar ação';
+    messageEl.textContent = opts.message || 'Tem certeza?';
+    formEl.setAttribute('action', opts.action || '#');
+    formEl.setAttribute('method', opts.method || 'post');
+    btnEl.textContent = opts.confirmLabel || 'Confirmar';
+    btnEl.className = 'ff-btn ff-btn--' + (opts.confirmVariant || 'danger');
+
+    // Token CSRF se presente
+    var csrfMeta  = document.querySelector('meta[name="_csrf"]');
+    var csrfName  = document.querySelector('meta[name="_csrf_header"]');
+    formEl.querySelectorAll('input[name="_csrf"]').forEach(function (n) { n.remove(); });
+    if (csrfMeta) {
+      var input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = '_csrf';
+      input.value = csrfMeta.getAttribute('content');
+      formEl.prepend(input);
+    }
+
+    var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modal.show();
+  };
+</script>
+
+</body>
+</html>

@@ -7,36 +7,39 @@
 <body>
 <div id="pageContent">
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">
-            <i class="bi bi-box-seam me-2 text-success"></i>
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h1 class="ff-heading-1 mb-0 d-flex align-items-center gap-2">
+            <i class="bi bi-box-seam" style="color: var(--brand-primary);"></i>
             <span th:text="${produto.id == null ? 'Novo Produto' : 'Editar Produto'}"></span>
-        </h2>
-        <a th:href="@{/produtos}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-1"></i>Voltar
+        </h1>
+        <a th:href="@{/produtos}" class="ff-btn ff-btn--secondary ff-btn--sm">
+            <i class="bi bi-arrow-left"></i>
+            <span>Voltar</span>
         </a>
     </div>
 
-    <div class="card">
-        <div class="card-body">
-            <form th:action="@{/produtos/salvar}" th:object="${produto}" method="post"
-                  enctype="multipart/form-data">
-                <input type="hidden" th:field="*{id}">
-                <input type="hidden" th:field="*{foto}">
+    <div class="ff-card">
+        <form th:action="@{/produtos/salvar}" th:object="${produto}" method="post"
+              enctype="multipart/form-data">
+            <input type="hidden" th:field="*{id}">
+            <input type="hidden" th:field="*{foto}">
 
-                <div class="row g-3">
-                    <div class="col-md-8">
-                        <label class="form-label fw-semibold">Nome *</label>
-                        <input type="text" class="form-control"
+            <div class="row g-3">
+                <div class="col-md-8">
+                    <div class="ff-field">
+                        <label class="ff-label">Nome <span class="ff-label__required">*</span></label>
+                        <input type="text" class="ff-input"
                                th:field="*{nome}"
                                th:classappend="${#fields.hasErrors('nome')} ? 'is-invalid'"
                                placeholder="Nome do produto">
-                        <div class="invalid-feedback" th:errors="*{nome}"></div>
+                        <div class="ff-error" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></div>
                     </div>
+                </div>
 
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold">Categoria *</label>
-                        <select class="form-select"
+                <div class="col-md-4">
+                    <div class="ff-field">
+                        <label class="ff-label">Categoria <span class="ff-label__required">*</span></label>
+                        <select class="ff-select"
                                 th:field="*{categoria}"
                                 th:classappend="${#fields.hasErrors('categoria')} ? 'is-invalid'">
                             <option value="">Selecione...</option>
@@ -44,68 +47,73 @@
                                     th:value="${cat.name()}"
                                     th:text="${cat.descricao}"></option>
                         </select>
-                        <div class="invalid-feedback" th:errors="*{categoria}"></div>
+                        <div class="ff-error" th:if="${#fields.hasErrors('categoria')}" th:errors="*{categoria}"></div>
                     </div>
+                </div>
 
-                    <div class="col-md-12">
-                        <label class="form-label fw-semibold">Descrição</label>
-                        <textarea class="form-control" th:field="*{descricao}"
+                <div class="col-md-12">
+                    <div class="ff-field">
+                        <label class="ff-label">Descrição</label>
+                        <textarea class="ff-textarea" th:field="*{descricao}"
                                   rows="2" placeholder="Descrição do produto (opcional)"></textarea>
                     </div>
+                </div>
 
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold">Preço de Venda (R$) *</label>
-                        <input type="number" class="form-control"
+                <div class="col-md-4">
+                    <div class="ff-field">
+                        <label class="ff-label">Preço de Venda (R$) <span class="ff-label__required">*</span></label>
+                        <input type="number" class="ff-input"
                                th:field="*{precoVenda}"
                                th:classappend="${#fields.hasErrors('precoVenda')} ? 'is-invalid'"
                                min="0.01" step="0.01" placeholder="0,00">
-                        <div class="invalid-feedback" th:errors="*{precoVenda}"></div>
+                        <div class="ff-error" th:if="${#fields.hasErrors('precoVenda')}" th:errors="*{precoVenda}"></div>
                     </div>
+                </div>
 
-                    <div class="col-md-4 d-flex align-items-end">
-                        <div class="form-check mb-2">
-                            <input class="form-check-input" type="checkbox"
-                                   th:field="*{ativo}" id="ativo">
-                            <label class="form-check-label fw-semibold" for="ativo">Produto Ativo</label>
-                        </div>
-                    </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <label class="ff-check" style="margin-bottom: var(--space-4);">
+                        <input type="checkbox" th:field="*{ativo}" id="ativo">
+                        <span>Produto Ativo</span>
+                    </label>
+                </div>
 
-                    <!-- Foto do produto -->
-                    <div class="col-md-12">
-                        <label class="form-label fw-semibold">Foto do Produto</label>
-                        <div class="d-flex align-items-start gap-3">
-                            <!-- Preview da foto atual -->
+                <!-- Foto do produto -->
+                <div class="col-md-12">
+                    <div class="ff-field">
+                        <label class="ff-label">Foto do Produto</label>
+                        <div class="d-flex align-items-start gap-3 flex-wrap">
                             <div th:if="${produto.foto != null and !produto.foto.isEmpty()}">
                                 <img th:src="@{/media/{f}(f=${produto.foto})}"
-                                     alt="Foto atual" class="rounded border"
-                                     style="width:80px;height:80px;object-fit:cover;">
-                                <div class="small text-muted mt-1 text-center">Atual</div>
+                                     alt="Foto atual"
+                                     style="width:80px;height:80px;object-fit:cover;border-radius:var(--radius-md);border:1px solid var(--color-card-border);">
+                                <div class="ff-text-xs ff-text-muted text-center mt-1">Atual</div>
                             </div>
-                            <div class="flex-grow-1">
-                                <input type="file" name="fotoFile" class="form-control"
+                            <div class="flex-grow-1" style="min-width: 240px;">
+                                <input type="file" name="fotoFile" class="ff-input"
                                        accept="image/jpeg,image/png,image/webp">
-                                <div class="form-text">
+                                <span class="ff-hint">
                                     JPEG, PNG ou WebP · máx. 5 MB.
                                     <span th:if="${produto.foto != null and !produto.foto.isEmpty()}">
                                         Deixe em branco para manter a foto atual.
                                     </span>
-                                </div>
+                                </span>
                             </div>
                         </div>
-                        <div th:if="${erroFoto}" class="text-danger small mt-1" th:text="${erroFoto}"></div>
+                        <div th:if="${erroFoto}" class="ff-error mt-1" th:text="${erroFoto}"></div>
                     </div>
                 </div>
+            </div>
 
-                <hr class="my-4">
+            <hr style="border-color: var(--color-card-border); margin: var(--space-5) 0;">
 
-                <div class="d-flex gap-2">
-                    <button type="submit" class="btn btn-success px-4">
-                        <i class="bi bi-check-lg me-1"></i>Salvar
-                    </button>
-                    <a th:href="@{/produtos}" class="btn btn-outline-secondary">Cancelar</a>
-                </div>
-            </form>
-        </div>
+            <div class="ff-btn-group">
+                <button type="submit" class="ff-btn ff-btn--primary">
+                    <i class="bi bi-check-lg"></i>
+                    <span>Salvar</span>
+                </button>
+                <a th:href="@{/produtos}" class="ff-btn ff-btn--secondary">Cancelar</a>
+            </div>
+        </form>
     </div>
 
 </div>

@@ -1,0 +1,127 @@
+/* ═══════════════════════════════════════════════════════════════════
+   FoodFlow Design System v7 — Buttons
+   Variantes: primary, secondary, danger, ghost, link, icon.
+   Tamanhos: sm, default, lg. Estado: loading (spinner inline).
+   ═══════════════════════════════════════════════════════════════════ */
+
+.ff-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-5);
+  font-family: var(--font-family-sans);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  line-height: 1.25;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background var(--transition-fast),
+              border-color var(--transition-fast),
+              color var(--transition-fast),
+              box-shadow var(--transition-fast),
+              transform var(--transition-fast);
+  white-space: nowrap;
+  user-select: none;
+}
+.ff-btn:focus-visible {
+  outline: 2px solid var(--brand-primary);
+  outline-offset: 2px;
+}
+.ff-btn:disabled,
+.ff-btn.is-disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* ── Tamanhos ── */
+.ff-btn--sm { padding: var(--space-1) var(--space-3); font-size: var(--text-xs); border-radius: var(--radius-sm); }
+.ff-btn--lg { padding: var(--space-3) var(--space-6); font-size: var(--text-body); border-radius: var(--radius-lg); }
+
+/* ── Variantes ── */
+.ff-btn--primary {
+  background: var(--brand-primary);
+  color: var(--color-text-inverse);
+}
+.ff-btn--primary:hover { background: var(--brand-primary-dark); }
+.ff-btn--primary:active { transform: translateY(1px); }
+
+.ff-btn--secondary {
+  background: #fff;
+  color: var(--color-text-primary);
+  border-color: var(--color-card-border);
+}
+.ff-btn--secondary:hover {
+  background: var(--color-slate-50);
+  border-color: var(--color-slate-500);
+}
+
+.ff-btn--danger {
+  background: var(--color-danger);
+  color: var(--color-text-inverse);
+}
+.ff-btn--danger:hover { background: var(--color-red-700); }
+
+.ff-btn--ghost {
+  background: transparent;
+  color: var(--color-text-primary);
+}
+.ff-btn--ghost:hover { background: var(--color-slate-100); }
+
+.ff-btn--link {
+  background: transparent;
+  color: var(--brand-primary);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+}
+.ff-btn--link:hover { color: var(--brand-primary-dark); text-decoration: underline; }
+
+/* ── Icon button (quadrado, só ícone) ── */
+.ff-btn--icon {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: var(--radius-md);
+}
+.ff-btn--icon.ff-btn--sm { width: 28px; height: 28px; }
+.ff-btn--icon.ff-btn--lg { width: 44px; height: 44px; }
+
+/* ── Estado loading ── */
+.ff-btn.is-loading {
+  position: relative;
+  color: transparent !important;
+  pointer-events: none;
+}
+.ff-btn.is-loading::after {
+  content: '';
+  position: absolute;
+  width: 1em;
+  height: 1em;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  /* W-05 — fallback literal antes do var() para Safari 15- em pseudo-elementos */
+  color: #ffffff;
+  color: var(--color-text-inverse, #ffffff);
+  animation: ff-spin 0.6s linear infinite;
+}
+.ff-btn--secondary.is-loading::after,
+.ff-btn--ghost.is-loading::after,
+.ff-btn--link.is-loading::after {
+  color: #0f172a;
+  color: var(--color-text-primary, #0f172a);
+}
+
+@keyframes ff-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Grupo de botões ── */
+.ff-btn-group {
+  display: inline-flex;
+  gap: var(--space-2);
+  align-items: center;
+}

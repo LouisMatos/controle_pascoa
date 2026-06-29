@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head><title>Plano — Admin Tenant</title></head>
+<body>
+<div id="pageContent">
+
+    <div th:replace="~{admin/tenant/_tabs :: tabs(ativa='plano')}"></div>
+
+    <div class="d-flex align-items-center mb-4 gap-3">
+        <i class="bi bi-credit-card" style="font-size: 1.5rem; color: var(--brand-primary);"></i>
+        <h1 class="ff-heading-2 mb-0">Plano &amp; Recursos</h1>
+    </div>
+
+    <!-- Plano atual -->
+    <div class="ff-kpi ff-kpi--success mb-4" style="max-width: 720px;">
+        <div class="ff-kpi__icon"><i class="bi bi-patch-check-fill"></i></div>
+        <div class="ff-kpi__content">
+            <div class="ff-kpi__label">Plano atual</div>
+            <div class="ff-kpi__value" style="text-transform: capitalize;" th:text="${planoAtual}">ENTERPRISE</div>
+            <div class="ff-kpi__trend ff-kpi__trend--flat" th:if="${trialAte != null}">
+                Trial até <strong th:text="${trialAte}"></strong>
+            </div>
+            <div class="ff-kpi__trend ff-kpi__trend--up" th:unless="${trialAte != null}">
+                <i class="bi bi-infinity"></i> Sem expiração
+            </div>
+        </div>
+    </div>
+
+    <!-- Features ativas -->
+    <div class="ff-card mb-4">
+        <div class="ff-card__header">
+            <h2 class="ff-card__title"><i class="bi bi-stars me-2"></i>Recursos do seu plano</h2>
+        </div>
+        <div class="ff-card__body">
+            <div class="row g-2">
+                <div th:each="f : ${featuresAtivas}" class="col-sm-6 col-lg-4">
+                    <div class="d-flex align-items-center gap-2"
+                         style="padding: var(--space-2) var(--space-3); border-radius: var(--radius-md); background: var(--color-slate-50);">
+                        <i class="bi"
+                           th:classappend="${f.ativo} ? 'bi-check-circle-fill' : 'bi-x-circle'"
+                           th:style="${f.ativo} ? 'color: var(--color-success);' : 'color: var(--color-text-secondary);'"></i>
+                        <span class="ff-text-sm"
+                              th:classappend="${f.ativo} ? 'fw-semibold' : 'ff-text-muted'"
+                              th:text="${f.nome}"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Catálogo de planos -->
+    <h2 class="ff-heading-3 mb-3 mt-4">Mudar de plano</h2>
+    <div class="row g-3">
+        <div th:each="p : ${planos}" class="col-sm-6 col-lg-3">
+            <div class="ff-card h-100"
+                 th:style="${p.destaque} ? 'border-color: var(--brand-primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-primary) 18%, transparent);' : ''">
+
+                <div th:if="${p.destaque}" class="ff-badge ff-badge--brand mb-2" style="align-self: flex-start;">
+                    <i class="bi bi-star-fill"></i>
+                    Recomendado
+                </div>
+
+                <h3 class="ff-card__title" th:text="${p.nome}">Plano</h3>
+                <div class="ff-heading-1" style="color: var(--brand-primary);" th:text="${p.preco}">R$ 0/mês</div>
+
+                <ul style="list-style: none; padding: 0; margin: var(--space-3) 0; font-size: var(--text-sm);">
+                    <li><i class="bi bi-check2 me-1" style="color: var(--color-success);"></i> Pedidos ilimitados</li>
+                    <li><i class="bi bi-check2 me-1" style="color: var(--color-success);"></i> WhatsApp integrado</li>
+                    <li><i class="bi bi-check2 me-1" style="color: var(--color-success);"></i> Catálogo público</li>
+                </ul>
+
+                <form th:action="@{/admin/tenant/plano/upgrade}" method="post" class="mt-auto">
+                    <input type="hidden" name="codigoPlano" th:value="${p.codigo}">
+                    <button type="submit" class="ff-btn"
+                            th:classappend="${p.destaque} ? 'ff-btn--primary' : 'ff-btn--secondary'"
+                            style="width: 100%;"
+                            th:disabled="${p.codigo == planoAtual}">
+                        <span th:text="${p.codigo == planoAtual} ? 'Plano atual' : 'Selecionar'"></span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="ff-text-sm ff-text-muted mt-4">
+        <i class="bi bi-shield-lock me-1"></i>
+        Pagamentos processados via Stripe (integração será habilitada quando o monólito virar multi-tenant).
+    </div>
+
+</div>
+</body>
+</html>

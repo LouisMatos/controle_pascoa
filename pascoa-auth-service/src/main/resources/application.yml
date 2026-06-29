@@ -10,7 +10,9 @@ spring:
     username: postgres
     password: sua_senha
     hikari:
-      maximum-pool-size: 10
+      maximum-pool-size: 5
+      minimum-idle: 1
+      idle-timeout: 30000
 
   jpa:
     hibernate:
@@ -43,6 +45,12 @@ auth:
     secret: "ALTERE-ESTA-CHAVE-SECRETA-MINIMO-32-CARACTERES-PROD"
     access-ttl: 15m
     refresh-ttl: 7d
+  # S-02 — cookies httpOnly para JWT. Defaults seguros para produção (HTTPS, Strict).
+  # Em dev local sobre HTTP, exportar AUTH_COOKIE_SECURE=false.
+  cookie:
+    secure: ${AUTH_COOKIE_SECURE:true}
+    same-site: ${AUTH_COOKIE_SAMESITE:Strict}
+    domain: ${AUTH_COOKIE_DOMAIN:}
 
 eureka:
   client:

@@ -1,6 +1,7 @@
 package br.com.seuprojeto.pascoa.notification.config;
 
 import org.springframework.amqp.core.*;
+import org.springframework.amqp.core.AcknowledgeMode;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
@@ -44,6 +45,10 @@ public class RabbitConfig {
         factory.setConnectionFactory(connectionFactory);
         factory.setMessageConverter(messageConverter());
         factory.setDefaultRequeueRejected(false);
+        // MS-03 — ack manual. AUTO causava perda de mensagem quando o
+        // serviço caía após consumir e antes de enviar a notificação;
+        // agora só fazemos basicAck após envio bem-sucedido.
+        factory.setAcknowledgeMode(AcknowledgeMode.MANUAL);
         return factory;
     }
 }

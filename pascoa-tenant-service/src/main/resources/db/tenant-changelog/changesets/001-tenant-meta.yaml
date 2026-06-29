@@ -1,0 +1,34 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-tenant-meta
+      author: foodflow-v6
+      comment: "Tabela _meta — prova de schema provisionado + audit trail das migrations do tenant."
+      changes:
+        - createTable:
+            tableName: _meta
+            columns:
+              - column:
+                  name: chave
+                  type: VARCHAR(80)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: valor
+                  type: VARCHAR(500)
+              - column:
+                  name: atualizado_em
+                  type: TIMESTAMP
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+        - insert:
+            tableName: _meta
+            columns:
+              - column: { name: chave, value: schema_version }
+              - column: { name: valor, value: "1" }
+        - insert:
+            tableName: _meta
+            columns:
+              - column: { name: chave, value: provisioned_by }
+              - column: { name: valor, value: "pascoa-tenant-service" }

@@ -1,0 +1,148 @@
+/* ═══════════════════════════════════════════════════════════════════
+   FoodFlow Design System v7 — Kanban Board
+   Colunas drag-and-drop com Sortable.js (visual).
+   ═══════════════════════════════════════════════════════════════════ */
+
+.ff-kanban {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+  align-items: flex-start;
+}
+
+.ff-kanban__column {
+  background: var(--color-slate-100);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  min-height: 240px;
+  transition: background var(--transition-fast);
+  /* L-03 — sem min-width:0 o Firefox deixa o conteúdo expandir a coluna.
+     L-08 — height 100% requer que .ff-kanban tenha altura definida (ver mais abaixo). */
+  min-width: 0;
+}
+/* L-03 — cards do Kanban: word-break evita estouro horizontal por texto longo. */
+.ff-kanban__card { overflow: hidden; }
+.ff-kanban__card-title { word-break: break-word; overflow-wrap: anywhere; }
+/* L-08 — altura distribuída uniformemente entre as colunas no desktop. */
+.ff-kanban { align-items: stretch; }
+.ff-kanban__column { height: 100%; }
+.ff-kanban__column--info    { background: color-mix(in srgb, var(--color-info) 8%, var(--color-slate-100)); }
+.ff-kanban__column--success { background: color-mix(in srgb, var(--color-success) 8%, var(--color-slate-100)); }
+.ff-kanban__column.is-drag-over {
+  background: color-mix(in srgb, var(--brand-primary) 12%, var(--color-slate-100));
+  outline: 2px dashed var(--brand-primary);
+  outline-offset: -4px;
+}
+
+.ff-kanban__column-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-weight: 700;
+  font-size: var(--text-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: var(--space-2) var(--space-2) var(--space-3);
+  color: var(--color-text-primary);
+}
+.ff-kanban__column-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-full);
+  background: var(--color-card-bg);
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  font-weight: 700;
+}
+
+.ff-kanban__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-height: 80px;
+}
+
+.ff-kanban__card {
+  background: var(--color-card-bg);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  box-shadow: var(--shadow-sm);
+  border-left: 4px solid var(--color-slate-500);
+  transition: box-shadow var(--transition-fast), transform var(--transition-fast);
+  cursor: grab;
+}
+.ff-kanban__card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+.ff-kanban__card:active { cursor: grabbing; }
+.ff-kanban__card.sortable-ghost { opacity: 0.4; }
+.ff-kanban__card.sortable-chosen { box-shadow: var(--shadow-lg); }
+
+.ff-kanban__card--pendente     { border-left-color: var(--color-slate-500); }
+.ff-kanban__card--em-andamento { border-left-color: var(--color-info); }
+.ff-kanban__card--concluida    { border-left-color: var(--color-success); opacity: 0.92; }
+
+.ff-kanban__card-title {
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-1);
+}
+.ff-kanban__card-meta {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+  margin-top: var(--space-1);
+}
+.ff-kanban__card-actions {
+  display: flex;
+  gap: var(--space-1);
+  flex-wrap: wrap;
+  margin-top: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px dashed var(--color-card-border);
+}
+
+.ff-kanban__empty {
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  padding: var(--space-6) var(--space-2);
+}
+
+/* M-01 — Kanban com scroll horizontal funcional em iOS Safari.
+   Em mobile, abandonamos o grid empilhado vertical: vira flex horizontal com
+   scroll-snap por coluna. `overflow-x: scroll` (não `auto`) e `touch-action:
+   pan-x` são obrigatórios — caso contrário o WebKit ignora o scroll por toque
+   quando algum ancestral tem `overflow: hidden`.
+   `-webkit-overflow-scrolling: touch` mantém o momentum scroll no iOS 12-.
+*/
+@media (max-width: 768px) {
+  .ff-kanban {
+    display: flex;
+    flex-wrap: nowrap;
+    grid-template-columns: none;
+    overflow-x: scroll;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+    scroll-snap-type: x mandatory;
+    scroll-padding-left: var(--space-3);
+    /* Estende além do padding do .ff-content para o scroll usar toda a tela. */
+    margin: 0 calc(var(--space-4) * -1);
+    padding: 0 var(--space-4);
+  }
+  .ff-kanban__column {
+    flex: 0 0 85%;
+    min-width: 0;
+    max-width: 320px;
+    scroll-snap-align: start;
+  }
+}

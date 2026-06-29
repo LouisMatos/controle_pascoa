@@ -48,7 +48,7 @@ O script executa, em ordem:
    |10 | `pascoa-notification-service` | 8088 | Email/WhatsApp/SMS |
    |11 | `pascoa-analytics-service` | 8089 | Comparativo de safras |
    |12 | `pascoa-api-gateway`       | 8090 | Spring Cloud Gateway |
-   |13 | `pascoa-monolith`          | 8080 | UI Thymeleaf + módulos legados |
+   |13 | `pascoa-monolith`          | 8080 | UI Thymeleaf + módulos legados — **opcional**, pule com `--no-monolith` (§4.1) |
 
 Tempo estimado de boot completo (cache quente): **~3–5 min**.
 
@@ -78,6 +78,24 @@ Tempo estimado de boot completo (cache quente): **~3–5 min**.
 ```
 
 Logs ficam em `logs/<modulo>.log`. PIDs ficam em `.pids/<modulo>.pid`.
+
+### 4.1 Subir economizando recursos (sem monólito / sem v6)
+
+O monólito (`8080`) hoje é apenas **referência** — em desenvolvimento rotineiro dá para
+não subi-lo e poupar uma JVM (~256 MB). O `pascoa-api-gateway` continua subindo normalmente.
+
+```bash
+./start-all.sh up --no-monolith        # sobe v5 + v6, sem o monólito
+SKIP_MONOLITH=1 ./start-all.sh         # equivalente via env var
+
+./start-all.sh up --no-v6              # sobe v5 + monólito, sem os serviços v6
+./start-all.sh up --no-monolith --no-v6  # apenas infra + v5 (mínimo)
+```
+
+| Flag | Env var | Efeito |
+|------|---------|--------|
+| `--no-monolith` (`--skip-monolith`) | `SKIP_MONOLITH=1` | Não inicia `pascoa-monolith:8080` |
+| `--no-v6` (`--skip-v6`) | `SKIP_V6=1` | Não inicia tenant/config-engine/pricing/subscription |
 
 ---
 

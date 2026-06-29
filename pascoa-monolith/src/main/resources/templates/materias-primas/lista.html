@@ -7,94 +7,93 @@
 <body>
 <div id="pageContent">
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0"><i class="bi bi-stack me-2 text-secondary"></i>Matérias-Primas</h2>
-        <a th:href="@{/materias-primas/nova}" class="btn btn-success">
-            <i class="bi bi-plus-lg me-1"></i>Nova Matéria-Prima
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h1 class="ff-heading-1 mb-0 d-flex align-items-center gap-2">
+            <i class="bi bi-stack" style="color: var(--brand-primary);"></i>Matérias-Primas
+        </h1>
+        <a th:href="@{/materias-primas/nova}" class="ff-btn ff-btn--primary">
+            <i class="bi bi-plus-lg"></i>
+            <span>Nova Matéria-Prima</span>
         </a>
     </div>
 
     <!-- Busca -->
-    <div class="card mb-3">
-        <div class="card-body py-2">
-            <form th:action="@{/materias-primas}" method="get" class="d-flex gap-2">
-                <input type="text" name="busca" class="form-control" placeholder="Buscar por nome..."
-                       th:value="${busca}">
-                <button type="submit" class="btn btn-outline-secondary">
-                    <i class="bi bi-search"></i>
-                </button>
-                <a th:href="@{/materias-primas}" class="btn btn-outline-danger"
-                   th:if="${busca != null and !#strings.isEmpty(busca)}">
-                    <i class="bi bi-x-lg"></i>
-                </a>
-            </form>
-        </div>
+    <div class="ff-card mb-3" style="padding: var(--space-3) var(--space-4);">
+        <form th:action="@{/materias-primas}" method="get" class="d-flex gap-2 flex-wrap">
+            <div class="ff-input-group" style="flex: 1; min-width: 240px;">
+                <span class="ff-input-group__addon"><i class="bi bi-search"></i></span>
+                <input type="text" name="busca" class="ff-input" placeholder="Buscar por nome..." th:value="${busca}">
+            </div>
+            <button type="submit" class="ff-btn ff-btn--secondary">Buscar</button>
+            <a th:href="@{/materias-primas}" class="ff-btn ff-btn--ghost ff-btn--icon"
+               th:if="${busca != null and !#strings.isEmpty(busca)}" title="Limpar busca">
+                <i class="bi bi-x-lg"></i>
+            </a>
+        </form>
     </div>
 
-    <div class="card">
-        <div class="card-body p-0">
-          <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
+    <div class="ff-table-wrapper">
+        <div style="overflow-x: auto;">
+            <table class="ff-table">
                 <thead>
                     <tr>
-                        <th class="ps-3">Nome</th>
-                        <th class="text-center">Unidade</th>
-                        <th class="text-end">Qtd. Atual</th>
-                        <th class="text-end">Qtd. Mínima</th>
-                        <th class="text-end">Custo Unit.</th>
-                        <th class="text-center">Estoque</th>
-                        <th class="text-center pe-3">Ações</th>
+                        <th>Nome</th>
+                        <th class="ff-col-center">Unidade</th>
+                        <th class="ff-col-num">Qtd. Atual</th>
+                        <th class="ff-col-num">Qtd. Mínima</th>
+                        <th class="ff-col-num">Custo Unit.</th>
+                        <th class="ff-col-center">Estoque</th>
+                        <th class="ff-col-actions">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr th:each="mp : ${materiasPrimas}"
                         th:classappend="${mp.estoqueCritico} ? 'estoque-critico'">
-                        <td class="ps-3 fw-semibold" th:text="${mp.nome}"></td>
-                        <td class="text-center">
-                            <span class="badge bg-light text-dark border" th:text="${mp.unidade.simbolo}"></span>
+                        <td class="fw-semibold" th:text="${mp.nome}"></td>
+                        <td class="ff-col-center">
+                            <span class="ff-badge ff-badge--neutral" th:text="${mp.unidade.simbolo}"></span>
                         </td>
-                        <td class="text-end" th:text="${#numbers.formatDecimal(mp.quantidadeAtual, 1, 'POINT', 3, 'COMMA')}"></td>
-                        <td class="text-end" th:text="${#numbers.formatDecimal(mp.quantidadeMinima, 1, 'POINT', 3, 'COMMA')}"></td>
-                        <td class="text-end">
+                        <td class="ff-col-num" th:text="${#numbers.formatDecimal(mp.quantidadeAtual, 1, 'POINT', 3, 'COMMA')}"></td>
+                        <td class="ff-col-num ff-text-muted" th:text="${#numbers.formatDecimal(mp.quantidadeMinima, 1, 'POINT', 3, 'COMMA')}"></td>
+                        <td class="ff-col-num">
                             R$ <span th:text="${#numbers.formatDecimal(mp.custoUnitario, 1, 'POINT', 4, 'COMMA')}"></span>
                         </td>
-                        <td class="text-center">
-                            <span th:if="${mp.estoqueCritico}" class="badge bg-danger">
-                                <i class="bi bi-exclamation-triangle me-1"></i>Crítico
+                        <td class="ff-col-center">
+                            <span th:if="${mp.estoqueCritico}" class="ff-badge ff-badge--danger ff-badge--bullet">
+                                Crítico
                             </span>
-                            <span th:unless="${mp.estoqueCritico}" class="badge bg-success">
-                                <i class="bi bi-check me-1"></i>OK
+                            <span th:unless="${mp.estoqueCritico}" class="ff-badge ff-badge--success ff-badge--bullet">
+                                OK
                             </span>
                         </td>
-                        <td class="text-center pe-3">
+                        <td class="ff-col-actions">
                             <a th:href="@{/materias-primas/{id}/editar(id=${mp.id})}"
-                               class="btn btn-sm btn-outline-primary me-1" title="Editar">
+                               class="ff-btn ff-btn--ghost ff-btn--icon ff-btn--sm" title="Editar">
                                 <i class="bi bi-pencil"></i>
                             </a>
                             <form th:action="@{/materias-primas/{id}/excluir(id=${mp.id})}" method="post"
                                   class="d-inline"
                                   onsubmit="return confirm('Confirma a exclusão?')">
-                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir">
+                                <button type="submit" class="ff-btn ff-btn--danger ff-btn--icon ff-btn--sm" title="Excluir">
                                     <i class="bi bi-trash"></i>
                                 </button>
                             </form>
                         </td>
                     </tr>
-                    <tr th:if="${#lists.isEmpty(materiasPrimas)}">
-                        <td colspan="7" class="text-center text-muted py-5">
-                            <i class="bi bi-stack fs-3 d-block mb-2 opacity-50"></i>
+                    <tr th:if="${#lists.isEmpty(materiasPrimas)}" class="ff-table__empty">
+                        <td colspan="7">
+                            <i class="bi bi-stack" style="font-size:2rem; opacity:0.4; display:block; margin-bottom:var(--space-2);"></i>
                             Nenhuma matéria-prima encontrada.
                         </td>
                     </tr>
                 </tbody>
             </table>
-          </div>
         </div>
-        <div class="card-footer text-muted small" th:if="${!#lists.isEmpty(materiasPrimas)}">
+        <div class="ff-table-footer" th:if="${!#lists.isEmpty(materiasPrimas)}">
             <span th:text="${#lists.size(materiasPrimas)}"></span> item(ns) encontrado(s).
-            <span class="ms-3 text-warning fw-semibold"
+            <span class="ms-3 fw-semibold" style="color: var(--color-warning);"
                   th:if="${materiasPrimas.?[estoqueCritico].size() > 0}">
-                <i class="bi bi-exclamation-triangle me-1"></i>
+                <i class="bi bi-exclamation-triangle"></i>
                 <span th:text="${materiasPrimas.?[estoqueCritico].size()}"></span> com estoque crítico.
             </span>
         </div>

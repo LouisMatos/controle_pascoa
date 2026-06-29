@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <title>FoodFlow — Onboarding</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root { --primary: #1976d2; --bg: #f4f6f8; --card: #ffffff; }
+    body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); margin: 0; }
+    .wrap { max-width: 720px; margin: 40px auto; padding: 0 16px; }
+    h1 { color: var(--primary); margin: 0 0 8px; }
+    .lead { color: #555; margin-bottom: 24px; }
+    .card { background: var(--card); border-radius: 8px; padding: 24px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+    .step { display: none; }
+    .step.active { display: block; }
+    label { display: block; font-weight: 600; margin: 12px 0 4px; font-size: 14px; }
+    input, select { width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #cdd1d4;
+                    border-radius: 6px; font-size: 14px; }
+    .row { display: flex; gap: 12px; }
+    .row > div { flex: 1; }
+    .actions { margin-top: 24px; display: flex; justify-content: space-between; }
+    button { background: var(--primary); color: #fff; border: 0; padding: 10px 24px;
+             border-radius: 6px; font-weight: 600; cursor: pointer; }
+    button:disabled { background: #aaa; cursor: not-allowed; }
+    button.secondary { background: transparent; color: var(--primary); border: 1px solid var(--primary); }
+    .dots { display: flex; gap: 6px; margin-bottom: 16px; }
+    .dot  { width: 10px; height: 10px; border-radius: 50%; background: #ddd; }
+    .dot.on { background: var(--primary); }
+    .result { padding: 16px; border-radius: 6px; }
+    .result.ok { background: #e8f5e9; color: #1b5e20; }
+    .result.partial { background: #fff8e1; color: #5d4037; }
+    .result.fail { background: #ffebee; color: #b71c1c; }
+    pre { white-space: pre-wrap; word-wrap: break-word; font-size: 12px; }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>FoodFlow</h1>
+  <p class="lead">Crie sua conta SaaS em 3 passos. Trial gratuito de 14 dias.</p>
+
+  <div class="card">
+    <div class="dots">
+      <div class="dot on"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+
+    <!-- Step 1 — empresa -->
+    <div class="step active" data-step="1">
+      <h3>1. Sua empresa</h3>
+      <label>Slug (subdomínio — ex.: confeitaria-maria)</label>
+      <input id="tenantId" placeholder="confeitaria-maria">
+      <label>Razão social</label>
+      <input id="razaoSocial" placeholder="Confeitaria Maria LTDA">
+      <div class="row">
+        <div>
+          <label>CNPJ/CPF</label>
+          <input id="cnpjCpf" placeholder="12.345.678/0001-90">
+        </div>
+        <div>
+          <label>Email do admin</label>
+          <input id="email" type="email" placeholder="maria@confeitaria.com">
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2 — tipo de negócio -->
+    <div class="step" data-step="2">
+      <h3>2. Tipo de negócio</h3>
+      <p>Escolhe o template que melhor representa seu negócio. Você pode customizar tudo depois.</p>
+      <label>Template</label>
+      <select id="tipoNegocio">
+        <option value="CONFEITARIA">Confeitaria — bolos, tortas, cupcakes</option>
+        <option value="MARMITARIA">Marmitaria — marmitas, fitness, vegano</option>
+        <option value="RESTAURANTE">Restaurante/Buffet — pratos, kg, eventos</option>
+        <option value="SALGADERIA">Salgaderia — coxinha, esfiha, mini</option>
+        <option value="DOCES">Doces gourmet — chocolates, brigadeiros, Páscoa</option>
+        <option value="CUSTOM">Custom — configure do zero</option>
+      </select>
+    </div>
+
+    <!-- Step 3 — white-label -->
+    <div class="step" data-step="3">
+      <h3>3. Identidade visual</h3>
+      <p>Opcional — pode pular e ajustar depois no painel.</p>
+      <label>Nome do app (como aparecerá para clientes)</label>
+      <input id="nomeApp" placeholder="Doces da Maria">
+      <div class="row">
+        <div>
+          <label>Cor primária</label>
+          <input id="corPrimaria" type="color" value="#1976d2">
+        </div>
+        <div>
+          <label>Cor secundária</label>
+          <input id="corSecundaria" type="color" value="#ffffff">
+        </div>
+      </div>
+      <label>URL do logo (opcional)</label>
+      <input id="logoUrl" placeholder="https://...">
+    </div>
+
+    <!-- Step 4 — resultado -->
+    <div class="step" data-step="4">
+      <h3>Concluído!</h3>
+      <div id="resultBox"></div>
+    </div>
+
+    <div class="actions">
+      <button id="prev" class="secondary" disabled>Voltar</button>
+      <button id="next">Próximo</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let step = 1;
+const TOTAL = 4;
+const dots = document.querySelectorAll('.dot');
+const prev = document.getElementById('prev');
+const next = document.getElementById('next');
+
+function show(n) {
+  document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+  document.querySelector(`.step[data-step="${n}"]`).classList.add('active');
+  dots.forEach((d, i) => d.classList.toggle('on', i < n));
+  prev.disabled = (n === 1 || n === TOTAL);
+  if (n === TOTAL) { next.style.display = 'none'; }
+  else if (n === 3) { next.textContent = 'Criar conta'; }
+  else { next.textContent = 'Próximo'; next.style.display = 'inline-block'; }
+}
+
+prev.onclick = () => { if (step > 1) { step--; show(step); } };
+
+next.onclick = async () => {
+  if (step < 3) { step++; show(step); return; }
+  // step 3 → submit
+  next.disabled = true; next.textContent = 'Criando...';
+  const payload = {
+    tenantId: val('tenantId'), razaoSocial: val('razaoSocial'),
+    cnpjCpf: val('cnpjCpf'), email: val('email'),
+    tipoNegocio: val('tipoNegocio'),
+    whiteLabel: {
+      nomeApp: val('nomeApp') || null,
+      logoUrl: val('logoUrl') || null,
+      corPrimaria: val('corPrimaria'),
+      corSecundaria: val('corSecundaria')
+    }
+  };
+  try {
+    const r = await fetch('/onboarding/iniciar', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(payload)
+    });
+    const data = await r.json();
+    renderResult(data, r.status);
+    step = TOTAL; show(step);
+  } catch (e) {
+    document.getElementById('resultBox').innerHTML =
+      `<div class="result fail">Falha de rede: ${e.message}</div>`;
+    step = TOTAL; show(step);
+  } finally {
+    next.disabled = false;
+  }
+};
+
+function val(id) { return document.getElementById(id).value.trim(); }
+
+function renderResult(data, status) {
+  const cls = data.sucesso ? 'ok' : (status === 207 ? 'partial' : 'fail');
+  const titulo = data.sucesso ? '✅ Tudo certo!' :
+    (status === 207 ? '⚠️ Concluído com avisos' : '❌ Falha no onboarding');
+  document.getElementById('resultBox').innerHTML = `
+    <div class="result ${cls}">
+      <h4>${titulo}</h4>
+      <ul>
+        <li><b>Registro:</b> ${etapa(data.registroTenant)}</li>
+        <li><b>Schema:</b> ${etapa(data.provisionamentoSchema)}</li>
+        <li><b>Template:</b> ${etapa(data.aplicacaoTemplate)}</li>
+        <li><b>Trial:</b> ${etapa(data.inicioTrial)}</li>
+        <li><b>White-label:</b> ${etapa(data.whiteLabel)}</li>
+      </ul>
+      ${data.tenant ? '<pre>' + JSON.stringify(data.tenant, null, 2) + '</pre>' : ''}
+    </div>`;
+}
+function etapa(e) {
+  if (!e) return '—';
+  return (e.ok ? '✓ ' : '✗ ') + (e.detalhe || '');
+}
+
+show(1);
+</script>
+</body>
+</html>

@@ -8,6 +8,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -41,6 +42,24 @@ public class ProdutoJpaEntity {
 
     @Column(nullable = false)
     private boolean ativo = true;
+
+    // ── v6 Etapa 8: multi-tenant + sazonalidade + categoria customizada ──
+    /** Slug do tenant (X-Tenant-Id). Nullable durante a transição v5→v6. */
+    @Column(name = "tenant_id", length = 50)
+    private String tenantId;
+
+    /** Categoria livre alinhada ao config-engine; coexiste com enum {@link Categoria} legado. */
+    @Column(name = "categoria_customizada", length = 80)
+    private String categoriaCustomizada;
+
+    @Column(nullable = false)
+    private boolean sazonal = false;
+
+    @Column(name = "sazonal_inicio")
+    private LocalDate sazonalInicio;
+
+    @Column(name = "sazonal_fim")
+    private LocalDate sazonalFim;
 
     @CreationTimestamp
     @Column(name = "criado_em", updatable = false)

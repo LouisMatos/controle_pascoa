@@ -1,0 +1,71 @@
+/* ═══════════════════════════════════════════════════════════════════
+   FoodFlow Design System v7 — Auth fullscreen
+   Páginas de login, 2FA, esqueci-senha — sem sidebar.
+   ═══════════════════════════════════════════════════════════════════ */
+
+.ff-auth {
+  /* M-02 — svh evita corte do botão de submit pelo teclado virtual mobile. */
+  min-height: 100vh;
+  min-height: 100svh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  background:
+    radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--brand-primary) 15%, transparent) 0%, transparent 50%),
+    radial-gradient(circle at 100% 100%, color-mix(in srgb, var(--brand-primary) 10%, transparent) 0%, transparent 50%),
+    var(--color-page-bg);
+}
+
+.ff-auth__container {
+  width: 100%;
+  max-width: 400px;
+}
+
+.ff-auth__brand {
+  text-align: center;
+  margin-bottom: var(--space-5);
+}
+.ff-auth__brand-icon {
+  font-size: 3rem;
+  color: var(--brand-primary);
+  display: block;
+  margin-bottom: var(--space-2);
+}
+.ff-auth__brand-title {
+  font-size: var(--text-heading-2);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+.ff-auth__brand-subtitle {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-1);
+}
+
+.ff-auth__card {
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-lg);
+}
+
+.ff-auth__footer {
+  text-align: center;
+  margin-top: var(--space-4);
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+}
+
+/* Code input — OTP de 6 dígitos */
+.ff-otp-input {
+  font-family: var(--font-family-mono);
+  font-size: var(--text-heading-1);
+  font-weight: 700;
+  letter-spacing: 0.5em;
+  text-align: center;
+  text-indent: 0.25em;
+  padding: var(--space-3) !important;
+}

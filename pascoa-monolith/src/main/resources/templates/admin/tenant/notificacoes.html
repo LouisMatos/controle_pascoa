@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head><title>Templates de Notificação — Admin Tenant</title></head>
+<body>
+<div id="pageContent">
+
+    <div th:replace="~{admin/tenant/_tabs :: tabs(ativa='notificacoes')}"></div>
+
+    <div class="d-flex align-items-center mb-4 gap-3">
+        <i class="bi bi-envelope-paper" style="font-size: 1.5rem; color: var(--brand-primary);"></i>
+        <h1 class="ff-heading-2 mb-0">Templates de Notificação</h1>
+    </div>
+
+    <form th:action="@{/admin/tenant/notificacoes/salvar}" method="post">
+
+        <div class="row g-3">
+
+            <!-- Coluna principal: editor -->
+            <div class="col-lg-8">
+                <div class="ff-card">
+
+                    <div class="ff-form-row">
+                        <div class="ff-field">
+                            <label class="ff-label">Evento</label>
+                            <select class="ff-select" name="evento">
+                                <option th:each="e : ${eventos}"
+                                        th:value="${e}"
+                                        th:text="${e}"
+                                        th:selected="${e == eventoSelecionado}"></option>
+                            </select>
+                        </div>
+                        <div class="ff-field">
+                            <label class="ff-label">Canal</label>
+                            <select class="ff-select" name="canal">
+                                <option value="WHATSAPP" th:selected="${canalSelecionado == 'WHATSAPP'}">WhatsApp</option>
+                                <option value="EMAIL"     th:selected="${canalSelecionado == 'EMAIL'}">E-mail</option>
+                                <option value="SMS"       th:selected="${canalSelecionado == 'SMS'}">SMS</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="ff-field">
+                        <label class="ff-label">Mensagem</label>
+                        <textarea class="ff-textarea" name="template"
+                                  id="templateEditor" rows="8"
+                                  th:text="${templateAtual}"></textarea>
+                        <span class="ff-hint">
+                            Insira variáveis com chaves, ex.: <code>{cliente_nome}</code>.
+                            Clique nas variáveis ao lado para inserir no cursor.
+                        </span>
+                    </div>
+
+                    <div class="ff-btn-group mt-3">
+                        <button type="submit" class="ff-btn ff-btn--primary">
+                            <i class="bi bi-check-lg"></i>
+                            <span>Salvar template</span>
+                        </button>
+                        <button type="button" class="ff-btn ff-btn--secondary" onclick="testarEnvio()">
+                            <i class="bi bi-send"></i>
+                            <span>Testar envio</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Preview -->
+                <div class="ff-card mt-3">
+                    <div class="ff-card__header">
+                        <h2 class="ff-card__title"><i class="bi bi-eye me-2"></i>Preview com dados de exemplo</h2>
+                    </div>
+                    <div class="ff-card__body">
+                        <div id="preview" style="background: var(--color-slate-50); padding: var(--space-4); border-radius: var(--radius-md); font-family: var(--font-family-sans);"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coluna lateral: variáveis disponíveis -->
+            <div class="col-lg-4">
+                <div class="ff-card">
+                    <div class="ff-card__header">
+                        <h2 class="ff-card__title"><i class="bi bi-braces me-2"></i>Variáveis disponíveis</h2>
+                    </div>
+                    <div class="ff-card__body">
+                        <div class="d-flex flex-column gap-2">
+                            <button type="button"
+                                    th:each="v : ${variaveis}"
+                                    class="ff-btn ff-btn--ghost ff-btn--sm"
+                                    style="justify-content: flex-start;"
+                                    th:onclick="'inserirVariavel(\'' + ${v} + '\')'"
+                                    th:text="${v}"></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </form>
+
+<script>
+  // Dados de exemplo para o preview
+  const exemplo = {
+    cliente_nome:        'Maria Silva',
+    pedido_numero:       '1024',
+    data_entrega:        '15/04/2026',
+    valor_total:         '249,90',
+    link_acompanhamento: 'https://pascoa.com/acompanhamento/abc123',
+    produtos_lista:      '2x Ovo Trufado, 1x Ovo Diet',
+    tenant_nome:         'Páscoa Gestão',
+    tenant_whatsapp:     '(11) 99999-9999'
+  };
+
+  const editor = document.getElementById('templateEditor');
+  const preview = document.getElementById('preview');
+
+  function atualizarPreview() {
+    let txt = editor.value;
+    Object.entries(exemplo).forEach(([k, v]) => {
+      txt = txt.replaceAll('{' + k + '}', v);
+    });
+    preview.textContent = txt;
+  }
+
+  function inserirVariavel(v) {
+    const start = editor.selectionStart;
+    const end   = editor.selectionEnd;
+    editor.value = editor.value.slice(0, start) + v + editor.value.slice(end);
+    editor.focus();
+    editor.selectionStart = editor.selectionEnd = start + v.length;
+    atualizarPreview();
+  }
+
+  function testarEnvio() {
+    if (window.ffToast) ffToast('info', 'Envio de teste será habilitado na integração com notification-service.');
+    else alert('Envio de teste será habilitado na integração com notification-service.');
+  }
+
+  editor.addEventListener('input', atualizarPreview);
+  atualizarPreview();
+</script>
+
+</div>
+</body>
+</html>

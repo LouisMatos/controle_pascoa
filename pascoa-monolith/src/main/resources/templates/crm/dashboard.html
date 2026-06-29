@@ -5,101 +5,109 @@
 <body>
 <div id="pageContent">
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0"><i class="bi bi-people-fill me-2 text-success"></i>CRM — Clientes</h2>
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h1 class="ff-heading-1 mb-0 d-flex align-items-center gap-2">
+            <i class="bi bi-people-fill" style="color: var(--brand-primary);"></i>CRM — Clientes
+        </h1>
     </div>
 
     <!-- KPIs -->
-    <div class="row g-3 mb-4">
-        <div class="col-6 col-md-3">
-            <div class="card text-center">
-                <div class="card-body py-3">
-                    <div class="fs-2 fw-bold" th:text="${totalClientes}">0</div>
-                    <div class="text-muted small">Total Clientes</div>
-                </div>
+    <div class="ff-kpi-grid mb-4">
+
+        <div class="ff-kpi">
+            <div class="ff-kpi__icon"><i class="bi bi-people"></i></div>
+            <div class="ff-kpi__content">
+                <div class="ff-kpi__label">Total Clientes</div>
+                <div class="ff-kpi__value" th:text="${totalClientes}">0</div>
             </div>
         </div>
-        <div class="col-6 col-md-3">
-            <div class="card text-center border-warning">
-                <div class="card-body py-3">
-                    <div class="fs-2 fw-bold text-warning" th:text="${totalVip}">0</div>
-                    <div class="text-muted small"><i class="bi bi-star-fill me-1 text-warning"></i>VIP</div>
-                </div>
+
+        <div class="ff-kpi ff-kpi--warning">
+            <div class="ff-kpi__icon"><i class="bi bi-star-fill"></i></div>
+            <div class="ff-kpi__content">
+                <div class="ff-kpi__label">VIP</div>
+                <div class="ff-kpi__value" th:text="${totalVip}">0</div>
             </div>
         </div>
-        <div class="col-6 col-md-3">
-            <div class="card text-center border-secondary">
-                <div class="card-body py-3">
-                    <div class="fs-2 fw-bold text-secondary" th:text="${totalNovos}">0</div>
-                    <div class="text-muted small">Novos</div>
-                </div>
+
+        <div class="ff-kpi ff-kpi--info">
+            <div class="ff-kpi__icon"><i class="bi bi-person-plus"></i></div>
+            <div class="ff-kpi__content">
+                <div class="ff-kpi__label">Novos</div>
+                <div class="ff-kpi__value" th:text="${totalNovos}">0</div>
             </div>
         </div>
-        <div class="col-6 col-md-3">
-            <div class="card text-center border-danger">
-                <div class="card-body py-3">
-                    <div class="fs-2 fw-bold text-danger" th:text="${totalInativos}">0</div>
-                    <div class="text-muted small">Inativos (90+ dias)</div>
-                </div>
+
+        <div class="ff-kpi ff-kpi--danger">
+            <div class="ff-kpi__icon"><i class="bi bi-person-dash"></i></div>
+            <div class="ff-kpi__content">
+                <div class="ff-kpi__label">Inativos (90+ dias)</div>
+                <div class="ff-kpi__value" th:text="${totalInativos}">0</div>
             </div>
         </div>
+
     </div>
 
     <!-- Ranking -->
-    <div class="card">
-        <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
-            <span><i class="bi bi-trophy me-2 text-warning"></i>Ranking por LTV (Top 20)</span>
-            <a th:href="@{/clientes}" class="btn btn-sm btn-outline-secondary">
-                <i class="bi bi-people me-1"></i>Todos os clientes
+    <div class="ff-card" style="padding: 0;">
+        <div class="ff-card__header" style="padding: var(--space-4) var(--space-5); border-bottom: 1px solid var(--color-card-border);">
+            <h2 class="ff-card__title">
+                <i class="bi bi-trophy me-2" style="color: var(--color-warning);"></i>Ranking por LTV (Top 20)
+            </h2>
+            <a th:href="@{/clientes}" class="ff-btn ff-btn--secondary ff-btn--sm">
+                <i class="bi bi-people"></i>
+                <span>Todos os clientes</span>
             </a>
         </div>
-        <div class="card-body p-0">
-            <div th:if="${#lists.isEmpty(ranking)}" class="text-center text-muted py-5">
-                <i class="bi bi-people fs-2 d-block mb-2 opacity-40"></i>
-                Nenhum cliente com pedidos registrado.
-            </div>
-            <table th:unless="${#lists.isEmpty(ranking)}" class="table table-hover align-middle mb-0">
-                <thead>
-                    <tr>
-                        <th class="ps-3" style="width:50px">#</th>
-                        <th>Cliente</th>
-                        <th class="text-center" style="width:110px">Segmento</th>
-                        <th class="text-end" style="width:120px">LTV</th>
-                        <th class="text-center" style="width:90px">Pedidos</th>
-                        <th class="text-center" style="width:80px">Pontos</th>
-                        <th class="text-end pe-3" style="width:80px">Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="c, i : ${ranking}">
-                        <td class="ps-3 text-muted fw-semibold" th:text="${i.index + 1}"></td>
-                        <td>
-                            <div class="fw-semibold" th:text="${c.cliente().nome}"></div>
-                            <div class="text-muted small" th:text="${c.cliente().email}"></div>
-                        </td>
-                        <td class="text-center">
-                            <span th:classappend="'bg-' + ${c.segmento().badgeColor()}"
-                                  class="badge"
-                                  th:text="${c.segmento().descricao()}"></span>
-                        </td>
-                        <td class="text-end fw-semibold text-success">
-                            R$ <span th:text="${#numbers.formatDecimal(c.ltv(), 1, 'POINT', 2, 'COMMA')}"></span>
-                        </td>
-                        <td class="text-center" th:text="${c.totalPedidos()}"></td>
-                        <td class="text-center">
-                            <span th:classappend="${c.saldoPontos() > 0} ? 'text-success' : 'text-muted'"
-                                  th:text="${c.saldoPontos()}"></span>
-                        </td>
-                        <td class="text-end pe-3">
-                            <a th:href="@{/crm/clientes/{id}(id=${c.cliente().id})}"
-                               class="btn btn-sm btn-outline-success">
-                                <i class="bi bi-person-lines-fill"></i>
-                            </a>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+
+        <div th:if="${#lists.isEmpty(ranking)}"
+             th:replace="~{fragments/empty-state :: empty(
+                 icon='bi-people', title='Sem dados',
+                 description='Nenhum cliente com pedidos registrado.',
+                 actionLabel=null, actionHref=null)}">
         </div>
+
+        <table th:unless="${#lists.isEmpty(ranking)}" class="ff-table">
+            <thead>
+                <tr>
+                    <th style="width:50px">#</th>
+                    <th>Cliente</th>
+                    <th class="ff-col-center">Segmento</th>
+                    <th class="ff-col-num">LTV</th>
+                    <th class="ff-col-center">Pedidos</th>
+                    <th class="ff-col-center">Pontos</th>
+                    <th class="ff-col-actions">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="c, i : ${ranking}">
+                    <td class="ff-text-muted fw-semibold" th:text="${i.index + 1}"></td>
+                    <td>
+                        <div class="fw-semibold" th:text="${c.cliente().nome}"></div>
+                        <div class="ff-text-xs ff-text-muted" th:text="${c.cliente().email}"></div>
+                    </td>
+                    <td class="ff-col-center">
+                        <span class="badge"
+                              th:classappend="'bg-' + ${c.segmento().badgeColor()}"
+                              th:text="${c.segmento().descricao()}"></span>
+                    </td>
+                    <td class="ff-col-num fw-semibold" style="color: var(--color-success);">
+                        R$ <span th:text="${#numbers.formatDecimal(c.ltv(), 1, 'POINT', 2, 'COMMA')}"></span>
+                    </td>
+                    <td class="ff-col-center" th:text="${c.totalPedidos()}"></td>
+                    <td class="ff-col-center">
+                        <span th:style="${c.saldoPontos() > 0} ? 'color: var(--color-success); font-weight:600;' : 'color: var(--color-text-secondary);'"
+                              th:text="${c.saldoPontos()}"></span>
+                    </td>
+                    <td class="ff-col-actions">
+                        <a th:href="@{/crm/clientes/{id}(id=${c.cliente().id})}"
+                           class="ff-btn ff-btn--ghost ff-btn--icon ff-btn--sm" title="Ver perfil">
+                            <i class="bi bi-person-lines-fill"></i>
+                        </a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 
 </div>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout-fullscreen :: layout(~{::title}, ~{::#pageContent}, ${etapaAtual}, ${totalEtapas})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head><title>Etapa 5 — Identidade Visual · FoodFlow</title></head>
+<body>
+<div id="pageContent">
+    <h1 class="ff-onboarding__title">Sua identidade visual</h1>
+    <p class="ff-onboarding__subtitle">Escolha as cores que vão aparecer no seu sistema, PWA, PDFs e notificações.</p>
+
+    <form th:action="@{/onboarding/etapa5}" method="post" class="ff-onboarding__card"
+          x-data="identidadeOb()" x-init="atualizar()">
+
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="ff-field">
+                    <label class="ff-label">Upload do logo</label>
+                    <input type="file" name="logoFile" class="ff-input" accept="image/*">
+                    <span class="ff-hint">PNG, JPG ou SVG — mín. 200×200px</span>
+                </div>
+
+                <div class="ff-field">
+                    <label class="ff-label">Cor primária</label>
+                    <div class="d-flex gap-2 align-items-center">
+                        <input type="color" x-model="corPrimaria" @input="atualizar()"
+                               style="width: 56px; height: 40px; border: 1px solid var(--color-card-border); border-radius: var(--radius-md); cursor: pointer; padding: 2px;">
+                        <input type="text" name="corPrimaria" class="ff-input" x-model="corPrimaria" @input="atualizar()" maxlength="7">
+                    </div>
+                    <span class="ff-hint">Use o seletor ou cole um hex (#e91e63)</span>
+                </div>
+
+                <div class="ff-field">
+                    <label class="ff-label">Cor secundária</label>
+                    <div class="d-flex gap-2 align-items-center">
+                        <input type="color" x-model="corSecundaria" @input="atualizar()"
+                               style="width: 56px; height: 40px; border: 1px solid var(--color-card-border); border-radius: var(--radius-md); cursor: pointer; padding: 2px;">
+                        <input type="text" name="corSecundaria" class="ff-input" x-model="corSecundaria" @input="atualizar()" maxlength="7">
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="ff-text-xs ff-text-muted fw-semibold mb-2">PREVIEW AO VIVO</div>
+                <div style="border: 1px solid var(--color-card-border); border-radius: var(--radius-lg); overflow: hidden;">
+                    <div :style="`background:${corPrimaria}; color:#fff; padding: var(--space-4); display:flex; align-items:center; gap:var(--space-3);`">
+                        <i class="bi bi-egg-fill" style="font-size: 1.25rem;"></i>
+                        <span style="font-weight: 700;">Seu Sistema</span>
+                    </div>
+                    <div style="padding: var(--space-4); background:#fff;">
+                        <div class="ff-kpi">
+                            <div class="ff-kpi__icon" :style="`background:${corSecundaria}; color:${corPrimaria};`">
+                                <i class="bi bi-cart3"></i>
+                            </div>
+                            <div class="ff-kpi__content">
+                                <div class="ff-kpi__label">Pedidos hoje</div>
+                                <div class="ff-kpi__value" :style="`color:${corPrimaria};`">42</div>
+                            </div>
+                        </div>
+                        <button type="button" class="ff-btn mt-3"
+                                :style="`background:${corPrimaria}; color:#fff; border:none;`">
+                            Confirmar pedido
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="ff-onboarding__nav">
+            <a th:href="@{/onboarding/etapa4}" class="ff-btn ff-btn--ghost">
+                <i class="bi bi-arrow-left"></i><span>Voltar</span>
+            </a>
+            <button type="submit" class="ff-btn ff-btn--primary ff-btn--lg">
+                <span>Próxima etapa</span><i class="bi bi-arrow-right"></i>
+            </button>
+        </div>
+    </form>
+
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.1/dist/cdn.min.js"></script>
+<script>
+  function identidadeOb() {
+    return {
+      corPrimaria:   '#e91e63',
+      corSecundaria: '#fce4ec',
+      atualizar() {
+        document.documentElement.style.setProperty('--brand-primary',   this.corPrimaria);
+        document.documentElement.style.setProperty('--brand-secondary', this.corSecundaria);
+      }
+    };
+  }
+</script>
+</div>
+</body>
+</html>

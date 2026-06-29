@@ -1,0 +1,39 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-tenant-config-local
+      author: foodflow-v6
+      comment: "Configurações locais do tenant (overrides do config-engine). Etapa 4 cria a estrutura; Etapa 5 popula via config-engine-service."
+      changes:
+        - createTable:
+            tableName: tenant_config_local
+            columns:
+              - column:
+                  name: id
+                  type: BIGSERIAL
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: chave
+                  type: VARCHAR(120)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: valor
+                  type: TEXT
+              - column:
+                  name: tipo
+                  type: VARCHAR(20)
+                  defaultValue: STRING
+              - column:
+                  name: criado_em
+                  type: TIMESTAMP
+                  defaultValueComputed: NOW()
+                  constraints:
+                    nullable: false
+              - column:
+                  name: atualizado_em
+                  type: TIMESTAMP
+        - addUniqueConstraint:
+            tableName: tenant_config_local
+            columnNames: chave
+            constraintName: uq_tenant_config_chave

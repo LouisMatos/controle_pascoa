@@ -40,6 +40,8 @@ public class RequestTracingFilter implements GlobalFilter, Ordered {
 
     @Override
     public int getOrder() {
-        return Ordered.HIGHEST_PRECEDENCE;
+        // Roda APÓS o TenantResolutionFilter (HIGHEST_PRECEDENCE) para que o log
+        // já tenha o X-Tenant-Id injetado.
+        return Ordered.HIGHEST_PRECEDENCE + 1;
     }
 }

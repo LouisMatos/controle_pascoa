@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head><title>Atributos de Produto — Admin Tenant</title></head>
+<body>
+<div id="pageContent">
+
+    <div th:replace="~{admin/tenant/_tabs :: tabs(ativa='atributos')}"></div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h1 class="ff-heading-2 mb-0 d-flex align-items-center gap-2">
+            <i class="bi bi-tags" style="color: var(--brand-primary);"></i>Atributos de Produto
+        </h1>
+        <button type="button" class="ff-btn ff-btn--primary" onclick="adicionarLinha()">
+            <i class="bi bi-plus-lg"></i>
+            <span>Novo atributo</span>
+        </button>
+    </div>
+
+    <div class="ff-text-sm ff-text-muted mb-3">
+        <i class="bi bi-info-circle me-1"></i>
+        Atributos dinâmicos aparecem como campos extras no formulário de produto e no wizard de pedido.
+        O tipo <strong>Lista</strong> exige opções separadas por vírgula.
+    </div>
+
+    <form th:action="@{/admin/tenant/atributos/salvar}" method="post">
+
+        <div class="ff-table-wrapper">
+            <table class="ff-table" id="atributosTable">
+                <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th style="width: 140px;">Tipo</th>
+                        <th>Opções (se Lista)</th>
+                        <th class="ff-col-center" style="width: 120px;">Obrigatório</th>
+                        <th class="ff-col-actions">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="a : ${atributos}">
+                        <td>
+                            <input type="text" class="ff-input" th:value="${a.nome}" name="nome">
+                        </td>
+                        <td>
+                            <select class="ff-select" name="tipo">
+                                <option th:each="t : ${tipos}"
+                                        th:value="${t}"
+                                        th:text="${t}"
+                                        th:selected="${t == a.tipo}"></option>
+                            </select>
+                        </td>
+                        <td>
+                            <input type="text" class="ff-input" th:value="${a.opcoes}"
+                                   placeholder="Opção 1, Opção 2, ..." name="opcoes">
+                        </td>
+                        <td class="ff-col-center">
+                            <label class="ff-check">
+                                <input type="checkbox" th:checked="${a.obrigatorio}" name="obrigatorio">
+                            </label>
+                        </td>
+                        <td class="ff-col-actions">
+                            <button type="button" class="ff-btn ff-btn--danger ff-btn--icon ff-btn--sm"
+                                    onclick="this.closest('tr').remove()" title="Remover">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="ff-btn-group mt-4">
+            <button type="submit" class="ff-btn ff-btn--primary">
+                <i class="bi bi-check-lg"></i>
+                <span>Salvar atributos</span>
+            </button>
+            <a th:href="@{/admin/tenant/identidade}" class="ff-btn ff-btn--secondary">Cancelar</a>
+        </div>
+    </form>
+
+<script>
+  function adicionarLinha() {
+    const tbody = document.querySelector('#atributosTable tbody');
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="text" class="ff-input" placeholder="Nome do atributo"></td>
+      <td>
+        <select class="ff-select">
+          <option>TEXTO</option><option>NUMERO</option><option>BOOLEAN</option>
+          <option>LISTA</option><option>DATA</option>
+        </select>
+      </td>
+      <td><input type="text" class="ff-input" placeholder="Opção 1, Opção 2, ..."></td>
+      <td class="ff-col-center"><label class="ff-check"><input type="checkbox"></label></td>
+      <td class="ff-col-actions">
+        <button type="button" class="ff-btn ff-btn--danger ff-btn--icon ff-btn--sm" onclick="this.closest('tr').remove()">
+          <i class="bi bi-trash"></i>
+        </button>
+      </td>`;
+    tbody.appendChild(tr);
+  }
+</script>
+
+</div>
+</body>
+</html>

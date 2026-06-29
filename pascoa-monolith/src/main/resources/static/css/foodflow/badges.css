@@ -1,0 +1,57 @@
+/* ═══════════════════════════════════════════════════════════════════
+   FoodFlow Design System v7 — Badges
+   Status semânticos + status do domínio (pedido, ordem, orçamento).
+   Uso: <span class="ff-badge ff-badge--em-producao">EM PRODUÇÃO</span>
+   ═══════════════════════════════════════════════════════════════════ */
+
+.ff-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  border-radius: var(--radius-full);
+  background: var(--color-slate-100);
+  color: var(--color-slate-700);
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+/* ── Status semânticos ── */
+.ff-badge--success { background: var(--color-green-50);  color: var(--color-green-700); }
+.ff-badge--danger  { background: var(--color-red-50);    color: var(--color-red-700); }
+.ff-badge--warning { background: var(--color-amber-50);  color: var(--color-amber-700); }
+.ff-badge--info    { background: #dbeafe;                color: #1e40af; }
+.ff-badge--neutral { background: var(--color-slate-100); color: var(--color-slate-700); }
+
+/* ── Status de Pedido / Ordem ── */
+.ff-badge--novo,
+.ff-badge--pendente     { background: var(--color-slate-100); color: var(--color-slate-700); }
+.ff-badge--confirmado   { background: #dbeafe;                color: #1e40af; }
+.ff-badge--em-producao,
+.ff-badge--em-andamento { background: var(--color-amber-50);  color: var(--color-amber-700); }
+.ff-badge--pronto,
+.ff-badge--concluida    { background: #ddd6fe;                color: var(--color-purple-700); }
+.ff-badge--entregue,
+.ff-badge--aprovado     { background: var(--color-green-50);  color: var(--color-green-700); }
+.ff-badge--cancelado,
+.ff-badge--recusado     { background: var(--color-red-50);    color: var(--color-red-700); }
+.ff-badge--expirado     { background: var(--color-slate-100); color: var(--color-slate-700); }
+
+/* ── Badge com bullet ── */
+.ff-badge--bullet::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* ── Badge brand ── */
+.ff-badge--brand {
+  background: var(--brand-secondary);
+  color: var(--brand-primary-dark);
+}

@@ -38,6 +38,10 @@
         <module>pascoa-financial-service</module>
         <module>pascoa-notification-service</module>
         <module>pascoa-analytics-service</module>
+        <module>pascoa-tenant-service</module>
+        <module>pascoa-config-engine-service</module>
+        <module>pascoa-pricing-engine-service</module>
+        <module>pascoa-subscription-service</module>
     </modules>
 
     <dependencyManagement>

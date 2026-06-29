@@ -1,0 +1,32 @@
+/* ═══════════════════════════════════════════════════════════════════
+   FoodFlow Design System v7 — Wizard
+   Estilos compartilhados do wizard de pedidos / onboarding.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════════
+   M-05 — Barra de ações do wizard "sticky" no mobile.
+
+   Quando o teclado virtual sobe no iOS/Android, o viewport encolhe e
+   os botões Voltar/Avançar somem do final do form. `position: sticky`
+   no rodapé do card mantém os botões acima do teclado, e o
+   `env(safe-area-inset-bottom)` reserva espaço para o Home Indicator
+   do iPhone com notch.
+
+   Aplica em qualquer linha de ações marcada com `.ff-wizard__actions`
+   ou com `data-wizard-actions`. Ativo apenas em viewports <= 767px;
+   em desktop o footer é estático (não há teclado virtual).
+   ═══════════════════════════════════════════════════════════════════ */
+@media (max-width: 767.98px) {
+  .ff-wizard__actions,
+  [data-wizard-actions] {
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    background: var(--color-card-bg, #fff);
+    padding: var(--space-3) var(--space-2);
+    padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom));
+    margin: var(--space-3) calc(var(--space-2) * -1) calc(var(--space-2) * -1);
+    border-top: 1px solid var(--color-card-border);
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.04);
+  }
+}

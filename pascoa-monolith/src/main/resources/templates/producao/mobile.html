@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <!-- M-10 — viewport-fit=cover libera env(safe-area-inset-*) no iPhone com notch. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Produção (Mobile) — Páscoa</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#e91e63">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" th:href="@{/css/foodflow.css}">
+    <style>
+      /* WCAG: todo elemento clicável >= 44px */
+      body { background: var(--color-page-bg); padding-bottom: 96px; }
+      .ff-mobile__header {
+        background: var(--brand-primary); color:#fff;
+        padding: var(--space-4); position: sticky; top:0; z-index:10;
+        display:flex; align-items:center; justify-content:space-between;
+        min-height: 56px;
+      }
+      .ff-mobile__title { font-size: var(--text-heading-3); font-weight: 700; margin: 0; }
+      .ff-mobile__user-btn {
+        min-width: 44px; min-height: 44px; background: rgba(255,255,255,0.15);
+        border: none; color:#fff; border-radius: var(--radius-md);
+        display:flex; align-items:center; justify-content:center;
+      }
+      .ff-mobile__section {
+        padding: var(--space-4) var(--space-3);
+        font-size: var(--text-xs); text-transform: uppercase;
+        letter-spacing: 0.05em; color: var(--color-text-secondary); font-weight: 600;
+      }
+      .ff-order-card {
+        background: #fff; border: 1px solid var(--color-card-border);
+        border-radius: var(--radius-lg); padding: var(--space-4);
+        margin: 0 var(--space-3) var(--space-3);
+        box-shadow: var(--shadow-sm);
+        display: flex; flex-direction: column; gap: var(--space-2);
+      }
+      .ff-order-card--active { border-color: var(--brand-primary); border-width: 2px; }
+      .ff-order-card__title { font-size: var(--text-body-lg); font-weight: 600; margin: 0; }
+      .ff-order-card__meta  { font-size: var(--text-sm); color: var(--color-text-secondary); }
+      .ff-order-card__actions { display:flex; gap: var(--space-2); margin-top: var(--space-2); }
+      .ff-order-card__actions .ff-btn {
+        flex: 1; min-height: 48px; font-size: var(--text-body); /* touch-friendly */
+      }
+      .ff-mobile__empty {
+        text-align: center; padding: var(--space-8) var(--space-4);
+        color: var(--color-text-secondary);
+      }
+      .ff-mobile__empty i { font-size: 3rem; opacity: 0.4; display:block; margin-bottom: var(--space-2); }
+    </style>
+</head>
+<body>
+
+<!-- Header sticky -->
+<header class="ff-mobile__header" role="banner">
+    <h1 class="ff-mobile__title">
+        <i class="bi bi-gear-wide-connected me-2"></i>Produção
+    </h1>
+    <a th:href="@{/producao/kanban}" class="ff-mobile__user-btn" title="Ver Kanban completo">
+        <i class="bi bi-kanban"></i>
+    </a>
+</header>
+
+<!-- Flash messages -->
+<div th:if="${sucesso}" class="alert alert-success m-3 py-2"
+     style="font-size: var(--text-sm);" role="alert">
+    <i class="bi bi-check-circle-fill me-2"></i>
+    <span th:text="${sucesso}"></span>
+</div>
+<div th:if="${erro}" class="alert alert-danger m-3 py-2"
+     style="font-size: var(--text-sm);" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    <span th:text="${erro}"></span>
+</div>
+
+<!-- ── EM ANDAMENTO ── -->
+<div class="ff-mobile__section">
+    <i class="bi bi-arrow-clockwise me-1"></i>
+    Em Andamento (<span th:text="${#lists.size(emAndamento)}">0</span>)
+</div>
+
+<div th:if="${#lists.isEmpty(emAndamento)}" class="ff-mobile__empty">
+    <i class="bi bi-pause-circle"></i>
+    Nenhuma ordem em andamento agora.
+</div>
+
+<article th:each="o : ${emAndamento}" class="ff-order-card ff-order-card--active">
+    <h2 class="ff-order-card__title" th:text="${o.produto.nome}"></h2>
+    <div class="ff-order-card__meta">
+        Ordem #<span th:text="${o.id}"></span>
+        · Pedido #<span th:text="${o.pedido.id}"></span>
+        · <strong th:text="${o.quantidade} + ' un.'"></strong>
+    </div>
+    <span class="ff-badge ff-badge--em-andamento ff-badge--bullet align-self-start">Em andamento</span>
+
+    <div class="ff-order-card__actions">
+        <form th:action="@{/producao/{id}/concluir(id=${o.id})}" method="post" style="flex:1;">
+            <button type="submit" class="ff-btn ff-btn--primary" style="width:100%; min-height:48px;">
+                <i class="bi bi-check-lg"></i>
+                <span>Concluir</span>
+            </button>
+        </form>
+        <a th:href="@{/producao/{id}(id=${o.id})}" class="ff-btn ff-btn--secondary"
+           style="min-height:48px; min-width: 48px; flex: 0 0 auto;">
+            <i class="bi bi-eye"></i>
+        </a>
+    </div>
+</article>
+
+<!-- ── PENDENTES ── -->
+<div class="ff-mobile__section">
+    <i class="bi bi-clock me-1"></i>
+    Pendentes (<span th:text="${#lists.size(pendentes)}">0</span>)
+</div>
+
+<div th:if="${#lists.isEmpty(pendentes)}" class="ff-mobile__empty">
+    <i class="bi bi-check-all"></i>
+    Nenhuma ordem pendente. Bom trabalho!
+</div>
+
+<article th:each="o : ${pendentes}" class="ff-order-card">
+    <h2 class="ff-order-card__title" th:text="${o.produto.nome}"></h2>
+    <div class="ff-order-card__meta">
+        Ordem #<span th:text="${o.id}"></span>
+        · Pedido #<span th:text="${o.pedido.id}"></span>
+        · <strong th:text="${o.quantidade} + ' un.'"></strong>
+    </div>
+    <div class="ff-order-card__meta"
+         th:if="${o.pedido.dataEntrega != null}">
+        <i class="bi bi-calendar-check me-1"></i>
+        Entrega: <strong th:text="${#temporals.format(o.pedido.dataEntrega, 'dd/MM')}"></strong>
+    </div>
+    <span class="ff-badge ff-badge--pendente ff-badge--bullet align-self-start">Pendente</span>
+
+    <div class="ff-order-card__actions">
+        <form th:action="@{/producao/{id}/iniciar(id=${o.id})}" method="post" style="flex:1;">
+            <button type="submit" class="ff-btn ff-btn--primary" style="width:100%; min-height:48px;">
+                <i class="bi bi-play-fill"></i>
+                <span>Iniciar produção</span>
+            </button>
+        </form>
+        <a th:href="@{/producao/{id}(id=${o.id})}" class="ff-btn ff-btn--secondary"
+           style="min-height:48px; min-width: 48px; flex: 0 0 auto;">
+            <i class="bi bi-eye"></i>
+        </a>
+    </div>
+</article>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script th:inline="javascript">
+  // M-09 — SW registrado com `?tenant=<id>` para isolar o cache por tenant.
+  if ('serviceWorker' in navigator) {
+    var ffTenantId = /*[[${tenant != null and tenant.id != null} ? ${tenant.id} : '_default']]*/ '_default';
+    window.addEventListener('load', () =>
+      navigator.serviceWorker.register('/sw.js?tenant=' + encodeURIComponent(ffTenantId)));
+  }
+</script>
+</body>
+</html>

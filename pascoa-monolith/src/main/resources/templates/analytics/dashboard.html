@@ -7,12 +7,12 @@
 
     <!-- Cabeçalho -->
     <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-        <h2 class="mb-0">
-            <i class="bi bi-bar-chart-line me-2 text-primary"></i>Analytics
-        </h2>
+        <h1 class="ff-heading-1 mb-0 d-flex align-items-center gap-2">
+            <i class="bi bi-bar-chart-line" style="color: var(--brand-primary);"></i>Analytics
+        </h1>
         <form method="get" action="/analytics" class="d-flex align-items-center gap-2">
-            <label class="text-muted small mb-0">Safra:</label>
-            <select name="ano" class="form-select form-select-sm" onchange="this.form.submit()">
+            <label class="ff-text-sm ff-text-muted mb-0">Safra:</label>
+            <select name="ano" class="ff-select" style="width: auto;" onchange="this.form.submit()">
                 <option th:each="a : ${anos}" th:value="${a}" th:text="${a}"
                         th:selected="${a == anoSelecionado}"></option>
             </select>
@@ -20,145 +20,150 @@
     </div>
 
     <!-- KPIs -->
-    <div class="row g-3 mb-4">
-        <div class="col-6 col-md-3">
-            <div class="card text-center h-100">
-                <div class="card-body py-3">
-                    <div class="text-muted small mb-1">Faturamento <span th:text="${anoSelecionado}"></span></div>
-                    <div class="fs-4 fw-bold text-primary"
-                         th:text="'R$ ' + ${#numbers.formatDecimal(safraAtual.totalFaturamento(), 1, 'POINT', 2, 'COMMA')}">R$ 0,00</div>
+    <div class="ff-kpi-grid mb-4">
+
+        <div class="ff-kpi ff-kpi--info">
+            <div class="ff-kpi__icon"><i class="bi bi-cash-coin"></i></div>
+            <div class="ff-kpi__content">
+                <div class="ff-kpi__label">Faturamento <span th:text="${anoSelecionado}"></span></div>
+                <div class="ff-kpi__value"
+                     th:text="'R$ ' + ${#numbers.formatDecimal(safraAtual.totalFaturamento(), 1, 'POINT', 2, 'COMMA')}">R$ 0,00</div>
+            </div>
+        </div>
+
+        <div class="ff-kpi">
+            <div class="ff-kpi__icon"><i class="bi bi-cart3"></i></div>
+            <div class="ff-kpi__content">
+                <div class="ff-kpi__label">Pedidos <span th:text="${anoSelecionado}"></span></div>
+                <div class="ff-kpi__value" th:text="${safraAtual.totalPedidos()}">0</div>
+            </div>
+        </div>
+
+        <div class="ff-kpi" th:classappend="${variacaoPositiva} ? 'ff-kpi--success' : 'ff-kpi--danger'">
+            <div class="ff-kpi__icon">
+                <i th:class="${variacaoPositiva} ? 'bi bi-graph-up-arrow' : 'bi bi-graph-down-arrow'"></i>
+            </div>
+            <div class="ff-kpi__content">
+                <div class="ff-kpi__label">Var. vs Ano Anterior</div>
+                <div class="ff-kpi__value">
+                    <i th:class="${variacaoPositiva} ? 'bi bi-arrow-up-short' : 'bi bi-arrow-down-short'"></i>
+                    <span th:text="${#numbers.formatDecimal(variacaoPercent, 1, 'POINT', 1, 'COMMA')} + '%'"></span>
                 </div>
             </div>
         </div>
-        <div class="col-6 col-md-3">
-            <div class="card text-center h-100">
-                <div class="card-body py-3">
-                    <div class="text-muted small mb-1">Pedidos <span th:text="${anoSelecionado}"></span></div>
-                    <div class="fs-4 fw-bold" th:text="${safraAtual.totalPedidos()}">0</div>
-                </div>
+
+        <div class="ff-kpi ff-kpi--info">
+            <div class="ff-kpi__icon"><i class="bi bi-ticket-perforated"></i></div>
+            <div class="ff-kpi__content">
+                <div class="ff-kpi__label">Ticket Médio</div>
+                <div class="ff-kpi__value"
+                     th:text="${ticketMedio != null}
+                         ? 'R$ ' + ${#numbers.formatDecimal(ticketMedio, 1, 'POINT', 2, 'COMMA')}
+                         : '—'">—</div>
             </div>
         </div>
-        <div class="col-6 col-md-3">
-            <div class="card text-center h-100">
-                <div class="card-body py-3">
-                    <div class="text-muted small mb-1">Var. vs Ano Anterior</div>
-                    <div th:if="${variacaoPositiva}" class="fs-4 fw-bold text-success">
-                        <i class="bi bi-arrow-up-short"></i>
-                        <span th:text="${#numbers.formatDecimal(variacaoPercent, 1, 'POINT', 1, 'COMMA')} + '%'"></span>
-                    </div>
-                    <div th:unless="${variacaoPositiva}" class="fs-4 fw-bold text-danger">
-                        <i class="bi bi-arrow-down-short"></i>
-                        <span th:text="${#numbers.formatDecimal(variacaoPercent, 1, 'POINT', 1, 'COMMA')} + '%'"></span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="card text-center h-100">
-                <div class="card-body py-3">
-                    <div class="text-muted small mb-1">Ticket Médio</div>
-                    <div class="fs-4 fw-bold text-info"
-                         th:text="${ticketMedio != null}
-                             ? 'R$ ' + ${#numbers.formatDecimal(ticketMedio, 1, 'POINT', 2, 'COMMA')}
-                             : '—'">—</div>
-                </div>
-            </div>
-        </div>
+
     </div>
 
     <!-- Gráfico mensal -->
-    <div class="card mb-4">
-        <div class="card-header fw-semibold">
-            <i class="bi bi-graph-up me-2"></i>Faturamento Mensal
-            <span class="text-muted small ms-2" th:text="'(' + ${anoSelecionado} + (${anoAnterior > 0} ? ' vs ' + ${anoAnterior} : '') + ')'"></span>
+    <div class="ff-card mb-4">
+        <div class="ff-card__header">
+            <h2 class="ff-card__title">
+                <i class="bi bi-graph-up me-2"></i>Faturamento Mensal
+                <span class="ff-text-sm ff-text-muted ms-2" style="font-weight: 400;"
+                      th:text="'(' + ${anoSelecionado} + (${anoAnterior > 0} ? ' vs ' + ${anoAnterior} : '') + ')'"></span>
+            </h2>
         </div>
-        <div class="card-body">
+        <div class="ff-card__body">
             <canvas id="chartMensal" height="90"></canvas>
         </div>
     </div>
 
-    <!-- Ranking de produtos + tabela meses -->
+    <!-- Ranking + tabela mensal -->
     <div class="row g-4">
 
-        <!-- Ranking -->
         <div class="col-lg-6">
-            <div class="card h-100">
-                <div class="card-header fw-semibold">
-                    <i class="bi bi-trophy me-2 text-warning"></i>Top Produtos
-                    <span class="text-muted small ms-1" th:text="'(' + ${anoSelecionado} + ')'"></span>
+            <div class="ff-card" style="padding: 0;">
+                <div class="ff-card__header" style="padding: var(--space-4) var(--space-5); border-bottom: 1px solid var(--color-card-border);">
+                    <h2 class="ff-card__title">
+                        <i class="bi bi-trophy me-2" style="color: var(--color-warning);"></i>Top Produtos
+                        <span class="ff-text-xs ff-text-muted ms-1" style="font-weight: 400; text-transform: none;"
+                              th:text="'(' + ${anoSelecionado} + ')'"></span>
+                    </h2>
                 </div>
-                <div class="card-body p-0">
-                    <div th:if="${#lists.isEmpty(ranking)}" class="text-center text-muted py-4 small">
-                        Sem dados para o ano selecionado.
-                    </div>
-                    <table th:unless="${#lists.isEmpty(ranking)}" class="table table-hover align-middle mb-0 small">
-                        <thead>
-                            <tr>
-                                <th class="ps-3">#</th>
-                                <th>Produto</th>
-                                <th class="text-center">Qtd</th>
-                                <th class="text-end pe-3">Faturamento</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:each="r, i : ${ranking}">
-                                <td class="ps-3 text-muted" th:text="${i.index + 1}"></td>
-                                <td>
-                                    <div class="fw-semibold" th:text="${r.nome()}"></div>
-                                    <div class="text-muted" style="font-size:.78rem;" th:text="${r.categoria()}"></div>
-                                </td>
-                                <td class="text-center" th:text="${r.quantidade()}"></td>
-                                <td class="text-end pe-3 text-success fw-semibold"
-                                    th:text="'R$ ' + ${#numbers.formatDecimal(r.faturamento(), 1, 'POINT', 2, 'COMMA')}"></td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div th:if="${#lists.isEmpty(ranking)}"
+                     th:replace="~{fragments/empty-state :: empty(
+                         icon='bi-bar-chart', title='Sem dados',
+                         description='Sem dados para o ano selecionado.',
+                         actionLabel=null, actionHref=null)}">
                 </div>
+                <table th:unless="${#lists.isEmpty(ranking)}" class="ff-table ff-table--compact">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Produto</th>
+                            <th class="ff-col-center">Qtd</th>
+                            <th class="ff-col-num">Faturamento</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="r, i : ${ranking}">
+                            <td class="ff-text-muted" th:text="${i.index + 1}"></td>
+                            <td>
+                                <div class="fw-semibold" th:text="${r.nome()}"></div>
+                                <div class="ff-text-xs ff-text-muted" th:text="${r.categoria()}"></div>
+                            </td>
+                            <td class="ff-col-center" th:text="${r.quantidade()}"></td>
+                            <td class="ff-col-num fw-semibold" style="color: var(--color-success);"
+                                th:text="'R$ ' + ${#numbers.formatDecimal(r.faturamento(), 1, 'POINT', 2, 'COMMA')}"></td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
-        <!-- Tabela mensal detalhada -->
         <div class="col-lg-6">
-            <div class="card h-100">
-                <div class="card-header fw-semibold">
-                    <i class="bi bi-table me-2"></i>Detalhamento por Mês
-                    <span class="text-muted small ms-1" th:text="'(' + ${anoSelecionado} + ')'"></span>
+            <div class="ff-card" style="padding: 0;">
+                <div class="ff-card__header" style="padding: var(--space-4) var(--space-5); border-bottom: 1px solid var(--color-card-border);">
+                    <h2 class="ff-card__title">
+                        <i class="bi bi-table me-2"></i>Detalhamento por Mês
+                        <span class="ff-text-xs ff-text-muted ms-1" style="font-weight: 400; text-transform: none;"
+                              th:text="'(' + ${anoSelecionado} + ')'"></span>
+                    </h2>
                 </div>
-                <div class="card-body p-0">
-                    <table class="table table-hover align-middle mb-0 small">
-                        <thead>
-                            <tr>
-                                <th class="ps-3">Mês</th>
-                                <th class="text-center">Pedidos</th>
-                                <th class="text-end pe-3">Faturamento</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:each="m : ${safraAtual.meses()}"
-                                th:classappend="${m.pedidos() == 0} ? 'text-muted'">
-                                <td class="ps-3 fw-semibold" th:text="${m.nomeMes()}"></td>
-                                <td class="text-center" th:text="${m.pedidos() > 0} ? ${m.pedidos()} : '—'"></td>
-                                <td class="text-end pe-3"
-                                    th:text="${m.pedidos() > 0}
-                                        ? 'R$ ' + ${#numbers.formatDecimal(m.faturamento(), 1, 'POINT', 2, 'COMMA')}
-                                        : '—'"></td>
-                            </tr>
-                        </tbody>
-                        <tfoot class="table-light fw-bold">
-                            <tr>
-                                <td class="ps-3">Total</td>
-                                <td class="text-center" th:text="${safraAtual.totalPedidos()}"></td>
-                                <td class="text-end pe-3 text-primary"
-                                    th:text="'R$ ' + ${#numbers.formatDecimal(safraAtual.totalFaturamento(), 1, 'POINT', 2, 'COMMA')}"></td>
-                            </tr>
-                        </tfoot>
-                    </table>
-                </div>
+                <table class="ff-table ff-table--compact">
+                    <thead>
+                        <tr>
+                            <th>Mês</th>
+                            <th class="ff-col-center">Pedidos</th>
+                            <th class="ff-col-num">Faturamento</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="m : ${safraAtual.meses()}"
+                            th:classappend="${m.pedidos() == 0} ? 'ff-text-muted'">
+                            <td class="fw-semibold" th:text="${m.nomeMes()}"></td>
+                            <td class="ff-col-center" th:text="${m.pedidos() > 0} ? ${m.pedidos()} : '—'"></td>
+                            <td class="ff-col-num"
+                                th:text="${m.pedidos() > 0}
+                                    ? 'R$ ' + ${#numbers.formatDecimal(m.faturamento(), 1, 'POINT', 2, 'COMMA')}
+                                    : '—'"></td>
+                        </tr>
+                    </tbody>
+                    <tfoot>
+                        <tr style="background: var(--color-slate-50); font-weight: 700;">
+                            <td>Total</td>
+                            <td class="ff-col-center" th:text="${safraAtual.totalPedidos()}"></td>
+                            <td class="ff-col-num" style="color: var(--brand-primary);"
+                                th:text="'R$ ' + ${#numbers.formatDecimal(safraAtual.totalFaturamento(), 1, 'POINT', 2, 'COMMA')}"></td>
+                        </tr>
+                    </tfoot>
+                </table>
             </div>
         </div>
     </div>
 
-    <!-- Chart.js -->
+    <!-- Chart.js — cores alinhadas ao brand FoodFlow -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script th:inline="javascript">
     /*<![CDATA[*/
@@ -173,23 +178,25 @@
         const fatAtualArr = JSON.parse(fatAtual);
         const fatAntArr   = JSON.parse(fatAnt);
 
-        const datasets = [
-            {
-                label: 'Faturamento ' + anoSel,
-                data: fatAtualArr,
-                borderColor: '#0d6efd',
-                backgroundColor: 'rgba(13,110,253,.15)',
-                fill: true,
-                tension: 0.3,
-            }
-        ];
+        // Lê cor brand do CSS custom property
+        const cs = getComputedStyle(document.documentElement);
+        const brand = (cs.getPropertyValue('--brand-primary') || '#e91e63').trim();
+
+        const datasets = [{
+            label: 'Faturamento ' + anoSel,
+            data: fatAtualArr,
+            borderColor: brand,
+            backgroundColor: brand + '26', // ~15% alpha
+            fill: true,
+            tension: 0.3,
+        }];
 
         if (anoAnt > 0 && fatAntArr.length > 0) {
             datasets.push({
                 label: 'Faturamento ' + anoAnt,
                 data: fatAntArr,
-                borderColor: '#adb5bd',
-                backgroundColor: 'rgba(173,181,189,.10)',
+                borderColor: '#94a3b8',
+                backgroundColor: 'rgba(148,163,184,.10)',
                 fill: false,
                 tension: 0.3,
                 borderDash: [5, 5],
@@ -200,7 +207,10 @@
             type: 'line',
             data: { labels: labelsArr, datasets },
             options: {
+                // L-10 — devicePixelRatio explícito evita canvas borrado em Retina/4K.
+                devicePixelRatio: window.devicePixelRatio || 1,
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
                     legend: { position: 'top' },
                     tooltip: {
@@ -215,9 +225,7 @@
                 scales: {
                     y: {
                         beginAtZero: true,
-                        ticks: {
-                            callback: function(v) { return 'R$ ' + Number(v).toLocaleString('pt-BR'); }
-                        }
+                        ticks: { callback: v => 'R$ ' + Number(v).toLocaleString('pt-BR') }
                     }
                 }
             }

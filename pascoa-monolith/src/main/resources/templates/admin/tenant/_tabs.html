@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- Fragmento de abas comuns ao painel Admin Tenant.
+     Uso: <div th:replace="~{admin/tenant/_tabs :: tabs(ativa='identidade')}"></div> -->
+<div th:fragment="tabs(ativa)" class="ff-card mb-4" style="padding: var(--space-2); display:flex; gap: var(--space-1); flex-wrap: wrap;">
+    <a th:href="@{/admin/tenant/identidade}" class="ff-btn ff-btn--sm"
+       th:classappend="${ativa == 'identidade'} ? 'ff-btn--primary' : 'ff-btn--ghost'">
+        <i class="bi bi-palette"></i>
+        <span>Identidade</span>
+    </a>
+    <a th:href="@{/admin/tenant/fases}" class="ff-btn ff-btn--sm"
+       th:classappend="${ativa == 'fases'} ? 'ff-btn--primary' : 'ff-btn--ghost'">
+        <i class="bi bi-diagram-3"></i>
+        <span>Fases de Produção</span>
+    </a>
+    <a th:href="@{/admin/tenant/atributos}" class="ff-btn ff-btn--sm"
+       th:classappend="${ativa == 'atributos'} ? 'ff-btn--primary' : 'ff-btn--ghost'">
+        <i class="bi bi-tags"></i>
+        <span>Atributos de Produto</span>
+    </a>
+    <a th:href="@{/admin/tenant/notificacoes}" class="ff-btn ff-btn--sm"
+       th:classappend="${ativa == 'notificacoes'} ? 'ff-btn--primary' : 'ff-btn--ghost'">
+        <i class="bi bi-envelope-paper"></i>
+        <span>Templates Notif.</span>
+    </a>
+    <a th:href="@{/admin/tenant/plano}" class="ff-btn ff-btn--sm"
+       th:classappend="${ativa == 'plano'} ? 'ff-btn--primary' : 'ff-btn--ghost'">
+        <i class="bi bi-credit-card"></i>
+        <span>Plano</span>
+    </a>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+  Breadcrumb FoodFlow v7
+  Gerado a partir da URL atual: /financeiro/fluxo-caixa → Início › Financeiro › Fluxo Caixa
+  - Hifens viram espaço, capitaliza primeira letra de cada token
+  - Cada segmento é clicável até o atual (não clicável)
+  - Para títulos customizados, a página pode passar pageBreadcrumb via Model
+    e o layout exibe via @if. Esta versão automática serve para 90% dos casos.
+-->
+<nav th:fragment="breadcrumb" class="ff-breadcrumb" aria-label="Trilha de navegação"
+     th:with="path=${currentUri} ?: '/'">
+    <ol class="ff-breadcrumb" style="padding:0; margin:0; list-style:none; display:flex; gap:var(--space-2); align-items:center;">
+        <li class="ff-breadcrumb__item">
+            <a class="ff-breadcrumb__link" th:href="@{/dashboard}">
+                <i class="bi bi-house-door"></i>
+                <span>Início</span>
+            </a>
+        </li>
+        <th:block th:with="segments=${#strings.arraySplit(path, '/')},
+                            cumulative=''">
+            <li th:each="seg, iter : ${segments}"
+                th:if="${!#strings.isEmpty(seg)}"
+                th:with="cumulative=${cumulative + '/' + seg},
+                         isLast=${iter.index == segments.length - 1},
+                         label=${#strings.capitalize(#strings.replace(seg, '-', ' '))}"
+                class="ff-breadcrumb__item"
+                th:classappend="${isLast} ? 'ff-breadcrumb__item--current'">
+                <a th:if="${!isLast}" class="ff-breadcrumb__link"
+                   th:href="@{__${cumulative}__}"
+                   th:text="${label}"></a>
+                <span th:if="${isLast}" th:text="${label}" aria-current="page"></span>
+            </li>
+        </th:block>
+    </ol>
+</nav>
+
+</body>
+</html>

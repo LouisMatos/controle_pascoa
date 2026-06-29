@@ -1,12 +1,12 @@
 {
   "name": "Páscoa Gestão",
   "short_name": "Páscoa",
-  "description": "Sistema de Gestão de Ovos de Páscoa",
+  "description": "Sistema de Gestão de Ovos de Páscoa Artesanais",
   "start_url": "/dashboard",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#198754",
-  "theme_color": "#198754",
+  "background_color": "#ffffff",
+  "theme_color": "#e91e63",
   "orientation": "any",
   "lang": "pt-BR",
   "icons": [
@@ -24,5 +24,28 @@
     }
   ],
   "screenshots": [],
-  "categories": ["business", "productivity"]
+  "categories": ["business", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Pedidos",
+      "short_name": "Pedidos",
+      "description": "Lista de pedidos",
+      "url": "/pedidos",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Kanban",
+      "short_name": "Kanban",
+      "description": "Kanban de produção",
+      "url": "/producao/kanban",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Catálogo",
+      "short_name": "Catálogo",
+      "description": "Catálogo público",
+      "url": "/catalogo",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
 }

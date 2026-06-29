@@ -1,0 +1,42 @@
+/* ═══════════════════════════════════════════════════════════════════
+   FoodFlow Design System v7 — Bundle principal
+   Ponto de entrada único do design system. Importado no <head> do
+   layout base via <link rel="stylesheet" th:href="@{/css/foodflow.css}">.
+   FASE 1: tokens + reset + tipografia. As fases seguintes adicionam
+   _layout, _sidebar, _buttons, _forms, _cards, etc.
+   ═══════════════════════════════════════════════════════════════════ */
+
+@import url('foodflow/tokens.css');
+@import url('foodflow/reset.css');
+@import url('foodflow/typography.css');
+@import url('foodflow/layout.css');
+@import url('foodflow/sidebar.css');
+@import url('foodflow/topbar.css');
+
+/* FASE 3 — Componentes compartilhados */
+@import url('foodflow/buttons.css');
+@import url('foodflow/forms.css');
+@import url('foodflow/badges.css');
+@import url('foodflow/cards.css');
+@import url('foodflow/tables.css');
+
+/* FASE 4 — Auth fullscreen */
+@import url('foodflow/auth.css');
+
+/* FASE 5 — Wizard stepper + Kanban */
+@import url('foodflow/stepper.css');
+@import url('foodflow/kanban.css');
+@import url('foodflow/wizard.css');
+
+/* FASE 8 — Onboarding wizard */
+@import url('foodflow/onboarding.css');
+
+/* FASE 10 — Acessibilidade (focus-visible, sr-only, touch targets, high-contrast) */
+@import url('foodflow/a11y.css');
+
+/* v8 FASE 4 — Safe area insets (iPhone notch / Dynamic Island) */
+@import url('foodflow/safe-area.css');
+
+/* FASE 5 — Wizard stepper + Kanban */
+@import url('foodflow/stepper.css');
+@import url('foodflow/kanban.css');

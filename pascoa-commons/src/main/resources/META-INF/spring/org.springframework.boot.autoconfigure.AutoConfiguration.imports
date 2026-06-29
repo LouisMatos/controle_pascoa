@@ -1,0 +1,6 @@
+br.com.seuprojeto.pascoa.commons.tenant.TenantAutoConfiguration
+br.com.seuprojeto.pascoa.commons.tenant.TenantAsyncAutoConfiguration
+br.com.seuprojeto.pascoa.commons.featureflag.FeatureFlagAutoConfiguration
+br.com.seuprojeto.pascoa.commons.whitelabel.WhiteLabelAutoConfiguration
+br.com.seuprojeto.pascoa.commons.events.TenantConfigEventPublisher
+br.com.seuprojeto.pascoa.commons.events.TenantConfigCacheEvictor

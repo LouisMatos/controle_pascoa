@@ -1,0 +1,94 @@
+server:
+  port: 8094
+  tomcat:
+    threads:
+      max: 20
+      min-spare: 2
+    max-connections: 200
+
+spring:
+  application:
+    name: pascoa-tenant-service
+  # MS-05 — quando o uso do Config Server for ativado, o `import` abaixo +
+  # `cloud.config.fail-fast: true` + `retry` garantem que o serviço espere
+  # o Config Server estar pronto em vez de morrer com "Connection refused".
+  # Comentado por enquanto: o serviço lê config do próprio application.yml.
+  # config:
+  #   import: "optional:configserver:http://localhost:8888"
+  cloud:
+    config:
+      fail-fast: false   # mudar para true quando ativar config-server
+      retry:
+        initial-interval: 1000
+        max-attempts: 6
+        max-interval: 5000
+        multiplier: 1.5
+  datasource:
+    url: jdbc:postgresql://localhost:5441/foodflow_platform
+    username: postgres
+    password: sua_senha
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      idle-timeout: 60000
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: platform
+    show-sql: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    default-schema: platform
+    schemas: platform
+    create-schemas: false   # schema 'platform' já criado por init-platform.sql
+  # Liquibase é invocado programaticamente por LiquibaseTenantMigrator — desabilitamos
+  # o auto-run do Spring Boot para que ele não toque no schema 'platform'.
+  liquibase:
+    enabled: false
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: pascoa
+    password: pascoa123
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    enabled: ${EUREKA_ENABLED:false}
+  instance:
+    prefer-ip-address: true
+
+# v6 Etapa 14 — URLs dos serviços irmãos chamados pelo OnboardingService.
+# Overridable via env (CONFIG_ENGINE_URL / SUBSCRIPTION_URL) em prod.
+foodflow:
+  services:
+    config-engine-url: ${CONFIG_ENGINE_URL:http://localhost:8091}
+    subscription-url:  ${SUBSCRIPTION_URL:http://localhost:8093}
+  # S-03 — rate limit do endpoint POST /tenants/registrar (por IP, janela deslizante).
+  tenant:
+    register:
+      max: ${FOODFLOW_REGISTER_MAX:3}
+      window: ${FOODFLOW_REGISTER_WINDOW:PT1H}
+
+# v6 Etapa 15 — OpenAPI 3.0 / Swagger UI
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: method
+  show-actuator: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  endpoint:
+    health:
+      show-details: always

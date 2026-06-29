@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout-fullscreen :: layout(~{::title}, ~{::#pageContent}, ${etapaAtual}, ${totalEtapas})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head><title>Etapa 4 — Fases de Produção · FoodFlow</title></head>
+<body>
+<div id="pageContent">
+    <h1 class="ff-onboarding__title">Como sua produção fluí?</h1>
+    <p class="ff-onboarding__subtitle">Estas serão as colunas do seu Kanban. Arraste pelas alças <i class="bi bi-grip-vertical"></i> para reordenar.</p>
+
+    <form th:action="@{/onboarding/etapa4}" method="post" class="ff-onboarding__card">
+
+        <div id="fasesList">
+            <div th:each="f : ${fases}"
+                 class="d-flex align-items-center gap-3 fase-item"
+                 style="padding: var(--space-3); background: var(--color-card-bg); border: 1px solid var(--color-card-border); border-radius: var(--radius-md); margin-bottom: var(--space-2);">
+                <i class="bi bi-grip-vertical" style="cursor: grab; color: var(--color-text-secondary); font-size: 1.25rem;"></i>
+                <div th:style="'background: ' + ${f.cor} + '; width:32px; height:32px; border-radius:var(--radius-full); flex-shrink:0;'"></div>
+                <input type="text" class="ff-input" th:value="${f.nome}" style="flex: 1; max-width: 380px;">
+                <input type="color" th:value="${f.cor}"
+                       style="width: 44px; height: 40px; border: 1px solid var(--color-card-border); border-radius: var(--radius-md); cursor: pointer; padding: 2px;">
+                <button type="button" class="ff-btn ff-btn--danger ff-btn--icon ff-btn--sm" onclick="this.closest('.fase-item').remove()">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </div>
+
+        <button type="button" class="ff-btn ff-btn--secondary mt-3" onclick="adicionarFase()">
+            <i class="bi bi-plus-lg"></i><span>Adicionar fase</span>
+        </button>
+
+        <div class="ff-onboarding__nav">
+            <a th:href="@{/onboarding/etapa3}" class="ff-btn ff-btn--ghost">
+                <i class="bi bi-arrow-left"></i><span>Voltar</span>
+            </a>
+            <button type="submit" class="ff-btn ff-btn--primary ff-btn--lg">
+                <span>Próxima etapa</span><i class="bi bi-arrow-right"></i>
+            </button>
+        </div>
+    </form>
+
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script>
+  Sortable.create(document.getElementById('fasesList'), {
+    animation: 180,
+    handle: '.bi-grip-vertical',
+    // M-06 — touch options (iOS/Android)
+    delay: 150, delayOnTouchOnly: true, touchStartThreshold: 5, fallbackTolerance: 5
+  });
+  function adicionarFase() {
+    const list = document.getElementById('fasesList');
+    const div = document.createElement('div');
+    div.className = 'd-flex align-items-center gap-3 fase-item';
+    div.style.cssText = 'padding: var(--space-3); background: var(--color-card-bg); border: 1px solid var(--color-card-border); border-radius: var(--radius-md); margin-bottom: var(--space-2);';
+    div.innerHTML = `
+      <i class="bi bi-grip-vertical" style="cursor: grab; color: var(--color-text-secondary); font-size: 1.25rem;"></i>
+      <div style="width:32px; height:32px; border-radius:var(--radius-full); background:#94a3b8; flex-shrink:0;"></div>
+      <input type="text" class="ff-input" placeholder="Nova fase" style="flex:1; max-width:380px;">
+      <input type="color" value="#94a3b8" style="width: 44px; height: 40px; border: 1px solid var(--color-card-border); border-radius: var(--radius-md); cursor: pointer; padding: 2px;">
+      <button type="button" class="ff-btn ff-btn--danger ff-btn--icon ff-btn--sm" onclick="this.closest('.fase-item').remove()"><i class="bi bi-trash"></i></button>`;
+    list.appendChild(div);
+  }
+</script>
+</div>
+</body>
+</html>

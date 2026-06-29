@@ -1,48 +1,37 @@
 <!DOCTYPE html>
-<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<!--
+  MO-01 — migrado para fragments/layout-public (Design System v7 + white-label).
+  As cores hardcoded em verde foram substituídas por var(--brand-*); badges de
+  categoria continuam vindo do layout-public (mantidas por compatibilidade
+  visual com o catálogo público).
+-->
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout-public :: layout(~{::title}, ~{::main})}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${produto.nome} + ' — Páscoa Gestão'">Produto — Páscoa Gestão</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-    <style>
-        body { background-color: #f8f9fa; font-size: 0.93rem; }
-        .brand-bar { background: linear-gradient(135deg, #198754, #20c997); }
-        .produto-img { width: 100%; max-height: 380px; object-fit: cover; border-radius: 12px; }
-        .badge-TRUFADO    { background-color: #6f42c1; }
-        .badge-RECHEADO   { background-color: #fd7e14; }
-        .badge-DIET       { background-color: #0dcaf0; color: #000 !important; }
-        .badge-VEGANO     { background-color: #198754; }
-        .badge-TRADICIONAL{ background-color: #6c757d; }
-        .badge-ESPECIAL   { background-color: #d63384; }
-        .qr-box { background: #fff; border: 1px solid #dee2e6; border-radius: 10px; padding: 1rem; display: inline-block; }
-    </style>
+    <title th:text="${produto.nome} + ' — ' + (${tenant != null} ? ${tenant.nomeApp} : 'Páscoa Gestão')">Produto</title>
 </head>
 <body>
 
-<!-- Barra de marca -->
-<div class="brand-bar text-white py-3 mb-4">
-    <div class="container d-flex align-items-center gap-3">
-        <a th:href="@{/catalogo}" class="btn btn-outline-light btn-sm">
-            <i class="bi bi-arrow-left"></i>
-        </a>
-        <div>
-            <i class="bi bi-egg-fill me-1"></i>
-            <span class="fw-bold">Páscoa Gestão</span>
-            <span class="opacity-75 ms-2 small">— Catálogo</span>
-        </div>
-    </div>
-</div>
+<style>
+    .produto-img { width: 100%; max-height: 380px; aspect-ratio: 4/3;
+                   object-fit: cover; border-radius: var(--radius-lg); }
+    .qr-box      { background: #fff; border: 1px solid var(--color-card-border);
+                   border-radius: var(--radius-md); padding: var(--space-3);
+                   display: inline-block; }
+</style>
 
-<div class="container pb-5" style="max-width: 900px;">
+<main>
     <div class="row g-4">
 
         <!-- Coluna esquerda: foto -->
         <div class="col-md-5">
+            <!-- M-08 — width/height + decoding=async para evitar CLS na
+                 página de detalhe (imagem above-the-fold, sem lazy). -->
             <img th:if="${produto.foto != null and !produto.foto.isEmpty()}"
                  th:src="@{/media/{f}(f=${produto.foto})}"
                  th:alt="${produto.nome}"
+                 width="600" height="450"
+                 decoding="async"
                  class="produto-img shadow-sm">
             <div th:unless="${produto.foto != null and !produto.foto.isEmpty()}"
                  class="produto-img shadow-sm bg-light d-flex align-items-center justify-content-center"
@@ -62,7 +51,8 @@
             <p th:if="${produto.descricao != null and !produto.descricao.isEmpty()}"
                class="text-muted" th:text="${produto.descricao}"></p>
 
-            <div class="display-6 fw-bold text-success mb-3">
+            <div class="display-6 fw-bold mb-3"
+                 style="color: var(--brand-primary);">
                 R$ <span th:text="${#numbers.formatDecimal(produto.precoVenda, 1, 'POINT', 2, 'COMMA')}"></span>
             </div>
 
@@ -105,16 +95,10 @@
 
     <!-- Voltar ao catálogo -->
     <div class="text-center mt-5">
-        <a th:href="@{/catalogo}" class="btn btn-outline-success">
+        <a th:href="@{/catalogo}" class="ff-btn ff-btn--secondary">
             <i class="bi bi-grid me-1"></i>Ver todos os produtos
         </a>
     </div>
-</div>
-
-<footer class="bg-white border-top py-3 mt-4 text-center text-muted small">
-    <i class="bi bi-egg-fill text-success me-1"></i>Páscoa Gestão — Ovos Artesanais
-</footer>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</main>
 </body>
 </html>

@@ -1,12 +1,22 @@
 #!/usr/bin/env bash
 # =============================================================================
-# start-all.sh — Sobe todo o ambiente Páscoa v5 (infra + microsserviços + monólito)
+# start-all.sh — Sobe todo o ambiente Páscoa (v5 + v6 FoodFlow)
 #
 # Uso:
-#   ./start-all.sh          → sobe tudo
+#   ./start-all.sh          → sobe tudo (v5 + v6 + monólito)
 #   ./start-all.sh stop     → derruba tudo (mantém volumes do Docker)
 #   ./start-all.sh status   → mostra serviços rodando
 #   ./start-all.sh logs <servico>  → tail -f no log de um serviço
+#
+# Env vars:
+#   SKIP_V6=1        → pula os microsserviços v6 (tenant, config-engine, …)
+#   SKIP_MONOLITH=1  → não sobe o monólito (pascoa-monolith:8080).
+#                      Use para economizar recursos — o monólito hoje é apenas
+#                      referência. O api-gateway continua subindo normalmente.
+#
+# Atalhos de linha de comando (equivalentes às env vars acima):
+#   ./start-all.sh up --no-monolith   (ou: --skip-monolith)
+#   ./start-all.sh up --no-v6
 # =============================================================================
 
 set -euo pipefail
@@ -29,7 +39,19 @@ MICROSERVICES=(
   "pascoa-notification-service:8088"
   "pascoa-analytics-service:8089"
 )
-GATEWAY_AND_MONOLITH=("pascoa-api-gateway:8090" "pascoa-monolith:8080")
+# Camada de borda. O gateway sobe sempre; o monólito é opcional (SKIP_MONOLITH=1).
+GATEWAY=("pascoa-api-gateway:8090")
+MONOLITH=("pascoa-monolith:8080")
+
+# v6 FoodFlow — Plataforma SaaS multi-tenant
+# Sobem após os microsserviços v5 (dependem do mesmo Eureka/Config Server, mas
+# usam o postgres-platform — banco separado). Skipped quando SKIP_V6=1.
+V6_SERVICES=(
+  "pascoa-tenant-service:8094"
+  "pascoa-config-engine-service:8091"
+  "pascoa-pricing-engine-service:8092"
+  "pascoa-subscription-service:8093"
+)
 
 color() { printf "\033[%sm%s\033[0m" "$1" "$2"; }
 info()  { echo "$(color '1;34' '[INFO]') $*"; }
@@ -122,9 +144,12 @@ wait_port() {
 # Sobe infraestrutura Docker (postgres, rabbitmq, redis, zipkin)
 # ---------------------------------------------------------------------------
 start_infra() {
-  info "Subindo infra Docker (Postgres, RabbitMQ, Redis, Zipkin)..."
+  info "Subindo infra Docker (Postgres, Postgres-Platform, RabbitMQ, Redis, Zipkin)..."
   ( cd "$ROOT_DIR" && docker compose up -d )
   wait_port localhost 5432  "PostgreSQL"
+  if [[ "${SKIP_V6:-0}" != "1" ]]; then
+    wait_port localhost 5441 "PostgreSQL Platform (v6)"
+  fi
   wait_port localhost 5672  "RabbitMQ"
   wait_port localhost 6379  "Redis"
   wait_port localhost 9411  "Zipkin"
@@ -200,7 +225,7 @@ status() {
   echo "=== Serviços Java ==="
   printf "%-30s %-8s %-10s\n" "MÓDULO" "PORTA" "STATUS"
   printf -- "%.0s-" {1..52}; echo
-  local all=( "${INFRA_FIRST[@]}" "${MICROSERVICES[@]}" "${GATEWAY_AND_MONOLITH[@]}" )
+  local all=( "${INFRA_FIRST[@]}" "${MICROSERVICES[@]}" "${GATEWAY[@]}" "${MONOLITH[@]}" "${V6_SERVICES[@]}" )
   for entry in "${all[@]}"; do
     local m=${entry%:*} p=${entry#*:}
     local st="DOWN"
@@ -213,6 +238,14 @@ status() {
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
+# Resolve flags de linha de comando para env vars (a partir do 2º argumento).
+for arg in "${@:2}"; do
+  case "$arg" in
+    --no-monolith|--skip-monolith) SKIP_MONOLITH=1 ;;
+    --no-v6|--skip-v6)             SKIP_V6=1 ;;
+  esac
+done
+
 case "${1:-up}" in
   up|start|"")
     check_prereqs
@@ -230,20 +263,57 @@ case "${1:-up}" in
       start_service "${entry%:*}" "${entry#*:}"
     done
 
-    # 4) Gateway + monólito (camada de borda)
-    for entry in "${GATEWAY_AND_MONOLITH[@]}"; do
+    # 4) Gateway (sempre) + monólito (opcional — economia de recursos)
+    for entry in "${GATEWAY[@]}"; do
       start_service "${entry%:*}" "${entry#*:}"
     done
+    if [[ "${SKIP_MONOLITH:-0}" != "1" ]]; then
+      for entry in "${MONOLITH[@]}"; do
+        start_service "${entry%:*}" "${entry#*:}"
+      done
+    else
+      warn "SKIP_MONOLITH=1 — monólito (8080) não foi iniciado"
+    fi
+
+    # 5) v6 FoodFlow (multi-tenant, config engine) — opt-out via SKIP_V6=1
+    # Best-effort: falha em um serviço v6 não derruba os demais (sem 'set -e' aqui)
+    if [[ "${SKIP_V6:-0}" != "1" ]]; then
+      info "Subindo serviços v6 (FoodFlow)..."
+      V6_FAILED=()
+      for entry in "${V6_SERVICES[@]}"; do
+        if ! start_service "${entry%:*}" "${entry#*:}"; then
+          V6_FAILED+=("${entry%:*}")
+        fi
+      done
+      if (( ${#V6_FAILED[@]} > 0 )); then
+        warn "v6: falharam: ${V6_FAILED[*]} — demais serviços seguiram. Veja logs/<modulo>.log"
+      fi
+    else
+      warn "SKIP_V6=1 — serviços v6 não foram iniciados"
+    fi
 
     echo
-    ok "Ambiente Páscoa v5 no ar!"
+    ok "Ambiente Páscoa no ar!"
     echo
-    echo "  Monólito (UI Thymeleaf) : http://localhost:8080   (admin/admin123)"
+    if [[ "${SKIP_MONOLITH:-0}" != "1" ]]; then
+      echo "  Monólito (UI Thymeleaf) : http://localhost:8080   (admin/admin123)"
+    else
+      echo "  Monólito (UI Thymeleaf) : (não iniciado — SKIP_MONOLITH=1)"
+    fi
     echo "  API Gateway              : http://localhost:8090"
     echo "  Eureka Dashboard         : http://localhost:8761"
     echo "  Config Server            : http://localhost:8888  (config-admin/config123)"
     echo "  RabbitMQ Management      : http://localhost:15672 (pascoa/pascoa123)"
     echo "  Zipkin Tracing           : http://localhost:9411"
+    if [[ "${SKIP_V6:-0}" != "1" ]]; then
+      echo
+      echo "  ── v6 FoodFlow ──"
+      echo "  Tenant Service           : http://localhost:8094/tenants"
+      echo "  Config Engine            : http://localhost:8091/config"
+      echo "  Pricing Engine           : http://localhost:8092/pricing"
+      echo "  Subscription Service     : http://localhost:8093/subscriptions  (Stripe MOCK)"
+      echo "  Postgres Platform (5441) : DB foodflow_platform — schemas platform/config/pricing/subscription"
+    fi
     echo
     echo "Logs:    $LOG_DIR/<modulo>.log"
     echo "Parar:   ./start-all.sh stop"
@@ -261,7 +331,7 @@ case "${1:-up}" in
     ;;
   *)
     err "Comando inválido: $1"
-    echo "Uso: $0 [up|stop|status|logs <modulo>]"
+    echo "Uso: $0 [up [--no-monolith] [--no-v6] | stop | status | logs <modulo>]"
     exit 1
     ;;
 esac

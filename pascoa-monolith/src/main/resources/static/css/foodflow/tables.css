@@ -1,0 +1,120 @@
+/* ═══════════════════════════════════════════════════════════════════
+   FoodFlow Design System v7 — Tables
+   Responsivas (scroll horizontal em telas pequenas), zebra opcional, hover.
+   Uso: <div class="ff-table-wrapper"><table class="ff-table">...</table></div>
+   ═══════════════════════════════════════════════════════════════════ */
+
+.ff-table-wrapper {
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.ff-table-wrapper--scroll {
+  overflow-x: auto;
+}
+
+/* MO-03 — Tabelas legadas (Bootstrap `.table` e `.ff-table` sem wrapper)
+   ganham scroll horizontal automático em mobile. Substitui o pattern de
+   envolver manualmente 32+ tabelas em <div class="table-responsive">. */
+@media (max-width: 767.98px) {
+  .table:not(.table-responsive .table),
+  .ff-table:not(.ff-table-wrapper .ff-table) {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+  }
+}
+/* L-05 — sticky thead compatível com Safari.
+   Em Safari, position:sticky no <th> só funciona quando o pai usa
+   overflow:scroll explícito (não auto) e o thead não fica dentro de
+   overflow horizontal. Uso:
+     <div class="ff-table-wrapper ff-table-wrapper--sticky">
+       <div class="ff-table-scroll"><table class="ff-table ff-table--sticky-thead">...</table></div>
+     </div>
+*/
+.ff-table-wrapper--sticky { overflow-x: auto; overflow-y: visible; }
+.ff-table-scroll          { max-height: 600px; overflow-y: scroll; }
+.ff-table--sticky-thead thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--color-slate-50);
+}
+
+.ff-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.ff-table thead th {
+  background: var(--color-slate-50);
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  text-align: left;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: var(--text-xs);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-card-border);
+  white-space: nowrap;
+}
+
+.ff-table tbody td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-card-border);
+  color: var(--color-text-primary);
+  vertical-align: middle;
+}
+
+.ff-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.ff-table tbody tr {
+  transition: background var(--transition-fast);
+}
+.ff-table tbody tr:hover {
+  background: var(--color-slate-50);
+}
+
+.ff-table--zebra tbody tr:nth-child(even) {
+  background: var(--color-slate-50);
+}
+.ff-table--zebra tbody tr:nth-child(even):hover {
+  background: var(--color-slate-100);
+}
+
+/* Tipos de coluna */
+.ff-table .ff-col-num    { text-align: right; font-variant-numeric: tabular-nums; }
+.ff-table .ff-col-center { text-align: center; }
+.ff-table .ff-col-actions {
+  text-align: right;
+  white-space: nowrap;
+  width: 1%;
+}
+
+/* Footer/total de registros */
+.ff-table-footer {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  border-top: 1px solid var(--color-card-border);
+  background: var(--color-slate-50);
+}
+
+/* Linha vazia/empty state inline */
+.ff-table tbody tr.ff-table__empty td {
+  text-align: center;
+  padding: var(--space-8) var(--space-4);
+  color: var(--color-text-secondary);
+}
+
+/* Compacta */
+.ff-table--compact thead th,
+.ff-table--compact tbody td {
+  padding: var(--space-2) var(--space-3);
+}

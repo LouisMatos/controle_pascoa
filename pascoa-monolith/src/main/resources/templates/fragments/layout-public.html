@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR" th:fragment="layout(pageTitle, content)"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <!-- M-10 — viewport-fit=cover libera env(safe-area-inset-*) no iPhone com notch. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <!-- MO-02 — CSRF disponível para forms públicos (orçamento, acompanhamento). -->
+    <meta name="_csrf"        th:if="${_csrf != null}" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:if="${_csrf != null}" th:content="${_csrf.headerName}"/>
+    <title th:replace="${pageTitle}">FoodFlow</title>
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#e91e63">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/icons/icon-192.png">
+    <!-- Bootstrap + FoodFlow -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <!-- F-01 — Flatpickr (date picker universal). -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- L-11 — preload + carga paralela do Inter (reduz FOUT/CLS). -->
+    <link rel="preload" as="style"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" th:href="@{/css/foodflow.css}">
+
+    <!-- Injeção white-label do tenant (FASE 9.1 / Etapa 13 v6).
+         Hoje no monólito ${tenant} é null e os defaults vêm de tokens.css.
+         Quando o monólito virar multi-tenant, basta popular o atributo
+         "tenant" no GlobalModelAdvice e estas cores se aplicam automaticamente. -->
+    <!-- W-01 — escapeJavaScript impede CSS injection caso a cor escape do validador.
+         W-02 — emite cada var apenas se houver valor; senão preserva o default de tokens.css. -->
+    <!-- S-01 — th:nonce permite que o CSP rejeite <style> não autorizados. -->
+    <style th:if="${tenant != null}" th:nonce="${cspNonce}" th:inline="text">
+        :root {
+            [(${tenant.corPrimaria     != null and !tenant.corPrimaria.isBlank()     ? '--brand-primary: '      + #strings.escapeJavaScript(tenant.corPrimaria)     + ';' : ''})]
+            [(${tenant.corPrimariaDark != null and !tenant.corPrimariaDark.isBlank() ? '--brand-primary-dark: ' + #strings.escapeJavaScript(tenant.corPrimariaDark) + ';' : ''})]
+            [(${tenant.corSecundaria   != null and !tenant.corSecundaria.isBlank()   ? '--brand-secondary: '    + #strings.escapeJavaScript(tenant.corSecundaria)   + ';' : ''})]
+        }
+    </style>
+    <link rel="icon" th:if="${tenant != null and tenant.faviconUrl != null}"
+                     th:href="@{${tenant.faviconUrl}}">
+
+    <!-- Badges de categoria legadas — preservadas para o catálogo -->
+    <style>
+        .badge-TRUFADO    { background-color: #6f42c1; }
+        .badge-RECHEADO   { background-color: #fd7e14; }
+        .badge-DIET       { background-color: #0dcaf0; color: #000 !important; }
+        .badge-VEGANO     { background-color: #198754; }
+        .badge-TRADICIONAL{ background-color: #6c757d; }
+        .badge-ESPECIAL   { background-color: #d63384; }
+    </style>
+</head>
+<body style="background: var(--color-page-bg);">
+
+<!-- Header white-label do tenant -->
+<header style="background: var(--brand-primary); color: var(--color-text-inverse); padding: var(--space-5) var(--space-4); text-align: center;">
+    <div style="max-width: 960px; margin: 0 auto;">
+        <i class="bi bi-egg-fill" style="font-size: 2rem;"></i>
+        <h1 style="font-size: var(--text-heading-2); font-weight: 700; margin: var(--space-2) 0 0;"
+            th:text="${tenant != null ? tenant.nomeApp : 'Páscoa Artesanal'}">Páscoa Artesanal</h1>
+        <p style="margin: var(--space-1) 0 0; opacity: 0.85; font-size: var(--text-sm);"
+           th:text="${tagline} ?: 'Doces artesanais feitos com carinho'">Doces artesanais feitos com carinho</p>
+    </div>
+</header>
+
+<main role="main" style="max-width: 960px; margin: 0 auto; padding: var(--space-5) var(--space-4);">
+    <div th:replace="${content}">Conteúdo público</div>
+</main>
+
+<footer style="background: #fff; border-top: 1px solid var(--color-card-border); padding: var(--space-4); text-align: center; font-size: var(--text-xs); color: var(--color-text-secondary); margin-top: var(--space-8);">
+    <i class="bi bi-egg-fill me-1" style="color: var(--brand-primary);"></i>
+    <span th:text="${tenant != null ? tenant.nomeApp : 'Páscoa Artesanal'}">Páscoa Artesanal</span>
+    &nbsp;·&nbsp; feito com 🧡
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- F-01 — Flatpickr + locale + init global. -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/pt.js"></script>
+<script th:src="@{/js/foodflow/flatpickr-init.js}" defer></script>
+<!-- F-08 — Validação custom (desliga tooltips nativos). -->
+<script th:src="@{/js/foodflow/form-validation.js}" defer></script>
+<!-- F-06 — Proteção global contra duplo submit (forms de orçamento público). -->
+<script th:src="@{/js/foodflow/submit-guard.js}" defer></script>
+<script th:inline="javascript">
+  // M-09 — SW registrado com `?tenant=<id>` (catálogo público / acompanhamento).
+  if ('serviceWorker' in navigator) {
+    var ffTenantId = /*[[${tenant != null and tenant.id != null} ? ${tenant.id} : '_default']]*/ '_default';
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('/sw.js?tenant=' + encodeURIComponent(ffTenantId), { scope: '/' })
+        .catch(function (err) { console.warn('SW register failed:', err); });
+    });
+  }
+</script>
+</body>
+</html>

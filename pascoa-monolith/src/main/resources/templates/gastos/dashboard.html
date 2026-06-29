@@ -218,6 +218,20 @@
     const chartOrcado    = /*[[${chartOrcado}]]*/    [];
 
     if (chartLabels.length > 0) {
+        // W-06 — usa cores brand do tenant em vez de hardcoded.
+        // hexToRgba aceita #RRGGBB e devolve "rgba(r,g,b,a)".
+        function hexToRgba(hex, alpha) {
+            hex = (hex || '').trim().replace('#', '');
+            if (hex.length !== 6) return 'rgba(220,53,69,' + alpha + ')';
+            const r = parseInt(hex.slice(0,2), 16),
+                  g = parseInt(hex.slice(2,4), 16),
+                  b = parseInt(hex.slice(4,6), 16);
+            return 'rgba(' + r + ',' + g + ',' + b + ',' + alpha + ')';
+        }
+        const cs = getComputedStyle(document.documentElement);
+        const brand     = (cs.getPropertyValue('--brand-primary')      || '#e91e63').trim();
+        const brandDark = (cs.getPropertyValue('--brand-primary-dark') || '#c2185b').trim();
+
         const ctx = document.getElementById('gastosChart').getContext('2d');
         new Chart(ctx, {
             type: 'bar',
@@ -227,21 +241,24 @@
                     {
                         label: 'Realizado',
                         data: chartRealizado,
-                        backgroundColor: 'rgba(220, 53, 69, 0.75)',
-                        borderColor: 'rgba(220, 53, 69, 1)',
+                        backgroundColor: hexToRgba(brand, 0.75),
+                        borderColor:     brand,
                         borderWidth: 1
                     },
                     {
                         label: 'Orçado',
                         data: chartOrcado,
-                        backgroundColor: 'rgba(13, 110, 253, 0.35)',
-                        borderColor: 'rgba(13, 110, 253, 0.8)',
+                        backgroundColor: hexToRgba(brandDark, 0.35),
+                        borderColor:     hexToRgba(brandDark, 0.8),
                         borderWidth: 1
                     }
                 ]
             },
             options: {
+                // L-10 — devicePixelRatio explícito evita canvas borrado em Retina/4K.
+                devicePixelRatio: window.devicePixelRatio || 1,
                 responsive: true,
+                maintainAspectRatio: false,
                 plugins: {
                     legend: { position: 'top' },
                     tooltip: {

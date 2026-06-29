@@ -1,5 +1,16 @@
-/* Service Worker — Páscoa Gestão */
-const CACHE_NAME = 'pascoa-v1';
+/* Service Worker — Páscoa / FoodFlow Design v7
+   - cache-first para CDN, ícones e CSS estáticos do FoodFlow
+   - stale-while-revalidate para foodflow.css (atualiza no fundo)
+   - network-first para páginas dinâmicas (sem cachear HTML autenticado)
+
+   M-09 — cache isolado por tenant. O registro deve passar `?tenant=<id>`
+   na URL do SW; aqui extraímos para nomear o cache. Sem o parâmetro
+   (single-tenant atual), cai num namespace `_default` — comportamento
+   preservado. Dispositivos compartilhados em loja (tablets) usados por
+   tenants diferentes não vazam mais cache cruzado. */
+const TENANT_ID = new URL(self.location).searchParams.get('tenant') || '_default';
+const CACHE_VERSION = 'v7';
+const CACHE_NAME = `pascoa-${TENANT_ID}-${CACHE_VERSION}`;
 
 /* Recursos estáticos que vale pré-cachear (CDN) */
 const STATIC_ASSETS = [
@@ -18,12 +29,18 @@ self.addEventListener('install', event => {
   );
 });
 
-/* ── Activate: limpa caches antigos ────────────────────────────────────── */
+/* ── Activate: limpa caches antigos do MESMO tenant ───────────────────────
+   M-09 — preserva caches de outros tenants no mesmo dispositivo (loja
+   compartilhada). Só apaga entradas com prefixo `pascoa-${TENANT_ID}-`
+   e versão diferente da atual. */
+const CACHE_PREFIX = `pascoa-${TENANT_ID}-`;
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
       Promise.all(
-        keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+        keys
+          .filter(k => k.startsWith(CACHE_PREFIX) && k !== CACHE_NAME)
+          .map(k => caches.delete(k))
       )
     ).then(() => self.clients.claim())
   );
@@ -43,9 +60,25 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  /* Ícones e manifest: cache-first */
-  if (url.pathname.startsWith('/icons/') || url.pathname === '/manifest.json') {
+  /* W-04 — manifest.json: network-first com fallback ao cache.
+     Cache-first servia versão antiga por horas após troca de logo/nome
+     do tenant. Network-first garante que a próxima abertura do PWA já
+     pegue o manifest atualizado; o cache só responde se a rede falhar. */
+  if (url.pathname === '/manifest.json') {
+    event.respondWith(networkFirst(request));
+    return;
+  }
+
+  /* Ícones do PWA: cache-first (raramente mudam, são versionados por nome). */
+  if (url.pathname.startsWith('/icons/')) {
     event.respondWith(cacheFirst(request));
+    return;
+  }
+
+  /* FoodFlow Design System CSS: stale-while-revalidate
+     (serve do cache instantâneo, busca atualização em paralelo) */
+  if (url.pathname.startsWith('/css/foodflow')) {
+    event.respondWith(staleWhileRevalidate(request));
     return;
   }
 
@@ -71,6 +104,17 @@ async function cacheFirst(request) {
   } catch {
     return new Response('Offline', { status: 503 });
   }
+}
+
+/* Stale-while-revalidate: retorna cache imediato + revalida em segundo plano */
+async function staleWhileRevalidate(request) {
+  const cache = await caches.open(CACHE_NAME);
+  const cached = await cache.match(request);
+  const networkPromise = fetch(request).then(response => {
+    if (response.ok) cache.put(request, response.clone());
+    return response;
+  }).catch(() => null);
+  return cached || networkPromise || new Response('Offline', { status: 503 });
 }
 
 async function networkFirst(request) {

@@ -5,6 +5,13 @@ spring:
   application:
     name: pascoa-api-gateway
 
+  # Redis usado pelo RequestRateLimiter (token-bucket por tenant — Etapa 12).
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:pascoa123}
+
   cloud:
     gateway:
       # X-Forwarded-* habilitado explicitamente — o monólito (Tomcat) depende disso
@@ -24,6 +31,39 @@ spring:
           lower-case-service-id: true
 
       routes:
+        # ── v6 FoodFlow — rotas explícitas ANTES do catch-all do monólito ────
+        - id: tenant-service
+          uri: http://localhost:8094
+          predicates:
+            - Path=/tenants/**,/onboarding/**,/onboarding.html,/v3/api-docs/**,/swagger-ui/**,/swagger-ui.html
+        - id: config-engine
+          uri: http://localhost:8091
+          predicates:
+            - Path=/config/**
+        - id: pricing-engine
+          uri: http://localhost:8092
+          predicates:
+            - Path=/pricing/**
+        - id: subscription
+          uri: http://localhost:8093
+          predicates:
+            - Path=/subscriptions/**,/webhooks/stripe
+        - id: notification-templates
+          uri: http://localhost:8088
+          predicates:
+            - Path=/templates/**
+        # auth-service — usado pela tela de login moderna servida pelo próprio gateway.
+        - id: auth-service
+          uri: http://localhost:8081
+          predicates:
+            - Path=/api/auth/**
+        # Tela de login moderna servida localmente pelo gateway (LoginPageController).
+        # Usa forward:// para invocar o DispatcherHandler local, sem proxy.
+        - id: gateway-login
+          uri: forward:/login.html
+          predicates:
+            - Path=/login.html
+
         # ── Monólito — rota catch-all (deve ser a última) ─────────────────────
         - id: pascoa-monolith
           uri: http://localhost:8080
@@ -48,10 +88,28 @@ spring:
         connect-timeout: 5000
         response-timeout: 30s
 
-      # Headers padrão em todas as respostas
+      # Headers padrão em todas as respostas + rate limit por tenant
       default-filters:
         - AddResponseHeader=X-Gateway, pascoa-api-gateway
         - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+        # S-04 — headers HTTP de segurança aplicados a TODOS os microsserviços v6 atrás
+        # do gateway (tenant, config-engine, pricing-engine, subscription). Os serviços
+        # v5 e o monólito já configuram esses headers no Spring Security; aqui o gateway
+        # garante baseline também para os v6 que ainda não tinham.
+        - AddResponseHeader=X-Frame-Options, DENY
+        - AddResponseHeader=X-Content-Type-Options, nosniff
+        - AddResponseHeader=Referrer-Policy, strict-origin-when-cross-origin
+        - AddResponseHeader=Permissions-Policy, camera=(), microphone=(), geolocation=()
+        - AddResponseHeader=X-XSS-Protection, 0
+        - DedupeResponseHeader=X-Frame-Options X-Content-Type-Options Referrer-Policy Permissions-Policy X-XSS-Protection
+        # v6 Etapa 12 — token-bucket no Redis, chave = X-Tenant-Id (anonymous quando ausente).
+        # 20 req/s sustentado, burst de 40 (capacidade), expira em 60s para liberar bucket.
+        - name: RequestRateLimiter
+          args:
+            redis-rate-limiter.replenishRate: ${FOODFLOW_RATE_PER_SEC:20}
+            redis-rate-limiter.burstCapacity: ${FOODFLOW_RATE_BURST:40}
+            redis-rate-limiter.requestedTokens: 1
+            key-resolver: "#{@tenantKeyResolver}"
 
 # Eureka — registra o gateway como serviço
 eureka:
@@ -75,6 +133,14 @@ management:
       show-details: always
     gateway:
       enabled: true
+
+# v6 Etapa 12 — Tenant resolution
+foodflow:
+  tenant:
+    # Sufixo dos subdomínios SaaS — ex: confeitaria-maria.foodflow.com.br
+    base-domain: ${FOODFLOW_BASE_DOMAIN:foodflow.com.br}
+    # Paths que NÃO sofrem resolução de tenant nem rate limit (admin/infra)
+    bypass-paths: /actuator/**,/webhooks/**,/fallback/**,/onboarding/**,/onboarding.html,/v3/api-docs/**,/swagger-ui/**,/swagger-ui.html,/login.html,/api/auth/**
 
 logging:
   level:

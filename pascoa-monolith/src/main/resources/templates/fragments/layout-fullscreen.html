@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR" th:fragment="layout(pageTitle, content, etapaAtual, totalEtapas)"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <!-- M-10 — viewport-fit=cover libera env(safe-area-inset-*) no iPhone com notch. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <!-- MO-02 — CSRF para forms do wizard de onboarding. -->
+    <meta name="_csrf"        th:if="${_csrf != null}" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:if="${_csrf != null}" th:content="${_csrf.headerName}"/>
+    <title th:replace="${pageTitle}">FoodFlow — Onboarding</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#e91e63">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <!-- F-01/F-02 — Flatpickr + Pickr (date/color pickers universais). -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@simonwep/pickr@1.9.1/dist/themes/nano.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- L-11 — preload + carga paralela do Inter (reduz FOUT/CLS). -->
+    <link rel="preload" as="style"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <link rel="stylesheet" th:href="@{/css/foodflow.css}">
+</head>
+<body>
+
+<div class="ff-onboarding">
+
+    <header class="ff-onboarding__header">
+        <a class="ff-onboarding__brand" th:href="@{/onboarding/etapa1}">
+            <i class="bi bi-egg-fill" style="font-size: 1.5rem;"></i>
+            <span>FoodFlow</span>
+        </a>
+
+        <!-- Stepper -->
+        <ol class="ff-stepper" th:with="etapas=${ {
+                'Empresa', 'Negócio', 'Catálogo', 'Fases',
+                'Identidade', 'Notificações', 'Equipe'
+             } }">
+            <th:block th:each="nome, i : ${etapas}">
+                <li class="ff-stepper__step"
+                    th:classappend="${i.index + 1 == etapaAtual} ? 'ff-stepper__step--current'
+                                  : (${i.index + 1 < etapaAtual} ? 'ff-stepper__step--done' : '')"
+                    th:attr="aria-current=${i.index + 1 == etapaAtual} ? 'step' : null">
+                    <span class="ff-stepper__number">
+                        <i th:if="${i.index + 1 < etapaAtual}" class="bi bi-check-lg"></i>
+                        <span th:unless="${i.index + 1 < etapaAtual}" th:text="${i.index + 1}"></span>
+                    </span>
+                    <span class="ff-stepper__label" th:text="${nome}">Etapa</span>
+                </li>
+                <li class="ff-stepper__connector"
+                    th:if="${i.index + 1 < #lists.size(etapas)}"
+                    th:classappend="${i.index + 1 < etapaAtual} ? 'ff-stepper__connector--done'"></li>
+            </th:block>
+        </ol>
+    </header>
+
+    <main class="ff-onboarding__main" role="main">
+        <div th:if="${sucesso}" class="alert alert-success py-2" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <span th:text="${sucesso}"></span>
+        </div>
+        <div th:if="${erro}" class="alert alert-danger py-2" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <span th:text="${erro}"></span>
+        </div>
+        <div th:replace="${content}">Conteúdo da etapa</div>
+    </main>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<!-- F-01/F-02 — Flatpickr + Pickr (init globais). -->
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/pt.js"></script>
+<script th:src="@{/js/foodflow/flatpickr-init.js}" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@simonwep/pickr@1.9.1/dist/pickr.min.js"></script>
+<script th:src="@{/js/foodflow/pickr-init.js}" defer></script>
+<!-- F-08 — Validação custom (desliga tooltips nativos). -->
+<script th:src="@{/js/foodflow/form-validation.js}" defer></script>
+<!-- F-09 — File upload estilizado. -->
+<script th:src="@{/js/foodflow/file-upload-init.js}" defer></script>
+<!-- F-06 — Proteção global contra duplo submit (forms do wizard de onboarding). -->
+<script th:src="@{/js/foodflow/submit-guard.js}" defer></script>
+</body>
+</html>

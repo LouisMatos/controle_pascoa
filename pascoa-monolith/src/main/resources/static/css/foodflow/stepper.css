@@ -1,0 +1,114 @@
+/* ═══════════════════════════════════════════════════════════════════
+   FoodFlow Design System v7 — Stepper Horizontal
+   Estados: pending | active (atual) | done (concluído)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.ff-stepper {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  margin-bottom: var(--space-8);
+}
+
+.ff-stepper__step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 0 0 auto;
+  min-width: 90px;
+  text-align: center;
+  position: relative;
+}
+
+.ff-stepper__line {
+  flex: 1;
+  height: 2px;
+  background: var(--color-card-border);
+  margin: 22px var(--space-1) 0;
+  transition: background var(--transition-base);
+  min-width: 24px;
+}
+
+.ff-stepper__line--done {
+  background: var(--color-success);
+}
+
+.ff-stepper__circle {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--color-card-border);
+  background: var(--color-card-bg);
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  transition: all var(--transition-base);
+}
+
+.ff-stepper__label {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-2);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+/* Estado ATIVO */
+.ff-stepper__step--active .ff-stepper__circle {
+  border-color: var(--brand-primary);
+  background: var(--brand-primary);
+  color: var(--color-text-inverse);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand-primary) 18%, transparent);
+}
+.ff-stepper__step--active .ff-stepper__label {
+  color: var(--brand-primary);
+  font-weight: 700;
+}
+
+/* Estado DONE */
+.ff-stepper__step--done .ff-stepper__circle {
+  border-color: var(--color-success);
+  background: var(--color-green-50);
+  color: var(--color-success);
+}
+.ff-stepper__step--done .ff-stepper__label {
+  color: var(--color-success);
+}
+
+@media (max-width: 640px) {
+  .ff-stepper { flex-direction: column; align-items: flex-start; gap: var(--space-3); }
+  .ff-stepper__step { flex-direction: row; min-width: 0; gap: var(--space-3); }
+  .ff-stepper__label { margin-top: 0; text-align: left; }
+  .ff-stepper__line { display: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   M-07 — Progress bar via transform:scaleX.
+
+   Animar `width:%` em elementos com `border-radius` causa pixel-gap nas
+   bordas no iOS Safari (reflow por frame redesenha o radius). Usar
+   `transform: scaleX(...)` é puramente GPU (composição), sem reflow —
+   animação suave e sem artefatos. `--progress` é passado pelo template
+   como percentual (0..100) e convertido em fração pela `calc()`.
+   ═══════════════════════════════════════════════════════════════════ */
+.ff-progress-bar {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 10px;
+  background: var(--color-slate-100, #f1f5f9);
+  border-radius: var(--radius-sm);
+}
+.ff-progress-bar__fill {
+  position: absolute;
+  inset: 0;
+  background: var(--brand-primary);
+  transform-origin: left center;
+  transform: scaleX(calc(var(--progress, 0) / 100));
+  transition: transform 600ms cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}

@@ -2,8 +2,25 @@
 
 # =============================================================================
 # Infraestrutura base — Sistema Páscoa v5 (Strangler Fig)
-# Serviços: PostgreSQL x9, RabbitMQ, Redis, Zipkin
+# Serviços: PostgreSQL x2, RabbitMQ, Redis, Zipkin
 # Serviços Spring Cloud (Eureka, Config) rodam via Maven fora do compose
+# =============================================================================
+#
+# ⚠️ POLÍTICA DE RECURSOS (MacBook Air M1 — 8 GB de RAM)
+# -----------------------------------------------------------------------------
+# Ambiente alvo: desenvolvimento local em máquina com pouca RAM.
+# Orçamento total da stack docker: ~1.5 GB (deixar ≥4 GB livres para IDE/JVMs).
+#
+# REGRAS PARA TODO NOVO SERVIÇO ADICIONADO AQUI:
+#   1. SEMPRE definir `mem_limit` e `mem_reservation` (ver exemplos abaixo).
+#   2. SEMPRE definir `cpus` (limitar a 0.5–1.0 para infra; 1.0–1.5 para apps).
+#   3. Tunar a aplicação para o limite (PG: shared_buffers; JVM: -Xmx; etc.).
+#   4. Preferir imagens `-alpine` e `platform: linux/arm64` (M1 nativo).
+#   5. Para JVM Spring Boot: -Xmx256m -XX:MaxRAMPercentage=75 e mem_limit ~384m.
+#   6. Healthchecks com `interval` ≥15s para não desperdiçar CPU.
+#
+# Para subir só o essencial em dev: `docker compose up postgres redis`
+# (RabbitMQ, Zipkin e postgres-platform só quando trabalhar nos microsserviços)
 # =============================================================================
 
 services:
@@ -19,14 +36,63 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: sua_senha
       POSTGRES_DB: pascoa_monolith
+    command: >
+      postgres
+      -c shared_buffers=64MB
+      -c effective_cache_size=192MB
+      -c work_mem=4MB
+      -c maintenance_work_mem=32MB
+      -c max_connections=50
+      -c wal_buffers=2MB
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./infra/postgres/init-databases.sql:/docker-entrypoint-initdb.d/init-databases.sql:ro
+    mem_limit: 384m
+    mem_reservation: 128m
+    cpus: 1.0
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL Platform — v6 FoodFlow
+  # Banco dedicado a dados CROSS-TENANT: registro de tenants, configurações,
+  # feature flags, assinaturas Stripe. Consumido por:
+  #   - tenant-service       (etapa 3)
+  #   - config-engine-service (etapa 5)
+  #   - subscription-service  (etapa 11)
+  # ---------------------------------------------------------------------------
+  postgres-platform:
+    image: postgres:16-alpine
+    platform: linux/arm64
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: sua_senha
+      POSTGRES_DB: foodflow_platform
+    command: >
+      postgres
+      -c shared_buffers=32MB
+      -c effective_cache_size=96MB
+      -c work_mem=2MB
+      -c maintenance_work_mem=16MB
+      -c max_connections=30
+      -c wal_buffers=1MB
+    ports:
+      - "5441:5432"
+    volumes:
+      - postgres_platform_data:/var/lib/postgresql/data
+      - ./infra/postgres-platform/init-platform.sql:/docker-entrypoint-initdb.d/init-platform.sql:ro
+    mem_limit: 256m
+    mem_reservation: 96m
+    cpus: 0.75
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d foodflow_platform"]
+      interval: 15s
       timeout: 10s
       retries: 5
 
@@ -41,6 +107,9 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: pascoa
       RABBITMQ_DEFAULT_PASS: pascoa123
+      # vm_memory_high_watermark agora vive em infra/rabbitmq/rabbitmq.conf
+      # (a env var RABBITMQ_VM_MEMORY_HIGH_WATERMARK foi deprecada no RabbitMQ 3.13)
+      RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: "+S 1:1 +sbwt none +sbwtdcpu none +sbwtdio none"
     ports:
       - "5672:5672"    # AMQP
       - "15672:15672"  # Management UI
@@ -48,9 +117,12 @@ services:
       - rabbitmq_data:/var/lib/rabbitmq
       - ./infra/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
       - ./infra/rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+    mem_limit: 384m
+    mem_reservation: 128m
+    cpus: 0.75
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "ping"]
-      interval: 15s
+      interval: 30s
       timeout: 10s
       retries: 5
 
@@ -61,14 +133,17 @@ services:
     image: redis:7-alpine
     platform: linux/arm64
     restart: unless-stopped
-    command: redis-server --requirepass pascoa123 --maxmemory 256mb --maxmemory-policy allkeys-lru
+    command: redis-server --requirepass pascoa123 --maxmemory 96mb --maxmemory-policy allkeys-lru --save ""
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    mem_limit: 128m
+    mem_reservation: 32m
+    cpus: 0.5
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "pascoa123", "ping"]
-      interval: 10s
+      interval: 15s
       timeout: 5s
       retries: 5
 
@@ -77,21 +152,30 @@ services:
   # UI: http://localhost:9411
   # ---------------------------------------------------------------------------
   zipkin:
-    image: openzipkin/zipkin:3
+    image: openzipkin/zipkin-slim:3
     platform: linux/arm64
     restart: unless-stopped
     environment:
       STORAGE_TYPE: mem
+      # Limita heap da JVM do Zipkin
+      JAVA_OPTS: "-Xms64m -Xmx192m -XX:MaxRAMPercentage=75"
+      # Reduz capacidade de spans em memória (default é 500k)
+      MEM_MAX_SPANS: "50000"
     ports:
       - "9411:9411"
+    mem_limit: 256m
+    mem_reservation: 96m
+    cpus: 0.5
     healthcheck:
       test: ["CMD-SHELL", "wget --spider -q http://localhost:9411/health || exit 1"]
-      interval: 15s
+      interval: 30s
       timeout: 5s
       retries: 3
 
 volumes:
   postgres_data:
+    driver: local
+  postgres_platform_data:
     driver: local
   rabbitmq_data:
     driver: local
@@ -103,5 +187,35 @@ volumes:
 #   8761 — Eureka Server       (pascoa-eureka)
 #   8888 — Config Server       (pascoa-config-server)
 #   8080 — Monólito atual      (pascoa-monolith)
-#   8090 — API Gateway         (pascoa-api-gateway)  — próxima etapa
+#   8090 — API Gateway         (pascoa-api-gateway)
+#
+# v6 FoodFlow — portas planejadas (Etapas 3+):
+#   8091 — config-engine-service
+#   8092 — pricing-engine-service
+#   8093 — subscription-service
+#   8094 — tenant-service
+#   5441 — postgres-platform   (DB foodflow_platform)
+#
+# -----------------------------------------------------------------------------
+# MS-05 — Quando os microsserviços forem containerizados, garantir o pattern:
+#   depends_on:
+#     pascoa-config-server:
+#       condition: service_healthy
+#     pascoa-eureka:
+#       condition: service_healthy
+# E definir healthcheck no config-server/eureka usando GET /actuator/health.
+# A config `spring.cloud.config.retry.*` no application.yml dos clientes
+# (template no tenant-service) cobre o caso onde depends_on não pode
+# garantir prontidão (Maven local, falha temporária de rede, etc.).
+# -----------------------------------------------------------------------------
+# Orçamento de RAM da stack docker (teto, com tudo no ar):
+#   postgres            384 MB
+#   postgres-platform   256 MB
+#   rabbitmq            384 MB
+#   redis               128 MB
+#   zipkin              256 MB
+#   --------------------------
+#   TOTAL              ~1.4 GB
+#
+# Dica: em dev rotineiro, suba apenas `postgres` + `redis` (≈512 MB).
 # =============================================================================

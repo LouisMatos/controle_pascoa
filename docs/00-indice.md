@@ -23,6 +23,9 @@
 | 08 | [08-manutencao-docs.md](08-manutencao-docs.md) | Protocolo de fim de sessão — quais docs atualizar após cada mudança | **Executar ao final de toda sessão com código alterado** |
 | 09 | [09-quickstart.md](09-quickstart.md) | Subir todo o ambiente (infra + microsserviços + monólito) com `./start-all.sh` | Onboarding, primeira execução, demo |
 | 10 | [10-bugfix-login-loop-gateway.md](10-bugfix-login-loop-gateway.md) | Bugfix B11 — loop de login após migração v5; configuração de `forward-headers-strategy` no monólito atrás do gateway | Referência ao corrigir/diagnosticar problemas de redirect via gateway |
+| 11 | [11-migracao-tenant-pascoa-original.md](11-migracao-tenant-pascoa-original.md) | Etapa 16 v6 — bootstrap "Tenant Zero" representando a operação atual como tenant ENTERPRISE | Referência da estratégia multi-tenant sem migração de dados |
+| 12 | [12-deploy-canary-trial.md](12-deploy-canary-trial.md) | Etapa 18 v6 — playbook de rollout dos 5 tenants canary + métricas + rollback | Antes de executar canary; auditoria pós-rollout |
+| 13 | [13-acessibilidade-v7.md](13-acessibilidade-v7.md) | FASE 10 v7 — checklist WCAG 2.1 AA aplicado no Design System + guia de validação manual (axe, NVDA, Lighthouse, E2E) | Antes de auditar PR de UI; após adicionar componente novo |
 
 ---
 

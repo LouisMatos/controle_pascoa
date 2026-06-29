@@ -64,6 +64,17 @@ public class GlobalModelAdvice {
         return LocalDate.now().getYear();
     }
 
+    /**
+     * URI atual da requisição. Substitui o objeto de expressão {@code #httpServletRequest}
+     * do Thymeleaf, removido na versão 3.1 (bundle do Spring Boot 3.x). O fragmento
+     * {@code fragments/breadcrumb} consome este atributo para montar a trilha.
+     */
+    @ModelAttribute("currentUri")
+    public String currentUri(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        return uri != null ? uri : "/";
+    }
+
     @ModelAttribute("activePage")
     public String activePage(HttpServletRequest request) {
         String path = request.getRequestURI();

@@ -8,6 +8,10 @@ spring:
     url: jdbc:postgresql://localhost:5432/pascoa_inventory
     username: postgres
     password: sua_senha
+    hikari:
+      maximum-pool-size: 5
+      minimum-idle: 1
+      idle-timeout: 30000
   jpa:
     hibernate:
       ddl-auto: validate
