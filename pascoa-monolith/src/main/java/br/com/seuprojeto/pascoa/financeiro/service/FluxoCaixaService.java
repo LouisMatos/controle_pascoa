@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
 
@@ -30,26 +31,17 @@ public class FluxoCaixaService {
 
     @Transactional(readOnly = true)
     public FluxoCaixaDto calcular(LocalDate inicio, LocalDate fim) {
-        // ENTRADA — recebido real: pagamentos no período
-        BigDecimal recebidoReal = pagamentoRepository.findAll().stream()
-            .filter(p -> !p.getDataPagamento().isBefore(inicio) && !p.getDataPagamento().isAfter(fim))
-            .map(p -> p.getValor())
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        // ENTRADA — recebido real: pagamentos no período (agregação no DB, ver V15)
+        BigDecimal recebidoReal = pagamentoRepository.sumValorByPeriodo(inicio, fim);
 
         // ENTRADA — previsto: contas a receber com vencimento no período
         BigDecimal previstoEntrada = contaReceberRepository.sumPrevistoEntrada(inicio, fim);
 
-        // SAÍDA — MP comprada: entradas de estoque com custo no período
-        BigDecimal saidaMP = movimentacaoRepository.findByTipoOrderByDataDesc(TipoMovimentacao.ENTRADA).stream()
-            .filter(m -> {
-                var d = m.getData().toLocalDate();
-                return !d.isBefore(inicio) && !d.isAfter(fim);
-            })
-            .map(m -> {
-                BigDecimal custo = m.getCustoUnitario() != null ? m.getCustoUnitario() : BigDecimal.ZERO;
-                return m.getQuantidade().multiply(custo);
-            })
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        // SAÍDA — MP comprada: entradas de estoque com custo no período (agregação no DB, ver V15)
+        LocalDateTime inicioDt      = inicio.atStartOfDay();
+        LocalDateTime fimExclusivo  = fim.plusDays(1).atStartOfDay();
+        BigDecimal saidaMP = movimentacaoRepository.sumCustoByTipoEPeriodo(
+                TipoMovimentacao.ENTRADA, inicioDt, fimExclusivo);
 
         // SAÍDA — despesas fixas proporcionais ao período (normalizado para meses)
         long diasPeriodo = ChronoUnit.DAYS.between(inicio, fim.plusDays(1));

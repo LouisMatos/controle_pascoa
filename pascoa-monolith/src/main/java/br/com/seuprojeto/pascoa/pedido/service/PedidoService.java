@@ -25,7 +25,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -107,6 +111,18 @@ public class PedidoService {
             .build();
         pedido = pedidoRepository.save(pedido);
 
+        // Batch fetch dos produtos (evita N+1) e inserts em batch.
+        List<Long> idsValidos = produtoIds.stream()
+            .filter(Objects::nonNull)
+            .distinct()
+            .toList();
+        Map<Long, Produto> produtosPorId = produtoRepository.findAllById(idsValidos).stream()
+            .collect(Collectors.toMap(Produto::getId, p -> p));
+        if (produtosPorId.size() != idsValidos.size()) {
+            throw new RecursoNaoEncontradoException("Um ou mais produtos não foram encontrados.");
+        }
+
+        List<ItemPedido> itens = new ArrayList<>(produtoIds.size());
         BigDecimal total = BigDecimal.ZERO;
         for (int i = 0; i < produtoIds.size(); i++) {
             Long produtoId = produtoIds.get(i);
@@ -114,18 +130,16 @@ public class PedidoService {
                     ? quantidades.get(i) : 1;
             if (produtoId == null || qtd == null || qtd <= 0) continue;
 
-            Produto produto = produtoRepository.findById(produtoId)
-                .orElseThrow(() -> new RecursoNaoEncontradoException("Produto não encontrado: " + produtoId));
-
-            ItemPedido item = ItemPedido.builder()
+            Produto produto = produtosPorId.get(produtoId);
+            itens.add(ItemPedido.builder()
                 .pedido(pedido)
                 .produto(produto)
                 .quantidade(qtd)
                 .precoUnitario(produto.getPrecoVenda())
-                .build();
-            itemRepository.save(item);
+                .build());
             total = total.add(produto.getPrecoVenda().multiply(BigDecimal.valueOf(qtd)));
         }
+        itemRepository.saveAll(itens);
 
         pedido.setTotalPedido(total);
         return pedidoRepository.save(pedido);
@@ -266,12 +280,23 @@ public class PedidoService {
     }
 
     private void snapshotCustos(Pedido pedido) {
+        if (pedido.getItens().isEmpty()) return;
+
+        // 1 query traz todas as fichas + itens + matérias-primas dos produtos do pedido.
+        List<Long> produtoIds = pedido.getItens().stream()
+            .map(i -> i.getProduto().getId())
+            .distinct()
+            .toList();
+        Map<Long, FichaTecnica> fichasPorProduto = fichaTecnicaService
+            .buscarPorProdutoIds(produtoIds).stream()
+            .collect(Collectors.toMap(f -> f.getProduto().getId(), f -> f));
+
         for (ItemPedido item : pedido.getItens()) {
-            FichaTecnica ficha = fichaTecnicaService.buscarPorProduto(item.getProduto().getId());
-            BigDecimal custo = fichaTecnicaService.calcularCustoPorUnidade(ficha);
-            item.setCustoUnitario(custo);
-            itemRepository.save(item);
+            FichaTecnica ficha = fichasPorProduto.get(item.getProduto().getId());
+            item.setCustoUnitario(fichaTecnicaService.calcularCustoPorUnidade(ficha));
         }
+        // Flush em batch (com hibernate.jdbc.batch_size configurado em application.properties).
+        itemRepository.saveAll(pedido.getItens());
     }
 
     // -----------------------------------------------------------------------

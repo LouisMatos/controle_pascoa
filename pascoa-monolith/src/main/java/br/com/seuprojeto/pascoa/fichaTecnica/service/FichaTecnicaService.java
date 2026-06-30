@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -32,6 +33,13 @@ public class FichaTecnicaService {
     public FichaTecnica buscarPorProduto(Long produtoId) {
         return fichaRepository.findByProdutoIdComItens(produtoId)
             .orElse(null);
+    }
+
+    /** Batch fetch para evitar N+1 ao processar vários produtos de uma vez (ex.: snapshot de custos do pedido). */
+    @Transactional(readOnly = true)
+    public List<FichaTecnica> buscarPorProdutoIds(List<Long> produtoIds) {
+        if (produtoIds == null || produtoIds.isEmpty()) return List.of();
+        return fichaRepository.findByProdutoIdsComItens(produtoIds);
     }
 
     @Transactional

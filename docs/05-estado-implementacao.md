@@ -1,6 +1,6 @@
 # Estado de Implementação — Sistema Controle Páscoa
 
-> **Verificado em:** 2026-05-29 — atualizado migração v5 (microsserviços, arquitetura hexagonal, Docker Compose)  
+> **Verificado em:** 2026-06-30 — varredura de performance + V15 (índices fluxo de caixa)  
 > **Critério:** ✅ Implementado e testado | ⚠️ Parcialmente implementado | ❌ Não iniciado | 🐛 Bug conhecido
 
 ---
@@ -267,6 +267,10 @@ PAGAMENTO_RECEBIDO, PEDIDO_CANCELADO, ORCAMENTO_APROVADO, ORCAMENTO_RECUSADO
 | `V11__password_reset_token.sql` | ✅ | Item 22: reset de senha + email em usuários |
 | `V12__bugs_medios_item23.sql` | ✅ | Item 23: `evento` em notificacoes_enviadas, `desconsiderar_no_custo` + `pedido_id` em gastos_variaveis |
 | `V13__cliente_segmento_campo.sql` | ✅ | Item 23 F8: campo `segmento` em clientes |
+| `V14__novas_notificacoes_item25.sql` | ✅ | Item 25: `cliente_id` + `orcamento_id` em notificacoes_enviadas, índices de idempotência |
+| `V15__indices_performance_fluxo_caixa.sql` | ✅ | Performance: `idx_pagamento_data_pagamento` + `idx_movimentacao_estoque_tipo_data` para agregações no DB |
+
+> **Próxima versão de migration disponível:** V16.
 
 ---
 
@@ -471,7 +475,30 @@ controle_pascoa/
 
 ---
 
-## 22. Próximas Sessões — Prioridade Sugerida
+## 22. Otimizações de Performance (2026-06-30) ✅
+
+Varredura geral de hotspots no monólito (via `/java-performance-analysis`). 5 problemas corrigidos:
+
+| # | Tipo | Local | Antes | Depois |
+|---|------|-------|-------|--------|
+| 1 | JPA | `FluxoCaixaService.calcular()` (recebido real) | `pagamentoRepository.findAll().stream().filter(período)` | `pagamentoRepository.sumValorByPeriodo(inicio, fim)` — `SUM()` no DB |
+| 2 | JPA | `FluxoCaixaService.calcular()` (saída MP) | `findByTipoOrderByDataDesc(ENTRADA).stream().filter(período)` | `sumCustoByTipoEPeriodo(tipo, inicioDt, fimExclusivo)` — `SUM()` no DB com range sargable |
+| 3 | N+1 | `PedidoService.snapshotCustos()` | `buscarPorProduto()` + `save()` por item (2N round-trips) | `FichaTecnicaRepository.findByProdutoIdsComItens(produtoIds)` + `saveAll()` em batch |
+| 4 | N+1 | `PedidoService.criarComItens()` | `produtoRepository.findById()` + `itemRepository.save()` por item | `findAllById()` + `saveAll()` em batch |
+| 5 | JPA | `OrcamentoController` (4 ocorrências) | `clienteRepo.findAll()` (entidade completa) | `clienteRepo.findAllComboBox()` projetando `ClienteComboDto(id, nome)` já ordenado |
+
+**Mudanças de suporte:**
+- `V15__indices_performance_fluxo_caixa.sql`: `idx_pagamento_data_pagamento` + `idx_movimentacao_estoque_tipo_data` (composto).
+- `application.properties`: `hibernate.jdbc.batch_size=30` + `order_inserts=true` + `order_updates=true` + `batch_versioned_data=true`.
+- Novo DTO `cadastro/dto/ClienteComboDto` (record `id`, `nome`).
+
+**Validação:**
+- `mvn -pl pascoa-monolith clean compile` → `BUILD SUCCESS` (200 arquivos).
+- Para validar ganho real: ativar `hibernate.generate_statistics=true` em dev e medir `/financeiro/fluxo-caixa` antes/depois.
+
+---
+
+## 23. Próximas Sessões — Prioridade Sugerida
 
 1. **Simulador de cenários financeiros** — "e se aumentar o preço X%? vender Y unidades a mais?" (monólito)
 2. **`estoque/saida.html`** — template de saída manual de matéria-prima ausente (monólito)

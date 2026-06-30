@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 @Repository
@@ -19,4 +20,12 @@ public interface PagamentoRepository extends JpaRepository<Pagamento, Long> {
 
     @Query("SELECT COALESCE(SUM(p.valor), 0) FROM Pagamento p")
     BigDecimal sumTotal();
+
+    @Query("""
+        SELECT COALESCE(SUM(p.valor), 0)
+        FROM Pagamento p
+        WHERE p.dataPagamento BETWEEN :inicio AND :fim
+    """)
+    BigDecimal sumValorByPeriodo(@Param("inicio") LocalDate inicio,
+                                 @Param("fim") LocalDate fim);
 }

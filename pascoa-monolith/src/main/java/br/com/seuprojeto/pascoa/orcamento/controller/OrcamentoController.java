@@ -57,7 +57,7 @@ public class OrcamentoController {
     @GetMapping("/novo")
     public String novoForm(Model model) {
         model.addAttribute("form", new OrcamentoForm());
-        model.addAttribute("clientes", clienteRepo.findAll());
+        model.addAttribute("clientes", clienteRepo.findAllComboBox());
         model.addAttribute("produtos", produtoRepo.findByAtivoTrueOrderByNomeAsc());
         return "orcamentos/form";
     }
@@ -74,7 +74,7 @@ public class OrcamentoController {
             if (form.getItens().isEmpty()) {
                 model.addAttribute("erroItens", "Adicione pelo menos um item ao orçamento.");
             }
-            model.addAttribute("clientes", clienteRepo.findAll());
+            model.addAttribute("clientes", clienteRepo.findAllComboBox());
             model.addAttribute("produtos", produtoRepo.findByAtivoTrueOrderByNomeAsc());
             return "orcamentos/form";
         }
@@ -99,7 +99,7 @@ public class OrcamentoController {
 
         model.addAttribute("form", form);
         model.addAttribute("orcId", id);
-        model.addAttribute("clientes", clienteRepo.findAll());
+        model.addAttribute("clientes", clienteRepo.findAllComboBox());
         model.addAttribute("produtos", produtoRepo.findByAtivoTrueOrderByNomeAsc());
         model.addAttribute("itensExistentes", orc.getItens());
         return "orcamentos/form";
@@ -118,7 +118,7 @@ public class OrcamentoController {
                 model.addAttribute("erroItens", "Adicione pelo menos um item ao orçamento.");
             }
             model.addAttribute("orcId", id);
-            model.addAttribute("clientes", clienteRepo.findAll());
+            model.addAttribute("clientes", clienteRepo.findAllComboBox());
             model.addAttribute("produtos", produtoRepo.findByAtivoTrueOrderByNomeAsc());
             return "orcamentos/form";
         }

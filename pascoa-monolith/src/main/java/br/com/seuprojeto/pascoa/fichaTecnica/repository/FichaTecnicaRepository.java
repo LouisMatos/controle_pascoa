@@ -25,4 +25,10 @@ public interface FichaTecnicaRepository extends JpaRepository<FichaTecnica, Long
            "LEFT JOIN FETCH i.materiaPrima " +
            "LEFT JOIN FETCH f.produto")
     List<FichaTecnica> findAllComItens();
+
+    @Query("SELECT DISTINCT f FROM FichaTecnica f " +
+           "LEFT JOIN FETCH f.itens i " +
+           "LEFT JOIN FETCH i.materiaPrima " +
+           "WHERE f.produto.id IN :produtoIds")
+    List<FichaTecnica> findByProdutoIdsComItens(@Param("produtoIds") List<Long> produtoIds);
 }

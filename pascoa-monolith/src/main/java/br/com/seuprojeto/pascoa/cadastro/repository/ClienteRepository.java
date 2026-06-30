@@ -1,5 +1,6 @@
 package br.com.seuprojeto.pascoa.cadastro.repository;
 
+import br.com.seuprojeto.pascoa.cadastro.dto.ClienteComboDto;
 import br.com.seuprojeto.pascoa.cadastro.entity.Cliente;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -12,6 +13,11 @@ import java.util.List;
 public interface ClienteRepository extends JpaRepository<Cliente, Long> {
 
     List<Cliente> findAllByOrderByNomeAsc();
+
+    /** Projeção leve para combos/selects (id + nome), já ordenada — evita carregar a entidade inteira. */
+    @Query("SELECT new br.com.seuprojeto.pascoa.cadastro.dto.ClienteComboDto(c.id, c.nome) " +
+           "FROM Cliente c ORDER BY c.nome ASC")
+    List<ClienteComboDto> findAllComboBox();
 
     List<Cliente> findByNomeContainingIgnoreCaseOrderByNomeAsc(String nome);
 

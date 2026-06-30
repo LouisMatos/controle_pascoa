@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -24,4 +26,15 @@ public interface MovimentacaoEstoqueRepository extends JpaRepository<Movimentaca
            "ORDER BY m.data DESC")
     List<MovimentacaoEstoque> filtrar(@Param("mpId") Long mpId,
                                       @Param("tipo") TipoMovimentacao tipo);
+
+    @Query("""
+        SELECT COALESCE(SUM(m.quantidade * COALESCE(m.custoUnitario, 0)), 0)
+        FROM MovimentacaoEstoque m
+        WHERE m.tipo = :tipo
+          AND m.data >= :inicio
+          AND m.data <  :fimExclusivo
+    """)
+    BigDecimal sumCustoByTipoEPeriodo(@Param("tipo") TipoMovimentacao tipo,
+                                      @Param("inicio") LocalDateTime inicio,
+                                      @Param("fimExclusivo") LocalDateTime fimExclusivo);
 }

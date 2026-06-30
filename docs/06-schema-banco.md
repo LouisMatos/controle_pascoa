@@ -569,6 +569,8 @@ configuracao_sistema — tabela singleton (id = 1 fixo)
 | `uq_notif_pedido_evento_canal` | `notificacoes_enviadas` | `(pedido_id, evento, canal)` WHERE `ENVIADA` | Idempotência por pedido |
 | `uq_notif_orcamento_expirando` | `notificacoes_enviadas` | `(orcamento_id, evento, canal)` WHERE `ORCAMENTO_EXPIRANDO + ENVIADA` | Idempotência orçamento expirando |
 | `idx_notif_aniversario` | `notificacoes_enviadas` | `(cliente_id, evento, data_envio)` WHERE `ANIVERSARIO_CLIENTE` | Busca de aniversários enviados |
+| `idx_pagamento_data_pagamento` (V15) | `pagamentos` | `(data_pagamento)` | Agregação por período em `FluxoCaixaService.calcular()` (substitui `findAll()` em memória) |
+| `idx_movimentacao_estoque_tipo_data` (V15) | `movimentacoes_estoque` | `(tipo, data)` | Composto: filtro `ENTRADA` + range de data no fluxo de caixa |
 
 ---
 
@@ -593,15 +595,17 @@ configuracao_sistema — tabela singleton (id = 1 fixo)
 | **Total** | **29 tabelas** |
 
 > **Nota V14:** `notificacoes_enviadas` ganhou `pedido_id` nullable + `cliente_id` + `orcamento_id` para suportar notificações proativas sem pedido (aniversário, orçamento expirando).
+>
+> **Nota V15 (performance):** Apenas índices — `idx_pagamento_data_pagamento` e `idx_movimentacao_estoque_tipo_data` — sem alteração de schema. Suportam as agregações `sumValorByPeriodo` (PagamentoRepository) e `sumCustoByTipoEPeriodo` (MovimentacaoEstoqueRepository) usadas em `FluxoCaixaService` após substituir `findAll()` + filtro em memória por `SUM()` no DB.
 
 ---
 
 ## 16. Guia para Novas Migrations
 
-Próxima versão disponível: **V15**
+Próxima versão disponível: **V16**
 
 ```sql
--- Arquivo: src/main/resources/db/migration/V15__descricao.sql
+-- Arquivo: src/main/resources/db/migration/V16__descricao.sql
 
 -- Adicionar coluna nullable (seguro, sem DEFAULT obrigatório)
 ALTER TABLE nome_tabela ADD COLUMN nova_coluna VARCHAR(100);
