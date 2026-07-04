@@ -1,0 +1,239 @@
+name: Release — Versionamento & Publicação
+
+on:
+  # Dispara automaticamente após CI passar na branch main
+  workflow_run:
+    workflows: ["CI — Validação Contínua"]
+    branches: [main]
+    types: [completed]
+
+  # Permite acionar manualmente com tipo de versão escolhida
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Tipo de incremento de versão'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch   # 1.0.0 → 1.0.1  (bug fix, pequenas melhorias)
+          - minor   # 1.0.0 → 1.1.0  (nova funcionalidade)
+          - major   # 1.0.0 → 2.0.0  (breaking change)
+
+env:
+  JAVA_VERSION: '21'
+  MAVEN_OPTS: '-Xmx1g -XX:+UseG1GC -Dfile.encoding=UTF-8'
+  GIT_USER_EMAIL: 'github-actions[bot]@users.noreply.github.com'
+  GIT_USER_NAME: 'github-actions[bot]'
+
+jobs:
+
+  # ─── Guarda se o CI disparador teve sucesso ────────────────────────────────
+  check-ci:
+    name: "Verificar status do CI"
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    outputs:
+      proceed: ${{ steps.check.outputs.proceed }}
+    steps:
+      - id: check
+        run: echo "proceed=true" >> $GITHUB_OUTPUT
+
+  # ─── Job 1: Calcular próxima versão ────────────────────────────────────────
+  version:
+    name: "Calcular & Aplicar Versão"
+    runs-on: ubuntu-latest
+    needs: [check-ci]
+    outputs:
+      new_version: ${{ steps.semver.outputs.new_version }}
+      tag_name: ${{ steps.semver.outputs.tag_name }}
+
+    steps:
+      - name: Checkout código (histórico completo para tags)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Calcular próxima versão semântica
+        id: semver
+        run: |
+          # Pegar a última tag semântica (ex: v1.2.3)
+          LATEST_TAG=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-version:refname | head -n 1)
+          LATEST_TAG=${LATEST_TAG:-v0.0.0}
+          echo "Última tag encontrada: $LATEST_TAG"
+
+          # Remover o prefixo 'v'
+          VERSION=${LATEST_TAG#v}
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$VERSION"
+
+          # Determinar tipo de incremento
+          VERSION_TYPE="${{ github.event.inputs.version_type }}"
+          VERSION_TYPE=${VERSION_TYPE:-patch}
+
+          case "$VERSION_TYPE" in
+            major)
+              NEW_MAJOR=$((MAJOR + 1))
+              NEW_VERSION="${NEW_MAJOR}.0.0"
+              ;;
+            minor)
+              NEW_MINOR=$((MINOR + 1))
+              NEW_VERSION="${MAJOR}.${NEW_MINOR}.0"
+              ;;
+            patch|*)
+              NEW_PATCH=$((PATCH + 1))
+              NEW_VERSION="${MAJOR}.${MINOR}.${NEW_PATCH}"
+              ;;
+          esac
+
+          TAG_NAME="v${NEW_VERSION}"
+          echo "Nova versão: $NEW_VERSION (tag: $TAG_NAME)"
+
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "tag_name=$TAG_NAME"       >> $GITHUB_OUTPUT
+
+      - name: Setup Java ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Atualizar versão em todos os pom.xml
+        run: |
+          mvn versions:set \
+            -DnewVersion=${{ steps.semver.outputs.new_version }} \
+            -DprocessAllModules=true \
+            -DgenerateBackupPoms=false \
+            --no-transfer-progress
+
+      - name: Configurar Git
+        run: |
+          git config user.email "${{ env.GIT_USER_EMAIL }}"
+          git config user.name "${{ env.GIT_USER_NAME }}"
+
+      - name: Commit dos pom.xml com nova versão
+        run: |
+          git add '**/pom.xml' 'pom.xml'
+          git commit -m "chore(release): bump version to ${{ steps.semver.outputs.new_version }} [skip ci]"
+
+      - name: Criar tag Git
+        run: |
+          git tag -a ${{ steps.semver.outputs.tag_name }} \
+            -m "Release ${{ steps.semver.outputs.tag_name }}"
+
+      - name: Push commit e tag
+        run: git push origin HEAD:main --follow-tags
+
+  # ─── Job 2: Build com nova versão ──────────────────────────────────────────
+  package:
+    name: "Build Release — ${{ needs.version.outputs.tag_name }}"
+    runs-on: ubuntu-latest
+    needs: [version]
+
+    steps:
+      - name: Checkout com a tag criada
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.version.outputs.tag_name }}
+
+      - name: Setup Java ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Build completo de todos os módulos
+        run: mvn package -DskipTests --no-transfer-progress
+
+      - name: Coletar JARs executáveis (fat JARs Spring Boot)
+        run: |
+          mkdir -p release-artifacts
+          # Copiar apenas os fat JARs (Spring Boot repackage) de cada serviço
+          find . -path '*/target/*.jar' \
+            ! -name '*sources*' \
+            ! -name '*javadoc*' \
+            ! -name 'original-*' \
+            ! -path '*/dependency/*' \
+            -exec cp {} release-artifacts/ \;
+          echo "Artefatos a publicar:"
+          ls -lh release-artifacts/
+
+      - name: Upload artefatos de release
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-jars-${{ needs.version.outputs.new_version }}
+          path: release-artifacts/
+          retention-days: 30
+
+  # ─── Job 3: Publicar GitHub Release ────────────────────────────────────────
+  release:
+    name: "GitHub Release — ${{ needs.version.outputs.tag_name }}"
+    runs-on: ubuntu-latest
+    needs: [version, package]
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout para gerar changelog
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download JARs de release
+        uses: actions/download-artifact@v4
+        with:
+          name: release-jars-${{ needs.version.outputs.new_version }}
+          path: release-artifacts/
+
+      - name: Gerar changelog desde última tag
+        id: changelog
+        run: |
+          PREV_TAG=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-version:refname | sed -n '2p')
+          if [ -n "$PREV_TAG" ]; then
+            RANGE="${PREV_TAG}..HEAD"
+          else
+            RANGE="HEAD"
+          fi
+
+          echo "## O que mudou" > changelog.md
+          echo "" >> changelog.md
+
+          # Features
+          FEATS=$(git log $RANGE --oneline --grep="^feat" | head -20)
+          if [ -n "$FEATS" ]; then
+            echo "### Novas Funcionalidades" >> changelog.md
+            git log $RANGE --oneline --grep="^feat" | head -20 | sed 's/^/- /' >> changelog.md
+            echo "" >> changelog.md
+          fi
+
+          # Bug fixes
+          FIXES=$(git log $RANGE --oneline --grep="^fix" | head -20)
+          if [ -n "$FIXES" ]; then
+            echo "### Correções" >> changelog.md
+            git log $RANGE --oneline --grep="^fix" | head -20 | sed 's/^/- /' >> changelog.md
+            echo "" >> changelog.md
+          fi
+
+          # Outros
+          OTHERS=$(git log $RANGE --oneline --grep -v "^\(feat\|fix\|chore(release)\)" | head -10)
+          if [ -n "$OTHERS" ]; then
+            echo "### Outros" >> changelog.md
+            git log $RANGE --oneline | grep -v "^.*chore(release)" | head -10 | sed 's/^/- /' >> changelog.md
+          fi
+
+          echo "changelog_file=changelog.md" >> $GITHUB_OUTPUT
+
+      - name: Publicar GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.version.outputs.tag_name }}
+          name: "Release ${{ needs.version.outputs.tag_name }}"
+          body_path: changelog.md
+          files: release-artifacts/*.jar
+          draft: false
+          prerelease: false
+          make_latest: true

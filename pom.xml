@@ -21,6 +21,12 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- Versões de plugins de qualidade (CI/CD) -->
+        <jacoco.version>0.8.12</jacoco.version>
+        <checkstyle-plugin.version>3.5.0</checkstyle-plugin.version>
+        <checkstyle-tool.version>10.18.2</checkstyle-tool.version>
+        <spotbugs-plugin.version>4.8.6.4</spotbugs-plugin.version>
+        <sonar-plugin.version>4.0.0.4121</sonar-plugin.version>
     </properties>
 
     <modules>
@@ -86,8 +92,113 @@
                     <artifactId>spring-boot-maven-plugin</artifactId>
                     <version>${spring-boot.version}</version>
                 </plugin>
+                <!-- JaCoCo — cobertura de testes (ativado em todos os módulos via <plugins>) -->
+                <plugin>
+                    <groupId>org.jacoco</groupId>
+                    <artifactId>jacoco-maven-plugin</artifactId>
+                    <version>${jacoco.version}</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>prepare-agent</goal>
+                            </goals>
+                        </execution>
+                        <execution>
+                            <id>jacoco-report</id>
+                            <phase>test</phase>
+                            <goals>
+                                <goal>report</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <!-- SonarCloud -->
+                <plugin>
+                    <groupId>org.sonarsource.scanner.maven</groupId>
+                    <artifactId>sonar-maven-plugin</artifactId>
+                    <version>${sonar-plugin.version}</version>
+                </plugin>
+                <!-- Checkstyle — gerenciado aqui, ativado pelo perfil ci -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-checkstyle-plugin</artifactId>
+                    <version>${checkstyle-plugin.version}</version>
+                    <dependencies>
+                        <dependency>
+                            <groupId>com.puppycrawl.tools</groupId>
+                            <artifactId>checkstyle</artifactId>
+                            <version>${checkstyle-tool.version}</version>
+                        </dependency>
+                    </dependencies>
+                    <configuration>
+                        <configLocation>.github/checkstyle.xml</configLocation>
+                        <consoleOutput>true</consoleOutput>
+                        <includeTestSourceDirectory>false</includeTestSourceDirectory>
+                        <!-- warning = reporta sem bloquear; mudar para error após limpar violações -->
+                        <violationSeverity>warning</violationSeverity>
+                        <failsOnError>false</failsOnError>
+                    </configuration>
+                </plugin>
+                <!-- SpotBugs — gerenciado aqui, ativado pelo perfil ci -->
+                <plugin>
+                    <groupId>com.github.spotbugs</groupId>
+                    <artifactId>spotbugs-maven-plugin</artifactId>
+                    <version>${spotbugs-plugin.version}</version>
+                    <configuration>
+                        <effort>Max</effort>
+                        <threshold>High</threshold>
+                        <failOnError>false</failOnError>
+                        <excludeFilterFile>.github/spotbugs-exclude.xml</excludeFilterFile>
+                        <xmlOutput>true</xmlOutput>
+                    </configuration>
+                </plugin>
             </plugins>
         </pluginManagement>
+
+        <!-- JaCoCo ativo em todos os módulos por padrão -->
+        <plugins>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
     </build>
+
+    <!-- ─── Perfil CI — ativa Checkstyle e SpotBugs no verify ───────────────── -->
+    <profiles>
+        <profile>
+            <id>ci</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-checkstyle-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>checkstyle-ci</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>com.github.spotbugs</groupId>
+                        <artifactId>spotbugs-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>spotbugs-ci</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>check</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 
 </project>

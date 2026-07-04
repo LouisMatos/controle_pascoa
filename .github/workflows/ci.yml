@@ -1,0 +1,254 @@
+name: CI — Validação Contínua
+
+on:
+  push:
+    branches: ['**']
+    tags-ignore: ['v*']
+  pull_request:
+    branches: [main, micro]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JAVA_VERSION: '21'
+  MAVEN_OPTS: '-Xmx1g -XX:+UseG1GC -Dfile.encoding=UTF-8'
+
+# =============================================================================
+# Fluxo de Jobs (sequencial onde há dependência):
+#
+#   lint
+#    ├─ unit-tests
+#    │    ├─ sonar  (aguarda cobertura dos testes)
+#    │    └─ build  (aguarda testes + segurança)
+#    └─ security
+#          └─ build
+# =============================================================================
+
+jobs:
+
+  # ─── Job 1: Lint & Análise Estática ────────────────────────────────────────
+  lint:
+    name: "Lint & Análise Estática"
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Setup Java ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Checkstyle — verificar estilo de código
+        run: |
+          mvn checkstyle:check -Pci --no-transfer-progress \
+            -Dcheckstyle.failsOnError=false \
+            -Dcheckstyle.logViolationsToConsole=true
+
+      - name: SpotBugs — análise estática de bugs
+        run: |
+          mvn spotbugs:check -Pci --no-transfer-progress \
+            -DfailOnError=false
+
+      - name: Upload relatório SpotBugs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: spotbugs-reports
+          path: '**/target/spotbugsXml.xml'
+          retention-days: 7
+          if-no-files-found: ignore
+
+  # ─── Job 2: Testes Unitários ───────────────────────────────────────────────
+  unit-tests:
+    name: "Testes Unitários"
+    runs-on: ubuntu-latest
+    needs: [lint]
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Setup Java ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Executar testes unitários (exclui IT e IntegrationTest)
+        run: |
+          mvn test --no-transfer-progress \
+            -Dsurefire.excludes="**/*IT.java,**/*IntegrationTest.java,**/*IT.class,**/*IntegrationTest.class"
+
+      - name: Publicar resultado dos testes no GitHub
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: Testes Unitários JUnit
+          path: '**/target/surefire-reports/*.xml'
+          reporter: java-junit
+          fail-on-error: false
+
+      - name: Upload relatório Surefire
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: '**/target/surefire-reports/'
+          retention-days: 7
+
+      - name: Upload cobertura JaCoCo (XML para SonarCloud)
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-reports
+          path: '**/target/site/jacoco/jacoco.xml'
+          retention-days: 7
+          if-no-files-found: ignore
+
+  # ─── Job 3: Análise de Segurança (paralelo com unit-tests) ────────────────
+  security:
+    name: "Análise de Segurança"
+    runs-on: ubuntu-latest
+    needs: [lint]
+    permissions:
+      security-events: write
+      contents: read
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Setup Java ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      # ── OWASP Dependency Check ─────────────────────────────────────────────
+      - name: Cache base de dados NVD (OWASP)
+        uses: actions/cache@v4
+        with:
+          path: ~/.owasp/dependency-check
+          key: owasp-nvd-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            owasp-nvd-
+
+      - name: OWASP Dependency Check — vulnerabilidades em dependências
+        run: |
+          mvn org.owasp:dependency-check-maven:10.0.4:aggregate \
+            --no-transfer-progress \
+            -DsuppressionsFile=.github/owasp-suppressions.xml \
+            -DfailBuildOnCVSS=9 \
+            -DautoUpdate=true \
+            -Dformat=HTML \
+            -DdataDirectory=$HOME/.owasp/dependency-check \
+            -DskipTestScope=true || true
+
+      - name: Upload relatório OWASP
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: owasp-dependency-report
+          path: 'target/dependency-check-report.html'
+          retention-days: 14
+          if-no-files-found: ignore
+
+      # ── Trivy — varredura de vulnerabilidades no filesystem ────────────────
+      - name: Trivy — varredura de segurança no código e dependências
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: 'CRITICAL,HIGH'
+          format: sarif
+          output: trivy-results.sarif
+          ignore-unfixed: true
+
+      - name: Upload resultados Trivy → GitHub Security Tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-results.sarif
+
+  # ─── Job 4: SonarCloud ─────────────────────────────────────────────────────
+  sonar:
+    name: "SonarCloud — Qualidade de Código"
+    runs-on: ubuntu-latest
+    needs: [unit-tests]
+    if: github.actor != 'dependabot[bot]'
+
+    steps:
+      - name: Checkout código (histórico completo para SonarCloud)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Download relatórios JaCoCo
+        uses: actions/download-artifact@v4
+        with:
+          name: jacoco-reports
+          path: jacoco-coverage
+        continue-on-error: true
+
+      - name: SonarCloud — análise de qualidade e cobertura
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          mvn sonar:sonar \
+            --no-transfer-progress \
+            -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }} \
+            -Dsonar.organization=${{ vars.SONAR_ORGANIZATION }} \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.coverage.jacoco.xmlReportPaths='**/target/site/jacoco/jacoco.xml' \
+            -Dsonar.exclusions='**/target/**,**/*.xml,**/*.yml,**/dto/**' \
+            -Dsonar.java.source=21
+
+  # ─── Job 5: Build Final ─────────────────────────────────────────────────────
+  build:
+    name: "Build & Package"
+    runs-on: ubuntu-latest
+    needs: [unit-tests, security]
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Setup Java ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Build — gerar JARs de todos os módulos
+        run: mvn package -DskipTests --no-transfer-progress
+
+      - name: Listar artefatos gerados
+        run: find . -name '*.jar' -path '*/target/*' ! -name '*sources*' ! -name '*javadoc*' | sort
+
+      - name: Upload artefatos de build
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts-${{ github.sha }}
+          path: |
+            **/target/*.jar
+            !**/target/*-sources.jar
+            !**/target/dependency/**
+            !**/target/original-*.jar
+          retention-days: 3
+          if-no-files-found: warn
