@@ -23,6 +23,12 @@
         <property name="lineSeparator" value="lf_cr_crlf"/>
     </module>
 
+    <!-- Máximo 150 caracteres por linha (ignora imports/packages/URLs) -->
+    <module name="LineLength">
+        <property name="max" value="150"/>
+        <property name="ignorePattern" value="^package.*|^import.*|https?://|ftp://"/>
+    </module>
+
     <module name="TreeWalker">
 
         <!-- ── Imports ─────────────────────────────────────────────────── -->
@@ -36,13 +42,6 @@
 
         <!-- Sem imports duplicados -->
         <module name="RedundantImport"/>
-
-        <!-- ── Tamanho ──────────────────────────────────────────────────── -->
-        <!-- Máximo 150 caracteres por linha (ignora imports/packages/URLs) -->
-        <module name="LineLength">
-            <property name="max" value="150"/>
-            <property name="ignorePattern" value="^package.*|^import.*|https?://|ftp://"/>
-        </module>
 
         <!-- ── Chaves e Blocos ──────────────────────────────────────────── -->
         <!-- Chaves obrigatórias em if/else/for/while/do -->
