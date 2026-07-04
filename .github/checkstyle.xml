@@ -20,7 +20,7 @@
 
     <!-- Arquivo deve terminar com nova linha -->
     <module name="NewlineAtEndOfFile">
-        <property name="lineSeparator" value="lf, crlf"/>
+        <property name="lineSeparator" value="lf_cr_crlf"/>
     </module>
 
     <module name="TreeWalker">
@@ -56,10 +56,6 @@
         <!-- ── Modificadores ────────────────────────────────────────────── -->
         <!-- Ordem dos modificadores: public protected private abstract static... -->
         <module name="ModifierOrder"/>
-
-        <!-- ── Código Morto ─────────────────────────────────────────────── -->
-        <!-- Sem declarações desnecessárias de throws -->
-        <module name="RedundantThrows"/>
 
     </module>
 </module>
