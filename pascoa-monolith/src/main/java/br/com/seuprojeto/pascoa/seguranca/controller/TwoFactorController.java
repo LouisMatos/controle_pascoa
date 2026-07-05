@@ -39,8 +39,8 @@ public class TwoFactorController {
     @GetMapping("/setup")
     public String setupForm(HttpSession session, Model model) {
         Usuario usuario = usuarioPendente(session);
-        if (usuario == null) return "redirect:/login";
-        if (usuario.isTotpAtivado()) return "redirect:/2fa/verificar";
+        if (usuario == null) { return "redirect:/login"; }
+        if (usuario.isTotpAtivado()) { return "redirect:/2fa/verificar"; }
 
         if (usuario.getTotpSecret() == null) {
             usuario.setTotpSecret(totpService.gerarSegredo());
@@ -59,10 +59,10 @@ public class TwoFactorController {
                                  HttpServletResponse response,
                                  RedirectAttributes ra) throws Exception {
         Usuario usuario = usuarioPendente(session);
-        if (usuario == null) return "redirect:/login";
+        if (usuario == null) { return "redirect:/login"; }
 
         int codigoInt = parseCodigoOuErro(codigo, ra, "redirect:/2fa/setup");
-        if (codigoInt < 0) return "redirect:/2fa/setup";
+        if (codigoInt < 0) { return "redirect:/2fa/setup"; }
 
         if (!totpService.validar(usuario.getTotpSecret(), codigoInt)) {
             ra.addFlashAttribute("erro", "Código inválido. Verifique o horário do seu dispositivo e tente novamente.");
@@ -80,7 +80,7 @@ public class TwoFactorController {
 
     @GetMapping("/verificar")
     public String verificarForm(HttpSession session) {
-        if (usuarioPendente(session) == null) return "redirect:/login";
+        if (usuarioPendente(session) == null) { return "redirect:/login"; }
         return "2fa/verificar";
     }
 
@@ -91,7 +91,7 @@ public class TwoFactorController {
                             HttpServletResponse response,
                             RedirectAttributes ra) throws Exception {
         Usuario usuario = usuarioPendente(session);
-        if (usuario == null) return "redirect:/login";
+        if (usuario == null) { return "redirect:/login"; }
 
         if (usuario.getTentativasTotpFalhas() >= MAX_TENTATIVAS) {
             ra.addFlashAttribute("erro", "Conta bloqueada por excesso de tentativas. Contate o administrador.");
@@ -99,7 +99,7 @@ public class TwoFactorController {
         }
 
         int codigoInt = parseCodigoOuErro(codigo, ra, "redirect:/2fa/verificar");
-        if (codigoInt < 0) return "redirect:/2fa/verificar";
+        if (codigoInt < 0) { return "redirect:/2fa/verificar"; }
 
         if (!totpService.validar(usuario.getTotpSecret(), codigoInt)) {
             usuario.setTentativasTotpFalhas(usuario.getTentativasTotpFalhas() + 1);
@@ -118,7 +118,7 @@ public class TwoFactorController {
 
     private Usuario usuarioPendente(HttpSession session) {
         Long userId = (Long) session.getAttribute(TwoFactorAuthenticationSuccessHandler.PENDING_2FA_USER_ID);
-        if (userId == null) return null;
+        if (userId == null) { return null; }
         return usuarioRepository.findById(userId).orElse(null);
     }
 

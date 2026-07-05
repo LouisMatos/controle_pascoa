@@ -188,13 +188,19 @@ public class OrcamentoService {
     // ── Auxiliar ─────────────────────────────────────────────────────────────
 
     private Orcamento adicionarItens(Orcamento orc, List<OrcamentoItemForm> itemForms) {
-        if (itemForms == null || itemForms.isEmpty()) return orc;
+        if (itemForms == null || itemForms.isEmpty()) {
+            return orc;
+        }
 
         BigDecimal total = BigDecimal.ZERO;
         for (OrcamentoItemForm itemForm : itemForms) {
-            if (itemForm.getProdutoId() == null) continue;
+            if (itemForm.getProdutoId() == null) {
+                continue;
+            }
             Integer qtd = itemForm.getQuantidade() != null ? itemForm.getQuantidade() : 1;
-            if (qtd <= 0) continue;
+            if (qtd <= 0) {
+                continue;
+            }
 
             Produto produto = produtoRepo.findById(itemForm.getProdutoId())
                     .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));

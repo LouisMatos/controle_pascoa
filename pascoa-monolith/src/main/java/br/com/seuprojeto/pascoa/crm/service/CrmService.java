@@ -3,7 +3,10 @@ package br.com.seuprojeto.pascoa.crm.service;
 import br.com.seuprojeto.pascoa.cadastro.entity.Cliente;
 import br.com.seuprojeto.pascoa.cadastro.repository.ClienteRepository;
 import br.com.seuprojeto.pascoa.crm.dto.ClienteCrmDto;
-import br.com.seuprojeto.pascoa.crm.entity.*;
+import br.com.seuprojeto.pascoa.crm.entity.NotaCliente;
+import br.com.seuprojeto.pascoa.crm.entity.PontoFidelidade;
+import br.com.seuprojeto.pascoa.crm.entity.SegmentoCliente;
+import br.com.seuprojeto.pascoa.crm.entity.TipoPonto;
 import br.com.seuprojeto.pascoa.crm.repository.NotaClienteRepository;
 import br.com.seuprojeto.pascoa.crm.repository.PontoFidelidadeRepository;
 import br.com.seuprojeto.pascoa.pedido.entity.Pedido;
@@ -130,7 +133,7 @@ public class CrmService {
     // ── Segmentação ───────────────────────────────────────────────────────
 
     private SegmentoCliente calcularSegmento(BigDecimal ltv, long totalPedidos, LocalDateTime ultimoPedido) {
-        if (totalPedidos == 0) return SegmentoCliente.NOVO;
+        if (totalPedidos == 0) { return SegmentoCliente.NOVO; }
         if (ultimoPedido != null && ultimoPedido.isBefore(LocalDateTime.now().minusDays(90))) {
             return SegmentoCliente.INATIVO;
         }

@@ -2,8 +2,22 @@ package br.com.seuprojeto.pascoa.qualidade.entity;
 
 import br.com.seuprojeto.pascoa.producao.entity.OrdemProducao;
 import br.com.seuprojeto.pascoa.qualidade.dto.ItemVerificadoDto;
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -46,11 +60,11 @@ public class InspecaoQualidade {
 
     @PrePersist
     private void prePersist() {
-        if (this.dataInspecao == null) this.dataInspecao = LocalDateTime.now();
+        if (this.dataInspecao == null) { this.dataInspecao = LocalDateTime.now(); }
     }
 
     public long totalVerificados() {
-        if (itensVerificados == null) return 0;
+        if (itensVerificados == null) { return 0; }
         return itensVerificados.stream().filter(ItemVerificadoDto::isVerificado).count();
     }
 

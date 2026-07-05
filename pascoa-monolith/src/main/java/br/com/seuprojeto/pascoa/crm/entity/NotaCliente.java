@@ -1,8 +1,22 @@
 package br.com.seuprojeto.pascoa.crm.entity;
 
 import br.com.seuprojeto.pascoa.cadastro.entity.Cliente;
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 
@@ -35,6 +49,6 @@ public class NotaCliente {
 
     @PrePersist
     private void prePersist() {
-        if (this.criadoEm == null) this.criadoEm = LocalDateTime.now();
+        if (this.criadoEm == null) { this.criadoEm = LocalDateTime.now(); }
     }
 }

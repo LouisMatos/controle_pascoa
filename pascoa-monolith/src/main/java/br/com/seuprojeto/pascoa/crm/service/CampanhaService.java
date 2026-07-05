@@ -40,14 +40,14 @@ public class CampanhaService {
 
         int count = 0;
         for (ClienteCrmDto dto : clientes) {
-            if (segmento != null && dto.segmento() != segmento) continue;
-            if (!Boolean.TRUE.equals(dto.cliente().getOptIn())) continue;
+            if (segmento != null && dto.segmento() != segmento) { continue; }
+            if (!Boolean.TRUE.equals(dto.cliente().getOptIn())) { continue; }
 
             String destinatario = switch (canal) {
                 case WHATSAPP, SMS -> dto.cliente().getTelefone();
                 case EMAIL         -> dto.cliente().getEmail();
             };
-            if (destinatario == null || destinatario.isBlank()) continue;
+            if (destinatario == null || destinatario.isBlank()) { continue; }
 
             campanhaQueue.enqueue(new CampanhaItem(
                     dto.cliente().getId(),
@@ -67,7 +67,7 @@ public class CampanhaService {
     @SchedulerLock(name = "campanha_processarProximo", lockAtMostFor = "PT10S", lockAtLeastFor = "PT5S")
     public void processarProximo() {
         CampanhaItem item = campanhaQueue.poll();
-        if (item == null) return;
+        if (item == null) { return; }
 
         Optional<ConfiguracaoCanal> optConfig = canalRepository.findByTipo(item.canal());
         if (optConfig.isEmpty() || !Boolean.TRUE.equals(optConfig.get().getAtivo())) {

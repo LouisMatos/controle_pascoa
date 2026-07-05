@@ -45,6 +45,6 @@ public class OrdemProducao {
 
     @PrePersist
     private void prePersist() {
-        if (dataAbertura == null) dataAbertura = LocalDateTime.now();
+        if (dataAbertura == null) { dataAbertura = LocalDateTime.now(); }
     }
 }

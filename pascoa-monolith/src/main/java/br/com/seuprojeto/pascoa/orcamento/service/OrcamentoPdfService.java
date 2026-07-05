@@ -2,8 +2,17 @@ package br.com.seuprojeto.pascoa.orcamento.service;
 
 import br.com.seuprojeto.pascoa.orcamento.entity.Orcamento;
 import br.com.seuprojeto.pascoa.orcamento.entity.OrcamentoItem;
-import com.lowagie.text.*;
-import com.lowagie.text.pdf.*;
+import com.lowagie.text.Document;
+import com.lowagie.text.Element;
+import com.lowagie.text.Font;
+import com.lowagie.text.PageSize;
+import com.lowagie.text.Paragraph;
+import com.lowagie.text.Phrase;
+import com.lowagie.text.Rectangle;
+import com.lowagie.text.pdf.BaseFont;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfWriter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -87,10 +96,12 @@ public class OrcamentoPdfService {
             addInfo(infoTbl, "Validade:",     orc.getValidade().format(DATE_FMT),      fPeqBold, fNormal, cinzaSep);
             addInfo(infoTbl, "Status:",       orc.getStatus().getDescricao(),          fPeqBold, fNormal, cinzaSep);
             addInfo(infoTbl, "Data Criacao:", orc.getDataCriacao().format(DATETIME_FMT), fPeqBold, fNormal, cinzaSep);
-            if (orc.getCliente().getTelefone() != null)
+            if (orc.getCliente().getTelefone() != null) {
                 addInfo(infoTbl, "Telefone:", orc.getCliente().getTelefone(), fPeqBold, fNormal, cinzaSep);
-            if (orc.getCliente().getEmail() != null)
+            }
+            if (orc.getCliente().getEmail() != null) {
                 addInfo(infoTbl, "E-mail:", orc.getCliente().getEmail(), fPeqBold, fNormal, cinzaSep);
+            }
 
             doc.add(infoTbl);
 
@@ -166,7 +177,9 @@ public class OrcamentoPdfService {
         } catch (DocumentException | java.io.IOException e) {
             throw new RuntimeException("Erro ao gerar PDF do orcamento #" + orc.getId(), e);
         } finally {
-            if (doc.isOpen()) doc.close();
+            if (doc.isOpen()) {
+                doc.close();
+            }
         }
         return out.toByteArray();
     }

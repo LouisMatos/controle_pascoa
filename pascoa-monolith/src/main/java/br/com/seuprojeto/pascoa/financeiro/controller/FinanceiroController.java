@@ -53,8 +53,8 @@ public class FinanceiroController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim,
             Model model) {
-        if (inicio == null) inicio = YearMonth.now().atDay(1);
-        if (fim == null)    fim    = YearMonth.now().atEndOfMonth();
+        if (inicio == null) { inicio = YearMonth.now().atDay(1); }
+        if (fim == null) { fim = YearMonth.now().atEndOfMonth(); }
         model.addAttribute("fluxo", fluxoCaixaService.calcular(inicio, fim));
         return "financeiro/fluxo-caixa";
     }

@@ -3,11 +3,26 @@ package br.com.seuprojeto.pascoa.cadastro.entity;
 import br.com.seuprojeto.pascoa.common.entity.BaseEntity;
 import br.com.seuprojeto.pascoa.crm.entity.SegmentoCliente;
 import br.com.seuprojeto.pascoa.pedido.entity.Pedido;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
@@ -109,9 +124,9 @@ public class Cliente extends BaseEntity {
     @PrePersist
     private void prePersist() {
         // criadoEm (= data_cadastro) é preenchido pelo @CreatedDate do Spring Data Auditing
-        if (this.preferenciaCanal == null) this.preferenciaCanal = PreferenciaCanal.NENHUM;
-        if (this.optIn == null) this.optIn = false;
-        if (this.anonimizado == null) this.anonimizado = false;
-        if (this.segmento == null) this.segmento = SegmentoCliente.NOVO;
+        if (this.preferenciaCanal == null) { this.preferenciaCanal = PreferenciaCanal.NENHUM; }
+        if (this.optIn == null) { this.optIn = false; }
+        if (this.anonimizado == null) { this.anonimizado = false; }
+        if (this.segmento == null) { this.segmento = SegmentoCliente.NOVO; }
     }
 }

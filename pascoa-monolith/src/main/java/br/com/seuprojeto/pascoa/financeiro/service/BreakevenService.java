@@ -189,11 +189,17 @@ public class BreakevenService {
                 .saldo(c.getSaldo())
                 .build();
 
-            if (dias <= 0)       corrente.add(linha);
-            else if (dias <= 30) a1a30.add(linha);
-            else if (dias <= 60) a31a60.add(linha);
-            else if (dias <= 90) a61a90.add(linha);
-            else                 aAcima90.add(linha);
+            if (dias <= 0) {
+                corrente.add(linha);
+            } else if (dias <= 30) {
+                a1a30.add(linha);
+            } else if (dias <= 60) {
+                a31a60.add(linha);
+            } else if (dias <= 90) {
+                a61a90.add(linha);
+            } else {
+                aAcima90.add(linha);
+            }
         }
 
         BigDecimal tCorrente  = soma(corrente);
