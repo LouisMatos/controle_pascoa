@@ -266,33 +266,37 @@ jobs:
             --jq '.[0].number' 2>/dev/null || echo "")
 
           if [ -z "$PR_NUMBER" ]; then
-            gh pr create \
-              --base main \
-              --head "$BRANCH" \
-              --title "release: $VERSION" \
-              --body "## Release $VERSION
+            PR_BODY=$(cat <<EOF
+## Release ${VERSION}
 
-CI passou em todos os checks obrigatórios ✅
+CI passou em todos os checks obrigatorios.
 
 ### Checklist de Release
 - [ ] CHANGELOG revisado
-- [ ] Versão nos \`pom.xml\` atualizada (\`mvn versions:set -DnewVersion=$VERSION\`)
+- [ ] Versao nos pom.xml atualizada (mvn versions:set -DnewVersion=${VERSION})
 - [ ] Migrations Flyway testadas em staging
 - [ ] Smoke test realizado
 - [ ] Rollback plan documentado
 
 ### Pipelines executados
-- Lint & Checkstyle ✅
-- Testes Unitários ✅
-- OWASP Dependency Check ✅
-- Trivy (CRITICAL/HIGH) ✅
-- SonarCloud Quality Gate ✅
-- Build & Package ✅
+- Lint e Checkstyle: OK
+- Testes Unitarios: OK
+- OWASP Dependency Check: OK
+- Trivy (CRITICAL/HIGH): OK
+- SonarCloud Quality Gate: OK
+- Build e Package: OK
 
 ---
-*Auto-gerado pelo pipeline \`ci-release.yml\` após todos os checks passarem.*" \
+Auto-gerado pelo pipeline ci-release.yml apos todos os checks passarem.
+EOF
+)
+            gh pr create \
+              --base main \
+              --head "$BRANCH" \
+              --title "release: $VERSION" \
+              --body "$PR_BODY" \
               --label "release"
-            echo "PR criado: $BRANCH → main"
+            echo "PR criado: $BRANCH -> main"
           else
-            echo "PR #$PR_NUMBER já existe para $BRANCH → main"
+            echo "PR #$PR_NUMBER ja existe para $BRANCH -> main"
           fi

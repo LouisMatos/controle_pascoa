@@ -192,29 +192,33 @@ jobs:
             --jq '.[0].number' 2>/dev/null || echo "")
 
           if [ -z "$PR_NUMBER" ]; then
-            gh pr create \
-              --base main \
-              --head "$BRANCH" \
-              --title "hotfix: $HOTFIX_NAME" \
-              --body "## Hotfix: $HOTFIX_NAME
+            PR_BODY=$(cat <<EOF
+## Hotfix: ${HOTFIX_NAME}
 
-CI passou ✅ — Correção crítica validada.
+CI passou - Correcao critica validada.
 
 ### Impacto
-<!-- Descrever qual bug é corrigido e o impacto em produção -->
+Descrever qual bug e corrigido e o impacto em producao.
 
 ### Checklist
 - [ ] Bug reproduzido e confirmado
 - [ ] Fix aplicado e testado localmente
 - [ ] Regression test adicionado
-- [ ] Este PR será backportado para \`develop\` também
+- [ ] Este PR sera backportado para develop tambem
 
 ---
-*Auto-gerado pelo pipeline \`ci-hotfix.yml\`.*" \
+Auto-gerado pelo pipeline ci-hotfix.yml.
+EOF
+)
+            gh pr create \
+              --base main \
+              --head "$BRANCH" \
+              --title "hotfix: $HOTFIX_NAME" \
+              --body "$PR_BODY" \
               --label "hotfix,urgent"
-            echo "PR criado: $BRANCH → main"
+            echo "PR criado: $BRANCH -> main"
           else
-            echo "PR #$PR_NUMBER já existe para $BRANCH → main"
+            echo "PR #$PR_NUMBER ja existe para $BRANCH -> main"
           fi
 
   # ─── Job 6: Auto-PR → develop (backport) ─────────────────────────────────────
@@ -244,20 +248,24 @@ CI passou ✅ — Correção crítica validada.
             --jq '.[0].number' 2>/dev/null || echo "")
 
           if [ -z "$PR_NUMBER" ]; then
+            PR_BODY=$(cat <<EOF
+## Backport: ${HOTFIX_NAME} -> develop
+
+Backport obrigatorio do hotfix para garantir que develop nao regrida.
+
+PR principal (-> main): veja PRs com label hotfix.
+
+---
+Auto-gerado pelo pipeline ci-hotfix.yml.
+EOF
+)
             gh pr create \
               --base develop \
               --head "$BRANCH" \
-              --title "hotfix(backport): $HOTFIX_NAME → develop" \
-              --body "## Backport: $HOTFIX_NAME → develop
-
-Backport obrigatório do hotfix para garantir que \`develop\` não regrida.
-
-PR principal (→ main): veja PRs com label \`hotfix\`
-
----
-*Auto-gerado pelo pipeline \`ci-hotfix.yml\`.*" \
+              --title "hotfix(backport): $HOTFIX_NAME -> develop" \
+              --body "$PR_BODY" \
               --label "hotfix,backport"
-            echo "PR de backport criado: $BRANCH → develop"
+            echo "PR de backport criado: $BRANCH -> develop"
           else
-            echo "PR #$PR_NUMBER já existe para $BRANCH → develop (backport)"
+            echo "PR #$PR_NUMBER ja existe para $BRANCH -> develop (backport)"
           fi
