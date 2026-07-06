@@ -3,6 +3,7 @@ package br.com.seuprojeto.pascoa.cadastro.entity;
 import br.com.seuprojeto.pascoa.common.entity.BaseEntity;
 import br.com.seuprojeto.pascoa.crm.entity.SegmentoCliente;
 import br.com.seuprojeto.pascoa.pedido.entity.Pedido;
+import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
