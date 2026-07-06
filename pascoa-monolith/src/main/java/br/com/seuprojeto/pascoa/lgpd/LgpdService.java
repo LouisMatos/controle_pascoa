@@ -113,7 +113,7 @@ public class LgpdService {
     }
 
     private String jsonStr(String value) {
-        if (value == null) return "null";
+        if (value == null) { return "null"; }
         return "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\"";
     }
 }

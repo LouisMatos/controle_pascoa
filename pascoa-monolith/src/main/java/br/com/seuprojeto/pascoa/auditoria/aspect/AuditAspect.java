@@ -44,7 +44,7 @@ public class AuditAspect {
         // Primeiro argumento Long (ex.: confirmar(Long id))
         if (args != null) {
             for (Object arg : args) {
-                if (arg instanceof Long l) return l;
+                if (arg instanceof Long l) { return l; }
             }
         }
         // Valor de retorno com getId()
@@ -52,7 +52,7 @@ public class AuditAspect {
             try {
                 var method = resultado.getClass().getMethod("getId");
                 Object id = method.invoke(resultado);
-                if (id instanceof Long l) return l;
+                if (id instanceof Long l) { return l; }
             } catch (Exception ignored) {}
         }
         return null;

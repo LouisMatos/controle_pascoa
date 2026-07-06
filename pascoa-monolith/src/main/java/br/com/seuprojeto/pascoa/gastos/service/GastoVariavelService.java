@@ -98,11 +98,11 @@ public class GastoVariavelService {
 
             while ((linha = reader.readLine()) != null) {
                 linha = linha.trim();
-                if (linha.isEmpty()) continue;
+                if (linha.isEmpty()) { continue; }
                 if (primeiraLinha) { primeiraLinha = false; continue; }
 
                 String[] campos = parseCsvLine(linha);
-                if (campos.length < 4) continue;
+                if (campos.length < 4) { continue; }
 
                 try {
                     String descricao = campos[0].trim();

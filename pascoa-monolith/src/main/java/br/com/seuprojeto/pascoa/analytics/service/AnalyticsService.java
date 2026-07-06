@@ -1,6 +1,9 @@
 package br.com.seuprojeto.pascoa.analytics.service;
 
-import br.com.seuprojeto.pascoa.analytics.dto.*;
+import br.com.seuprojeto.pascoa.analytics.dto.ComparativoSafraDto;
+import br.com.seuprojeto.pascoa.analytics.dto.MesDto;
+import br.com.seuprojeto.pascoa.analytics.dto.RankingProdutoDto;
+import br.com.seuprojeto.pascoa.analytics.dto.SafraDto;
 import br.com.seuprojeto.pascoa.pedido.repository.ItemPedidoRepository;
 import br.com.seuprojeto.pascoa.pedido.repository.PedidoRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +29,7 @@ public class AnalyticsService {
     public List<Integer> anosDisponiveis() {
         List<Integer> anos = new ArrayList<>(pedidoRepository.anosComPedidos());
         int anoAtual = LocalDate.now().getYear();
-        if (!anos.contains(anoAtual)) anos.add(0, anoAtual);
+        if (!anos.contains(anoAtual)) { anos.add(0, anoAtual); }
         return anos;
     }
 
@@ -78,9 +81,9 @@ public class AnalyticsService {
     // ── helpers ──────────────────────────────────────────────────────────────
 
     private BigDecimal toBigDecimal(Object value) {
-        if (value == null) return BigDecimal.ZERO;
-        if (value instanceof BigDecimal bd) return bd;
-        if (value instanceof Number n) return BigDecimal.valueOf(n.doubleValue());
+        if (value == null) { return BigDecimal.ZERO; }
+        if (value instanceof BigDecimal bd) { return bd; }
+        if (value instanceof Number n) { return BigDecimal.valueOf(n.doubleValue()); }
         return BigDecimal.ZERO;
     }
 }

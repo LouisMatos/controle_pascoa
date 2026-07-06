@@ -3,7 +3,6 @@ package br.com.seuprojeto.pascoa.pedido.service;
 import br.com.seuprojeto.pascoa.pedido.entity.ItemPedido;
 import br.com.seuprojeto.pascoa.pedido.entity.Pedido;
 // OpenPDF — modelo de documento (sem wildcard para evitar conflito com POI)
-import com.lowagie.text.Chunk;
 import com.lowagie.text.Document;
 import com.lowagie.text.DocumentException;
 import com.lowagie.text.Element;
@@ -21,7 +20,6 @@ import com.lowagie.text.pdf.PdfWriter;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.DataFormat;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.IndexedColors;
@@ -260,17 +258,20 @@ public class ExportService {
             infoTbl.setSpacingAfter(12f);
 
             addInfo(infoTbl, "Cliente:",    pedido.getCliente().getNome(),    fPeqBold, fNormal, cinzaSep);
-            if (str(pedido.getCliente().getTelefone()))
+            if (str(pedido.getCliente().getTelefone())) {
                 addInfo(infoTbl, "Telefone:", pedido.getCliente().getTelefone(), fPeqBold, fNormal, cinzaSep);
-            if (str(pedido.getCliente().getEmail()))
+            }
+            if (str(pedido.getCliente().getEmail())) {
                 addInfo(infoTbl, "E-mail:",   pedido.getCliente().getEmail(),    fPeqBold, fNormal, cinzaSep);
+            }
             addInfo(infoTbl, "Data do Pedido:",
                     pedido.getDataPedido().format(DATETIME_FMT), fPeqBold, fNormal, cinzaSep);
             if (pedido.getDataEntrega() != null) {
                 String entrega = pedido.getDataEntrega().format(DATE_FMT);
-                if (pedido.getSlotEntrega() != null)
+                if (pedido.getSlotEntrega() != null) {
                     entrega += " as " + pedido.getSlotEntrega()
                             .format(DateTimeFormatter.ofPattern("HH:mm"));
+                }
                 addInfo(infoTbl, "Previsao de Entrega:", entrega, fPeqBold, fNormal, cinzaSep);
             }
             addInfo(infoTbl, "Status:", pedido.getStatus().getDescricao(), fPeqBold, fNormal, cinzaSep);
@@ -386,7 +387,7 @@ public class ExportService {
         } catch (DocumentException | java.io.IOException e) {
             throw new RuntimeException("Erro ao gerar PDF do pedido #" + pedido.getId(), e);
         } finally {
-            if (doc.isOpen()) doc.close();
+            if (doc.isOpen()) { doc.close(); }
         }
         return out.toByteArray();
     }

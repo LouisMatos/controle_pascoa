@@ -1,7 +1,19 @@
 package br.com.seuprojeto.pascoa.gastos.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -68,10 +80,10 @@ public class GastoVariavel {
 
     @PrePersist
     private void prePersist() {
-        if (criadoEm == null) criadoEm = LocalDateTime.now();
+        if (criadoEm == null) { criadoEm = LocalDateTime.now(); }
         if (dataLancamento != null) {
-            if (referenciaMes == null) referenciaMes = dataLancamento.getMonthValue();
-            if (referenciaAno == null) referenciaAno = dataLancamento.getYear();
+            if (referenciaMes == null) { referenciaMes = dataLancamento.getMonthValue(); }
+            if (referenciaAno == null) { referenciaAno = dataLancamento.getYear(); }
         }
     }
 }

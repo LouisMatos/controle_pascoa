@@ -1,6 +1,9 @@
 package br.com.seuprojeto.pascoa.analytics.controller;
 
-import br.com.seuprojeto.pascoa.analytics.dto.*;
+import br.com.seuprojeto.pascoa.analytics.dto.ComparativoSafraDto;
+import br.com.seuprojeto.pascoa.analytics.dto.MesDto;
+import br.com.seuprojeto.pascoa.analytics.dto.RankingProdutoDto;
+import br.com.seuprojeto.pascoa.analytics.dto.SafraDto;
 import br.com.seuprojeto.pascoa.analytics.service.AnalyticsService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -28,7 +31,7 @@ public class AnalyticsController {
             throws JsonProcessingException {
 
         List<Integer> anos = analyticsService.anosDisponiveis();
-        if (anos.isEmpty()) anos = List.of(java.time.LocalDate.now().getYear());
+        if (anos.isEmpty()) { anos = List.of(java.time.LocalDate.now().getYear()); }
 
         int anoSelecionado = (ano != null) ? ano : anos.get(0);
 

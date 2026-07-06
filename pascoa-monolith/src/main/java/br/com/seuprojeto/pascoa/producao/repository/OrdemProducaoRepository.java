@@ -19,7 +19,9 @@ public interface OrdemProducaoRepository extends JpaRepository<OrdemProducao, Lo
     @Query("SELECT o FROM OrdemProducao o LEFT JOIN FETCH o.pedido LEFT JOIN FETCH o.produto WHERE o.status = :status ORDER BY o.dataAbertura ASC")
     List<OrdemProducao> findByStatusComDetalhes(@Param("status") StatusOrdem status);
 
-    @Query("SELECT o FROM OrdemProducao o LEFT JOIN FETCH o.pedido LEFT JOIN FETCH o.produto WHERE o.pedido.id = :pedidoId ORDER BY o.dataAbertura ASC")
+    @Query("SELECT o FROM OrdemProducao o LEFT JOIN FETCH o.pedido "
+        + "LEFT JOIN FETCH o.produto WHERE o.pedido.id = :pedidoId "
+        + "ORDER BY o.dataAbertura ASC")
     List<OrdemProducao> findByPedidoId(@Param("pedidoId") Long pedidoId);
 
     @Query("SELECT o FROM OrdemProducao o LEFT JOIN FETCH o.pedido LEFT JOIN FETCH o.produto WHERE o.id = :id")

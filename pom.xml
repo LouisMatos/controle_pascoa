@@ -134,8 +134,8 @@
                         <configLocation>.github/checkstyle.xml</configLocation>
                         <consoleOutput>true</consoleOutput>
                         <includeTestSourceDirectory>false</includeTestSourceDirectory>
-                        <!-- warning = reporta sem bloquear; mudar para error após limpar violações -->
-                        <violationSeverity>warning</violationSeverity>
+                        <!-- error = só falha em erros; warnings são reportados sem bloquear -->
+                        <violationSeverity>error</violationSeverity>
                         <failsOnError>false</failsOnError>
                     </configuration>
                 </plugin>

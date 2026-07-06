@@ -70,8 +70,8 @@ public class FinanceiroController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate inicio,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fim,
             Model model) {
-        if (inicio == null) inicio = LocalDate.now().withDayOfYear(1);
-        if (fim == null)    fim    = LocalDate.now();
+        if (inicio == null) { inicio = LocalDate.now().withDayOfYear(1); }
+        if (fim == null) { fim = LocalDate.now(); }
         model.addAttribute("projecao", breakevenService.projecaoSafra(inicio, fim));
         return "financeiro/projecao-safra";
     }

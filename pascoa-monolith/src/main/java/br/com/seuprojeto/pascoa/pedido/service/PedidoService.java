@@ -10,7 +10,10 @@ import br.com.seuprojeto.pascoa.notificacao.entity.EventoNotificacao;
 import br.com.seuprojeto.pascoa.notificacao.event.PedidoStatusEvent;
 import br.com.seuprojeto.pascoa.pedido.dto.PagamentoForm;
 import br.com.seuprojeto.pascoa.pedido.dto.PedidoForm;
-import br.com.seuprojeto.pascoa.pedido.entity.*;
+import br.com.seuprojeto.pascoa.pedido.entity.ItemPedido;
+import br.com.seuprojeto.pascoa.pedido.entity.Pagamento;
+import br.com.seuprojeto.pascoa.pedido.entity.Pedido;
+import br.com.seuprojeto.pascoa.pedido.entity.StatusPedido;
 import br.com.seuprojeto.pascoa.pedido.repository.ItemPedidoRepository;
 import br.com.seuprojeto.pascoa.pedido.repository.PagamentoRepository;
 import br.com.seuprojeto.pascoa.pedido.repository.PedidoRepository;
@@ -128,7 +131,7 @@ public class PedidoService {
             Long produtoId = produtoIds.get(i);
             Integer qtd = (quantidades != null && i < quantidades.size())
                     ? quantidades.get(i) : 1;
-            if (produtoId == null || qtd == null || qtd <= 0) continue;
+            if (produtoId == null || qtd == null || qtd <= 0) { continue; }
 
             Produto produto = produtosPorId.get(produtoId);
             itens.add(ItemPedido.builder()
@@ -280,7 +283,7 @@ public class PedidoService {
     }
 
     private void snapshotCustos(Pedido pedido) {
-        if (pedido.getItens().isEmpty()) return;
+        if (pedido.getItens().isEmpty()) { return; }
 
         // 1 query traz todas as fichas + itens + matérias-primas dos produtos do pedido.
         List<Long> produtoIds = pedido.getItens().stream()
