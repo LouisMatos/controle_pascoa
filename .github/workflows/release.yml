@@ -1,13 +1,13 @@
 name: Release — Versionamento & Publicação
 
 on:
-  # Dispara automaticamente após CI passar na branch main
+  # Dispara após CI do release candidate ou legado passarem na main
   workflow_run:
-    workflows: ["CI — Validação Contínua"]
+    workflows: ["CI — Legado (main/micro)", "CI — Release Candidate"]
     branches: [main]
     types: [completed]
 
-  # Permite acionar manualmente com tipo de versão escolhida
+  # Acionar manualmente (ex: após PR de release/* ser mergeado)
   workflow_dispatch:
     inputs:
       version_type:

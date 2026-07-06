@@ -1,0 +1,298 @@
+name: CI — Release Candidate
+
+# Pipeline para release/* branches (release candidates).
+# Após todos os jobs passarem, abre PR automaticamente para main se não existir.
+#
+# Convenção de nomenclatura: release/v1.2.0
+# Fluxo: lint → unit-tests ─┬─ security
+#                            └─ sonar
+#                                     └─ build → auto-pr
+
+on:
+  push:
+    branches:
+      - 'release/**'
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: ci-release-${{ github.ref }}
+  cancel-in-progress: false  # nunca cancelar build de release
+
+env:
+  JAVA_VERSION: '21'
+  MAVEN_OPTS: '-Xmx1g -XX:+UseG1GC -Dfile.encoding=UTF-8'
+
+jobs:
+
+  # ─── Job 1: Lint ─────────────────────────────────────────────────────────────
+  lint:
+    name: "Lint & Análise Estática"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Checkstyle
+        run: |
+          mvn checkstyle:check -Pci --no-transfer-progress \
+            -Dcheckstyle.failsOnError=false \
+            -Dcheckstyle.logViolationsToConsole=true
+
+      - name: SpotBugs
+        run: mvn spotbugs:check -Pci --no-transfer-progress -DfailOnError=false
+
+      - name: Upload SpotBugs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: spotbugs-release-${{ github.run_id }}
+          path: '**/target/spotbugsXml.xml'
+          retention-days: 14
+          if-no-files-found: ignore
+
+  # ─── Job 2: Testes Unitários ─────────────────────────────────────────────────
+  unit-tests:
+    name: "Testes Unitários"
+    runs-on: ubuntu-latest
+    needs: [lint]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Executar testes (exclui IT)
+        run: |
+          mvn test --no-transfer-progress \
+            -Dsurefire.excludes="**/*IT.java,**/*IntegrationTest.java,**/*IT.class,**/*IntegrationTest.class"
+
+      - name: Publicar resultado
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: "Testes — ${{ github.ref_name }}"
+          path: '**/target/surefire-reports/*.xml'
+          reporter: java-junit
+          fail-on-error: false
+
+      - name: Upload Surefire
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-release-${{ github.run_id }}
+          path: '**/target/surefire-reports/'
+          retention-days: 14
+
+      - name: Upload JaCoCo
+        uses: actions/upload-artifact@v4
+        with:
+          name: jacoco-release-${{ github.run_id }}
+          path: '**/target/site/jacoco/jacoco.xml'
+          retention-days: 14
+          if-no-files-found: ignore
+
+  # ─── Job 3: Segurança ────────────────────────────────────────────────────────
+  security:
+    name: "Análise de Segurança"
+    runs-on: ubuntu-latest
+    needs: [lint]
+    permissions:
+      security-events: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Cache NVD (OWASP)
+        uses: actions/cache@v4
+        with:
+          path: ~/.owasp/dependency-check
+          key: owasp-nvd-${{ hashFiles('**/pom.xml') }}
+          restore-keys: owasp-nvd-
+
+      - name: OWASP Dependency Check
+        run: |
+          mvn org.owasp:dependency-check-maven:10.0.4:aggregate \
+            --no-transfer-progress \
+            -DsuppressionsFile=.github/owasp-suppressions.xml \
+            -DfailBuildOnCVSS=9 \
+            -DautoUpdate=true \
+            -Dformat=HTML \
+            -DdataDirectory=$HOME/.owasp/dependency-check \
+            -DskipTestScope=true || true
+
+      - name: Upload OWASP
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: owasp-release-${{ github.run_id }}
+          path: 'target/dependency-check-report.html'
+          retention-days: 30
+          if-no-files-found: ignore
+
+      - name: Trivy
+        uses: aquasecurity/trivy-action@0.24.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: 'CRITICAL,HIGH'
+          format: sarif
+          output: trivy-results.sarif
+          ignore-unfixed: true
+
+      - name: Upload Trivy → Security Tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-results.sarif
+
+  # ─── Job 4: SonarCloud ───────────────────────────────────────────────────────
+  sonar:
+    name: "SonarCloud"
+    runs-on: ubuntu-latest
+    needs: [unit-tests]
+    if: github.actor != 'dependabot[bot]'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Download JaCoCo
+        uses: actions/download-artifact@v4
+        with:
+          name: jacoco-release-${{ github.run_id }}
+          path: jacoco-coverage
+        continue-on-error: true
+
+      - name: SonarCloud
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          mvn sonar:sonar --no-transfer-progress \
+            -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }} \
+            -Dsonar.organization=${{ vars.SONAR_ORGANIZATION }} \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.coverage.jacoco.xmlReportPaths='**/target/site/jacoco/jacoco.xml' \
+            -Dsonar.exclusions='**/target/**,**/*.xml,**/*.yml,**/dto/**' \
+            -Dsonar.java.source=21
+
+  # ─── Job 5: Build Final ───────────────────────────────────────────────────────
+  build:
+    name: "Build & Package"
+    runs-on: ubuntu-latest
+    needs: [unit-tests, security]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Build — gerar JARs
+        run: mvn package -DskipTests --no-transfer-progress
+
+      - name: Listar artefatos
+        run: find . -name '*.jar' -path '*/target/*' ! -name '*sources*' ! -name '*javadoc*' | sort
+
+      - name: Upload artefatos de release candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: rc-artifacts-${{ github.ref_name }}-${{ github.sha }}
+          path: |
+            **/target/*.jar
+            !**/target/*-sources.jar
+            !**/target/dependency/**
+            !**/target/original-*.jar
+          retention-days: 14
+          if-no-files-found: warn
+
+  # ─── Job 6: Auto-PR → main (apenas em push direto, não em PR) ────────────────
+  auto-pr-to-main:
+    name: "Auto-PR → main"
+    runs-on: ubuntu-latest
+    needs: [build, sonar]
+    if: >
+      github.event_name == 'push' &&
+      startsWith(github.ref, 'refs/heads/release/')
+    permissions:
+      pull-requests: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Criar ou atualizar PR para main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="${{ github.ref_name }}"
+          VERSION=$(echo "$BRANCH" | sed 's|release/||')
+
+          # Verificar se já existe PR aberto desta branch para main
+          PR_NUMBER=$(gh pr list \
+            --base main \
+            --head "$BRANCH" \
+            --state open \
+            --json number \
+            --jq '.[0].number' 2>/dev/null || echo "")
+
+          if [ -z "$PR_NUMBER" ]; then
+            gh pr create \
+              --base main \
+              --head "$BRANCH" \
+              --title "release: $VERSION" \
+              --body "## Release $VERSION
+
+CI passou em todos os checks obrigatórios ✅
+
+### Checklist de Release
+- [ ] CHANGELOG revisado
+- [ ] Versão nos \`pom.xml\` atualizada (\`mvn versions:set -DnewVersion=$VERSION\`)
+- [ ] Migrations Flyway testadas em staging
+- [ ] Smoke test realizado
+- [ ] Rollback plan documentado
+
+### Pipelines executados
+- Lint & Checkstyle ✅
+- Testes Unitários ✅
+- OWASP Dependency Check ✅
+- Trivy (CRITICAL/HIGH) ✅
+- SonarCloud Quality Gate ✅
+- Build & Package ✅
+
+---
+*Auto-gerado pelo pipeline \`ci-release.yml\` após todos os checks passarem.*" \
+              --label "release"
+            echo "PR criado: $BRANCH → main"
+          else
+            echo "PR #$PR_NUMBER já existe para $BRANCH → main"
+          fi

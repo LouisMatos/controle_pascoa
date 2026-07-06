@@ -1,0 +1,150 @@
+name: CI — Feature (Fast)
+
+# Pipeline rápido para feature branches.
+# Objetivo: feedback em ~5 min. Sem Sonar, sem OWASP, sem build artifact.
+on:
+  push:
+    branches:
+      - 'feat/**'
+      - 'fix/**'
+      - 'chore/**'
+      - 'refactor/**'
+      - 'docs/**'
+      - 'perf/**'
+      - 'test/**'
+  pull_request:
+    branches: [develop]
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: ci-feature-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JAVA_VERSION: '21'
+  MAVEN_OPTS: '-Xmx1g -XX:+UseG1GC -Dfile.encoding=UTF-8'
+
+# Fluxo: lint → unit-tests
+#          (paralelo não aplicável: unit-tests precisa de lint passar)
+
+jobs:
+
+  # ─── Job 1: Lint & Análise Estática ─────────────────────────────────────────
+  lint:
+    name: "Lint & Análise Estática"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Checkstyle
+        run: |
+          mvn checkstyle:check -Pci --no-transfer-progress \
+            -Dcheckstyle.failsOnError=false \
+            -Dcheckstyle.logViolationsToConsole=true
+
+      - name: SpotBugs
+        run: mvn spotbugs:check -Pci --no-transfer-progress -DfailOnError=false
+
+      - name: Upload SpotBugs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: spotbugs-feature-${{ github.run_id }}
+          path: '**/target/spotbugsXml.xml'
+          retention-days: 3
+          if-no-files-found: ignore
+
+  # ─── Job 2: Testes Unitários ─────────────────────────────────────────────────
+  unit-tests:
+    name: "Testes Unitários"
+    runs-on: ubuntu-latest
+    needs: [lint]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Executar testes (exclui IT)
+        run: |
+          mvn test --no-transfer-progress \
+            -Dsurefire.excludes="**/*IT.java,**/*IntegrationTest.java,**/*IT.class,**/*IntegrationTest.class"
+
+      - name: Publicar resultados
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: "Testes — ${{ github.ref_name }}"
+          path: '**/target/surefire-reports/*.xml'
+          reporter: java-junit
+          fail-on-error: false
+
+      - name: Upload Surefire
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-feature-${{ github.run_id }}
+          path: '**/target/surefire-reports/'
+          retention-days: 3
+
+  # ─── Job 3: Auto-PR → develop ────────────────────────────────────────────────
+  auto-pr-to-develop:
+    name: "Auto-PR → develop"
+    runs-on: ubuntu-latest
+    needs: [unit-tests]
+    if: >
+      github.event_name == 'push' &&
+      (
+        startsWith(github.ref, 'refs/heads/feat/') ||
+        startsWith(github.ref, 'refs/heads/fix/')  ||
+        startsWith(github.ref, 'refs/heads/chore/')
+      )
+    permissions:
+      pull-requests: write
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Criar PR para develop (se não existir)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH="${{ github.ref_name }}"
+
+          PR_NUMBER=$(gh pr list \
+            --base develop \
+            --head "$BRANCH" \
+            --state open \
+            --json number \
+            --jq '.[0].number' 2>/dev/null || echo "")
+
+          if [ -z "$PR_NUMBER" ]; then
+            gh pr create \
+              --base develop \
+              --head "$BRANCH" \
+              --title "${BRANCH}" \
+              --body "## ${BRANCH}
+
+CI passou ✅
+
+<!-- Descrever o que foi feito e por quê -->
+
+---
+*Auto-gerado pelo pipeline \`ci-feature.yml\` após lint + testes passarem.*" \
+              --draft
+            echo "Draft PR criado: $BRANCH → develop"
+          else
+            echo "PR #$PR_NUMBER já existe para $BRANCH → develop"
+          fi
