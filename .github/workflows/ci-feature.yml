@@ -131,17 +131,7 @@ jobs:
             --jq '.[0].number' 2>/dev/null || echo "")
 
           if [ -z "$PR_NUMBER" ]; then
-            PR_BODY=$(cat <<EOF
-## ${BRANCH}
-
-CI passou - lint e testes OK.
-
-Descrever o que foi feito e por que.
-
----
-Auto-gerado pelo pipeline ci-feature.yml apos lint + testes passarem.
-EOF
-)
+            PR_BODY=$(printf '## %s\n\nCI passou - lint e testes OK.\n\nDescrever o que foi feito e por que.\n\n---\nAuto-gerado pelo pipeline ci-feature.yml apos lint + testes passarem.' "${BRANCH}")
             gh pr create \
               --base develop \
               --head "$BRANCH" \

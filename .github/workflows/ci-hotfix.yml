@@ -192,24 +192,7 @@ jobs:
             --jq '.[0].number' 2>/dev/null || echo "")
 
           if [ -z "$PR_NUMBER" ]; then
-            PR_BODY=$(cat <<EOF
-## Hotfix: ${HOTFIX_NAME}
-
-CI passou - Correcao critica validada.
-
-### Impacto
-Descrever qual bug e corrigido e o impacto em producao.
-
-### Checklist
-- [ ] Bug reproduzido e confirmado
-- [ ] Fix aplicado e testado localmente
-- [ ] Regression test adicionado
-- [ ] Este PR sera backportado para develop tambem
-
----
-Auto-gerado pelo pipeline ci-hotfix.yml.
-EOF
-)
+            PR_BODY=$(printf '## Hotfix: %s\n\nCI passou - Correcao critica validada.\n\n### Impacto\nDescrever qual bug e corrigido e o impacto em producao.\n\n### Checklist\n- [ ] Bug reproduzido e confirmado\n- [ ] Fix aplicado e testado localmente\n- [ ] Regression test adicionado\n- [ ] Este PR sera backportado para develop tambem\n\n---\nAuto-gerado pelo pipeline ci-hotfix.yml.' "${HOTFIX_NAME}")
             gh pr create \
               --base main \
               --head "$BRANCH" \
@@ -248,17 +231,7 @@ EOF
             --jq '.[0].number' 2>/dev/null || echo "")
 
           if [ -z "$PR_NUMBER" ]; then
-            PR_BODY=$(cat <<EOF
-## Backport: ${HOTFIX_NAME} -> develop
-
-Backport obrigatorio do hotfix para garantir que develop nao regrida.
-
-PR principal (-> main): veja PRs com label hotfix.
-
----
-Auto-gerado pelo pipeline ci-hotfix.yml.
-EOF
-)
+            PR_BODY=$(printf '## Backport: %s -> develop\n\nBackport obrigatorio do hotfix para garantir que develop nao regrida.\n\nPR principal (-> main): veja PRs com label hotfix.\n\n---\nAuto-gerado pelo pipeline ci-hotfix.yml.' "${HOTFIX_NAME}")
             gh pr create \
               --base develop \
               --head "$BRANCH" \

@@ -266,30 +266,7 @@ jobs:
             --jq '.[0].number' 2>/dev/null || echo "")
 
           if [ -z "$PR_NUMBER" ]; then
-            PR_BODY=$(cat <<EOF
-## Release ${VERSION}
-
-CI passou em todos os checks obrigatorios.
-
-### Checklist de Release
-- [ ] CHANGELOG revisado
-- [ ] Versao nos pom.xml atualizada (mvn versions:set -DnewVersion=${VERSION})
-- [ ] Migrations Flyway testadas em staging
-- [ ] Smoke test realizado
-- [ ] Rollback plan documentado
-
-### Pipelines executados
-- Lint e Checkstyle: OK
-- Testes Unitarios: OK
-- OWASP Dependency Check: OK
-- Trivy (CRITICAL/HIGH): OK
-- SonarCloud Quality Gate: OK
-- Build e Package: OK
-
----
-Auto-gerado pelo pipeline ci-release.yml apos todos os checks passarem.
-EOF
-)
+            PR_BODY=$(printf '## Release %s\n\nCI passou em todos os checks obrigatorios.\n\n### Checklist de Release\n- [ ] CHANGELOG revisado\n- [ ] Versao nos pom.xml atualizada (mvn versions:set -DnewVersion=%s)\n- [ ] Migrations Flyway testadas em staging\n- [ ] Smoke test realizado\n- [ ] Rollback plan documentado\n\n### Pipelines executados\n- Lint e Checkstyle: OK\n- Testes Unitarios: OK\n- OWASP Dependency Check: OK\n- Trivy (CRITICAL/HIGH): OK\n- SonarCloud Quality Gate: OK\n- Build e Package: OK\n\n---\nAuto-gerado pelo pipeline ci-release.yml apos todos os checks passarem.' "${VERSION}" "${VERSION}")
             gh pr create \
               --base main \
               --head "$BRANCH" \
