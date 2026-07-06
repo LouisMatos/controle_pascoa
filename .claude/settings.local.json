@@ -6,7 +6,8 @@
       "Bash(awk '{printf \"RAM total: %.0f GB\\\\n\", $1/1024/1024/1024}')",
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(/usr/libexec/java_home *)"
     ]
   }
 }
