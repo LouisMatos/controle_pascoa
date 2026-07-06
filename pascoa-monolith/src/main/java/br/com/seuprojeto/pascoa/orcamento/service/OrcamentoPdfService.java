@@ -3,6 +3,7 @@ package br.com.seuprojeto.pascoa.orcamento.service;
 import br.com.seuprojeto.pascoa.orcamento.entity.Orcamento;
 import br.com.seuprojeto.pascoa.orcamento.entity.OrcamentoItem;
 import com.lowagie.text.Document;
+import com.lowagie.text.DocumentException;
 import com.lowagie.text.Element;
 import com.lowagie.text.Font;
 import com.lowagie.text.PageSize;
