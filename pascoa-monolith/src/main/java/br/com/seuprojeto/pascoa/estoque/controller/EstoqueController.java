@@ -3,6 +3,7 @@ package br.com.seuprojeto.pascoa.estoque.controller;
 import br.com.seuprojeto.pascoa.cadastro.service.MateriaPrimaService;
 import br.com.seuprojeto.pascoa.estoque.dto.AjusteEstoqueForm;
 import br.com.seuprojeto.pascoa.estoque.dto.EntradaEstoqueForm;
+import br.com.seuprojeto.pascoa.estoque.dto.SaidaEstoqueForm;
 import br.com.seuprojeto.pascoa.estoque.entity.TipoMovimentacao;
 import br.com.seuprojeto.pascoa.estoque.service.EstoqueService;
 import jakarta.validation.Valid;
@@ -66,6 +67,35 @@ public class EstoqueController {
             ra.addFlashAttribute("sucesso", "Entrada registrada com sucesso!");
         } catch (Exception e) {
             ra.addFlashAttribute("erro", "Erro ao registrar entrada: " + e.getMessage());
+        }
+        return "redirect:/estoque/movimentacoes";
+    }
+
+    // -----------------------------------------------------------------------
+    // Saída manual de matéria-prima (perda, uso interno, doação, etc.)
+    // -----------------------------------------------------------------------
+
+    @GetMapping("/saida")
+    public String saidaForm(@RequestParam(required = false) Long mpId, Model model) {
+        SaidaEstoqueForm form = new SaidaEstoqueForm();
+        if (mpId != null) { form.setMateriaPrimaId(mpId); }
+        model.addAttribute("form", form);
+        model.addAttribute("materiasPrimas", materiaPrimaService.listarTodas());
+        return "estoque/saida";
+    }
+
+    @PostMapping("/saida/salvar")
+    public String saidaSalvar(@Valid @ModelAttribute("form") SaidaEstoqueForm form,
+                              BindingResult result, Model model, RedirectAttributes ra) {
+        if (result.hasErrors()) {
+            model.addAttribute("materiasPrimas", materiaPrimaService.listarTodas());
+            return "estoque/saida";
+        }
+        try {
+            estoqueService.registrarSaida(form.getMateriaPrimaId(), form.getQuantidade(), form.getMotivo());
+            ra.addFlashAttribute("sucesso", "Saída registrada com sucesso!");
+        } catch (Exception e) {
+            ra.addFlashAttribute("erro", "Erro ao registrar saída: " + e.getMessage());
         }
         return "redirect:/estoque/movimentacoes";
     }
