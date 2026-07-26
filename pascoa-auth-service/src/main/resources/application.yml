@@ -40,7 +40,7 @@ spring:
 
 auth:
   jwt:
-    secret: "ALTERE-ESTA-CHAVE-SECRETA-MINIMO-32-CARACTERES-PROD"
+    secret: ${JWT_SECRET:ALTERE-ESTA-CHAVE-SECRETA-MINIMO-32-CARACTERES-PROD}
     access-ttl: 15m
     refresh-ttl: 7d
 
