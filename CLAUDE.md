@@ -1,13 +1,59 @@
-# CLAUDE.md — Sistema Controle Páscoa
+# CLAUDE.md
 
-Sistema de gestão de ovos de Páscoa artesanal. Monolito Spring Boot MVC + Thymeleaf.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## Sistema Controle Páscoa
+
+Sistema de gestão de ovos de Páscoa artesanal. Monolito Spring Boot MVC + Thymeleaf, evoluindo para arquitetura de microsserviços (v5).
+
+---
+
+## Comandos
+
+Projeto é Maven multi-module (root `pom.xml`, packaging=pom). Rodar comandos a partir da raiz ou dentro do módulo específico.
+
+```bash
+# build completo (todos os módulos), sem testes
+mvn -DskipTests install
+
+# build de um módulo só (ex.: monólito)
+cd pascoa-monolith && mvn install
+
+# rodar monólito isolado (dev rápido — só precisa do Postgres)
+docker compose up -d postgres
+cd pascoa-monolith && mvn spring-boot:run
+
+# subir ambiente completo (infra Docker + 13 serviços Java em ordem topológica)
+./start-all.sh
+./start-all.sh status                        # porta UP/DOWN de cada serviço
+./start-all.sh logs pascoa-order-service     # tail -f do log
+./start-all.sh stop                          # para tudo (volumes preservados)
+
+# testes — todos os módulos, exclui *IT.java e *IntegrationTest.java
+mvn test -Dsurefire.excludes="**/*IT.java,**/*IntegrationTest.java,**/*IT.class,**/*IntegrationTest.class"
+
+# um teste único
+mvn test -Dtest=PedidoStateMachineTest -pl pascoa-monolith
+mvn test -Dtest=PedidoStateMachineTest#cancelar_deveLiberarEstoque -pl pascoa-monolith
+
+# lint / análise estática — só ativos com o profile "ci"
+mvn checkstyle:check -Pci -Dcheckstyle.failsOnError=false -Dcheckstyle.logViolationsToConsole=true
+mvn spotbugs:check -Pci -DfailOnError=false
+```
+
+- Config do Checkstyle: `.github/checkstyle.xml` (severidade `error` bloqueia só com o profile `ci` ativo).
+- Config do SpotBugs: `.github/spotbugs-exclude.xml`.
+- Cobertura via JaCoCo roda automaticamente em `mvn test` (todos os módulos).
+- Credenciais/portas dos serviços de infra (RabbitMQ, Redis, Eureka, Config Server) e troubleshooting: `docs/09-quickstart.md`.
+
+**GitFlow:** branches `feat/*`, `fix/*`, `refactor/*`, `chore/*` a partir de `develop`; `release/*` a partir de `develop` (auto-PR para `main`); `hotfix/*` a partir de `main` (auto-PR para `main` e `develop`). CI varia por tipo de branch — ver `docs/09-gitflow.md`.
 
 ---
 
 ## Stack
 
 - **Java 21** + **Spring Boot 3.3.4** + Maven
-- **PostgreSQL** (`pascoa_db` em localhost:5432)
+- **PostgreSQL** (`pascoa_monolith` em localhost:5432)
 - **Flyway** para migrations (ddl-auto=`validate` — Hibernate nunca gera schema)
 - **Thymeleaf 3** + Bootstrap 5.3.2 + Bootstrap Icons 1.11.3
 - **Spring Security 6** com RBAC por roles
@@ -15,6 +61,24 @@ Sistema de gestão de ovos de Páscoa artesanal. Monolito Spring Boot MVC + Thym
 
 Pacote base: `br.com.seuprojeto.pascoa`  
 Entry point: `PascoaApplication.java`
+
+---
+
+## Arquitetura — Strangler Fig (2 camadas coexistindo)
+
+**Monólito (`pascoa-monolith`)** — MVC em camadas: `Controller → Service → Repository → PostgreSQL`. Eventos internos via `ApplicationEventPublisher` do Spring.
+
+**Microsserviços v5 (os outros 13 módulos)** — Arquitetura Hexagonal (Ports & Adapters):
+```
+adapter/in (REST, RabbitMQ Consumer) → application/usecase → domain/model → adapter/out (JPA, RabbitMQ)
+```
+- **Regra de ouro:** `domain/` nunca importa Spring/JPA/framework nenhum; `application/usecase` só conhece `port/in` e `port/out`, nunca HTTP/JPA/RabbitMQ diretamente.
+- JPA Entity é **separada** do domain model (mapeada via MapStruct).
+- Comunicação entre serviços: RabbitMQ (topic exchanges), assíncrona, com idempotência por `eventId`.
+- Cada serviço é stateless e valida o próprio JWT (sem sessão compartilhada).
+- Detalhes completos e checklist de novo serviço: `docs/02-arquitetura-tecnica.md` §1 e §14, `docs/07-convencoes-desenvolvimento.md` (seção "Microsserviços v5").
+
+Migração é gradual: features novas tendem a nascer no microsserviço correspondente; o monólito ainda concentra a maior parte do domínio de negócio.
 
 ---
 
@@ -50,9 +114,9 @@ Leia antes de começar qualquer tarefa — evita re-exploração do código:
 
 ---
 
-## Estrutura de Módulos
+## Estrutura de Módulos (monólito)
 
-Cada módulo em `src/main/java/br/com/seuprojeto/pascoa/` segue:
+Cada módulo em `pascoa-monolith/src/main/java/br/com/seuprojeto/pascoa/` segue:
 ```
 {modulo}/controller/{Entidade}Controller.java
 {modulo}/service/{Entidade}Service.java
@@ -128,7 +192,7 @@ Jobs proativos: aniversário (08h), orçamento expirando (09h). SMS como fallbac
 ```
 URL:   http://localhost:8080
 Login: admin / Senha: admin123
-BD:    localhost:5432/pascoa_db (usuário: postgres)
+BD:    localhost:5432/pascoa_monolith (usuário: postgres)
 ```
 
 ---

@@ -90,7 +90,6 @@ class FinanceiroUseCaseTest {
                 lancamentoCateg(TipoLancamento.DESPESA, CategoriaLancamento.OPERACIONAL, "100.00")
         );
         when(repository.findByAno(2026)).thenReturn(todos);
-        when(repository.findByMesAno(anyInt(), eq(2026))).thenReturn(List.of());
 
         DreAnual dre = useCase.dre(2026);
 
