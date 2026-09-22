@@ -49,7 +49,7 @@
             <ul class="navbar-nav me-auto">
 
                 <!-- CADASTROS -->
-                <li class="nav-item dropdown">
+                <li class="nav-item dropdown" th:classappend="${#httpServletRequest.requestURI.startsWith('/clientes') or #httpServletRequest.requestURI.startsWith('/produtos') or #httpServletRequest.requestURI.startsWith('/materias') or #httpServletRequest.requestURI.startsWith('/fornecedores')} ? 'active-group'">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                         <i class="bi bi-card-list me-1"></i>Cadastros
                     </a>
@@ -78,7 +78,7 @@
                 </li>
 
                 <!-- COMERCIAL -->
-                <li class="nav-item dropdown" sec:authorize="hasAnyRole('ADMIN', 'ATENDENTE')">
+                <li class="nav-item dropdown" sec:authorize="hasAnyRole('ADMIN', 'ATENDENTE')" th:classappend="${#httpServletRequest.requestURI.startsWith('/pedidos') or #httpServletRequest.requestURI.startsWith('/orcamentos') or #httpServletRequest.requestURI.startsWith('/crm')} ? 'active-group'">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                         <i class="bi bi-cart3 me-1"></i>Comercial
                     </a>
@@ -102,7 +102,7 @@
                 </li>
 
                 <!-- PRODUÇÃO -->
-                <li class="nav-item dropdown" sec:authorize="hasAnyRole('ADMIN', 'CONFEITEIRO', 'GESTOR_QUALIDADE')">
+                <li class="nav-item dropdown" sec:authorize="hasAnyRole('ADMIN', 'CONFEITEIRO', 'GESTOR_QUALIDADE')" th:classappend="${#httpServletRequest.requestURI.startsWith('/producao') or #httpServletRequest.requestURI.startsWith('/qualidade')} ? 'active-group'">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                         <i class="bi bi-gear me-1"></i>Produção
                     </a>
@@ -118,7 +118,7 @@
                 </li>
 
                 <!-- ESTOQUE -->
-                <li class="nav-item dropdown">
+                <li class="nav-item dropdown" th:classappend="${#httpServletRequest.requestURI.startsWith('/estoque')} ? 'active-group'">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                         <i class="bi bi-clipboard-data me-1"></i>Estoque
                     </a>
@@ -135,7 +135,7 @@
                 </li>
 
                 <!-- FINANCEIRO (inclui Gastos) -->
-                <li class="nav-item dropdown" sec:authorize="hasAnyRole('ADMIN', 'FINANCEIRO', 'ANALISTA')">
+                <li class="nav-item dropdown" sec:authorize="hasAnyRole('ADMIN', 'FINANCEIRO', 'ANALISTA')" th:classappend="${#httpServletRequest.requestURI.startsWith('/financeiro') or #httpServletRequest.requestURI.startsWith('/gastos') or #httpServletRequest.requestURI.startsWith('/analytics')} ? 'active-group'">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                         <i class="bi bi-graph-up me-1"></i>Financeiro
                     </a>
@@ -181,7 +181,7 @@
                 </li>
 
                 <!-- ADMIN -->
-                <li class="nav-item dropdown" sec:authorize="hasRole('ADMIN')">
+                <li class="nav-item dropdown" sec:authorize="hasRole('ADMIN')" th:classappend="${#httpServletRequest.requestURI.startsWith('/usuarios') or #httpServletRequest.requestURI.startsWith('/notificacoes') or #httpServletRequest.requestURI.startsWith('/auditoria') or #httpServletRequest.requestURI.startsWith('/lgpd')} ? 'active-group'">
                     <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                         <i class="bi bi-shield-lock me-1"></i>Admin
                     </a>
