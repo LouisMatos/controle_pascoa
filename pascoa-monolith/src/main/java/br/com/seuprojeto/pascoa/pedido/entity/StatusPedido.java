@@ -1,21 +1,27 @@
 package br.com.seuprojeto.pascoa.pedido.entity;
 
 public enum StatusPedido {
-    NOVO("Novo"),
-    CONFIRMADO("Confirmado"),
-    EM_PRODUCAO("Em Produção"),
-    PRONTO("Pronto"),
-    ENTREGUE("Entregue"),
-    CANCELADO("Cancelado");
+    NOVO("Novo", "bg-primary"),
+    CONFIRMADO("Confirmado", "bg-info text-dark"),
+    EM_PRODUCAO("Em Produção", "bg-warning text-dark"),
+    PRONTO("Pronto", "bg-success"),
+    ENTREGUE("Entregue", "bg-dark"),
+    CANCELADO("Cancelado", "bg-danger");
 
     private final String descricao;
+    private final String badgeCss;
 
-    StatusPedido(String descricao) {
+    StatusPedido(String descricao, String badgeCss) {
         this.descricao = descricao;
+        this.badgeCss = badgeCss;
     }
 
     public String getDescricao() {
         return descricao;
+    }
+
+    public String getBadgeCss() {
+        return badgeCss;
     }
 
     public boolean podeConfirmar() {

@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -25,6 +26,9 @@ public class TwoFactorAuthenticationSuccessHandler implements AuthenticationSucc
     private final UsuarioRepository usuarioRepository;
     private final TotpService totpService;
 
+    @Value("${security.2fa.enabled:true}")
+    private boolean twoFactorEnabled;
+
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
@@ -33,7 +37,7 @@ public class TwoFactorAuthenticationSuccessHandler implements AuthenticationSucc
         boolean isAdmin = authentication.getAuthorities().contains(
             new SimpleGrantedAuthority("ROLE_" + Role.ADMIN.name()));
 
-        if (!isAdmin) {
+        if (!isAdmin || !twoFactorEnabled) {
             response.sendRedirect("/dashboard");
             return;
         }
