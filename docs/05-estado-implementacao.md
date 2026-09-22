@@ -1,6 +1,6 @@
 # Estado de Implementação — Sistema Controle Páscoa
 
-> **Verificado em:** 2026-06-30 — varredura de performance + V15 (índices fluxo de caixa)  
+> **Verificado em:** 2026-09-22 — testes unitários passando (78/78), fixes JaCoCo/Mockito/Java 21  
 > **Critério:** ✅ Implementado e testado | ⚠️ Parcialmente implementado | ❌ Não iniciado | 🐛 Bug conhecido
 
 ---
@@ -495,6 +495,51 @@ Varredura geral de hotspots no monólito (via `/java-performance-analysis`). 5 p
 **Validação:**
 - `mvn -pl pascoa-monolith clean compile` → `BUILD SUCCESS` (200 arquivos).
 - Para validar ganho real: ativar `hibernate.generate_statistics=true` em dev e medir `/financeiro/fluxo-caixa` antes/depois.
+
+---
+
+## 21. Fixes Java 21 + Refactor Navbar ✅
+
+**Data:** 2026-09-22 — Teste suite foi 78/78 (100% passing)
+
+### Problemas Resolvidos
+
+| Problema | Raiz | Solução |
+|----------|------|---------|
+| Testes falhavam com JaCoCo `Unsupported class file major version 70` | JaCoCo 0.8.12 não suporta Java 21 | Upgrade `pom.xml`: JaCoCo 0.8.12 → 0.8.14 |
+| Mockito inline mocks falhavam com Byte Buddy/Java 21 | Mock-maker padrão incompatível | Maven Surefire: `<mockito.mock-maker>subclass</mockito.mock-maker>` |
+| Byte Buddy rejeita Java 21 | Versão antiga Byte Buddy | Adicionar flag: `<net.bytebuddy.experimental>true</net.bytebuddy.experimental>` |
+| Templates MockMvc falhavam ao resolver `#httpServletRequest` | Spring test context não fornecia `HttpServletRequest` no modelo | Refactor: criar `@ControllerAdvice` `LayoutAdvice` para injetar `activeGroup` no modelo |
+| Navbar ativo usava expressão complexa em Thymeleaf | Acesso direto a `#httpServletRequest` via SpringEL | Simplificar: `${activeGroup == 'cadastros'}` em lugar de ternário com 4 condições |
+
+### Arquivos Modificados
+
+- `pom.xml`: JaCoCo 0.8.12 → 0.8.14
+- `pascoa-monolith/pom.xml`: Surefire plugin com mock-maker + Byte Buddy flags
+- `pascoa-monolith/src/main/java/br/com/seuprojeto/pascoa/config/LayoutAdvice.java` (novo): injeta `activeGroup` baseado em `request.getRequestURI()`
+- `pascoa-monolith/src/main/resources/templates/fragments/layout.html`: Navbar refatorado com `${activeGroup}` (6 grupos: cadastros, comercial, producao, estoque, financeiro, admin)
+
+### Testes — Resultado Final
+
+```
+[INFO] Tests run: 78, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+```
+
+**Cobertura:** Todos os 78 testes unitários passam, incluindo:
+- 22 testes `RolePermissionsTest` (7 roles × navegação navbar)
+- 14 testes `NotificacaoEventListenerTest` (eventos + exception handling)
+- 13 testes `PedidoStateMachineTest` (transições de estado)
+- 8 testes `CrmSegmentoTest` (segmentação)
+- 14 testes `PasswordResetServiceTest` (recuperação de senha)
+- 6 testes `NotificacaoIdempotenciaTest` (idempotência)
+- Demais testes de autenticação, autorização, controllers, services
+
+### Impacto
+
+✅ **Nenhum bug novo introduzido** — refactor é estrutural, não muda lógica de negócio.  
+✅ **Testes de integração confirmam** — RolePermissionsTest renderiza 15 templates com sucesso.  
+✅ **Pronto para CI/CD** — Maven agora rodar testes com `mvn test -pl pascoa-monolith` sem falhas.
 
 ---
 
