@@ -10,6 +10,10 @@ import br.com.seuprojeto.pascoa.pedido.repository.PagamentoRepository;
 import br.com.seuprojeto.pascoa.pedido.repository.PedidoRepository;
 import br.com.seuprojeto.pascoa.producao.entity.StatusOrdem;
 import br.com.seuprojeto.pascoa.producao.repository.OrdemProducaoRepository;
+import br.com.seuprojeto.pascoa.qualidade.repository.InspecaoRepository;
+import br.com.seuprojeto.pascoa.gastos.repository.GastoVariavelRepository;
+import java.time.LocalDate;
+import java.time.YearMonth;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -30,6 +34,8 @@ public class DashboardController {
     private final OrdemProducaoRepository ordemRepository;
     private final PagamentoRepository pagamentoRepository;
     private final ConfiguracaoFinanceiraRepository configFinanceiraRepository;
+    private final InspecaoRepository inspecaoRepository;
+    private final GastoVariavelRepository gastoRepository;
 
     @GetMapping({"/", "/dashboard"})
     public String dashboard(Model model) {
@@ -53,6 +59,29 @@ public class DashboardController {
         ConfiguracaoFinanceira config = configFinanceiraRepository.obter();
         BigDecimal meta = config.getMetaFaturamentoMensal();
 
+        // Receita do mês (pedidos entregues)
+        var mesAtual = YearMonth.now();
+        BigDecimal receitaMes = pedidoRepository.sumTotalPorStatusAndMes(
+                List.of(StatusPedido.ENTREGUE),
+                mesAtual.getMonthValue(),
+                mesAtual.getYear());
+        if (receitaMes == null) receitaMes = BigDecimal.ZERO;
+
+        // Gastos do mês
+        BigDecimal gastosMes = gastoRepository.sumTotal(mesAtual.getYear(), mesAtual.getMonthValue());
+        if (gastosMes == null) gastosMes = BigDecimal.ZERO;
+
+        // Margem bruta do mês
+        Integer pctMargemMes = null;
+        if (receitaMes.compareTo(BigDecimal.ZERO) > 0) {
+            BigDecimal margem = receitaMes.subtract(gastosMes);
+            pctMargemMes = margem
+                    .divide(receitaMes, 4, RoundingMode.HALF_UP)
+                    .multiply(BigDecimal.valueOf(100))
+                    .setScale(0, RoundingMode.HALF_UP)
+                    .intValue();
+        }
+
         // pctMeta: null = meta não definida; int 0–100 = percentage
         Integer pctMeta = null;
         if (meta.compareTo(BigDecimal.ZERO) > 0) {
@@ -66,6 +95,9 @@ public class DashboardController {
 
         boolean metaDefinida = meta.compareTo(BigDecimal.ZERO) > 0;
 
+        // ── KPIs de qualidade ─────────────────────────────────────────────────
+        long inspeccoesPendentes = inspecaoRepository.countPendentes();
+
         // ── Model ─────────────────────────────────────────────────────────────
         model.addAttribute("totalClientes",      clienteService.listarTodos().size());
         model.addAttribute("totalProdutos",      produtoService.listarAtivos().size());
@@ -77,8 +109,12 @@ public class DashboardController {
 
         model.addAttribute("ordensPendentes",    ordensPendentes);
         model.addAttribute("ordensEmAndamento",  ordensEmAndamento);
+        model.addAttribute("inspeccoesPendentes", inspeccoesPendentes);
 
         model.addAttribute("totalRecebido",      totalRecebido);
+        model.addAttribute("receitaMes",         receitaMes);
+        model.addAttribute("gastosMes",          gastosMes);
+        model.addAttribute("pctMargemMes",       pctMargemMes);
         model.addAttribute("metaMensal",         meta);
         model.addAttribute("metaDefinida",       metaDefinida);
         model.addAttribute("pctMeta",            pctMeta);

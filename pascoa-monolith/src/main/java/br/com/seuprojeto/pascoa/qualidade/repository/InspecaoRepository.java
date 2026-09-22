@@ -18,4 +18,7 @@ public interface InspecaoRepository extends JpaRepository<InspecaoQualidade, Lon
 
     long countByAprovadoTrue();
     long countByAprovadoFalse();
+
+    @Query("SELECT COUNT(i) FROM InspecaoQualidade i WHERE i.dataInspecao IS NULL")
+    long countPendentes();
 }

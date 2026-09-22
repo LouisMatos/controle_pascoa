@@ -80,4 +80,10 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     @Query(value = "SELECT DISTINCT EXTRACT(YEAR FROM data_pedido)::int FROM pedidos " +
                    "WHERE status != 'CANCELADO' ORDER BY 1 DESC", nativeQuery = true)
     List<Integer> anosComPedidos();
+
+    @Query("SELECT COALESCE(SUM(p.totalPedido), 0) FROM Pedido p " +
+           "WHERE p.status IN :statuses " +
+           "AND MONTH(p.dataPedido) = :mes AND YEAR(p.dataPedido) = :ano")
+    BigDecimal sumTotalPorStatusAndMes(@Param("statuses") List<StatusPedido> statuses,
+                                       @Param("mes") int mes, @Param("ano") int ano);
 }
