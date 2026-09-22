@@ -1,14 +1,10 @@
 <!DOCTYPE html>
-<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<html lang="pt-BR" th:replace="~{fragments/layout-publico :: layout(~{::title}, ~{::main})}"
+      xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Catálogo de Produtos — Páscoa Gestão</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <style>
-        body { background-color: #f8f9fa; font-size: 0.93rem; }
-        .brand-bar { background: linear-gradient(135deg, #198754, #20c997); }
+        .brand-bar { background: linear-gradient(135deg, var(--pascoa-brand), #20c997); }
         .produto-card { transition: transform .15s, box-shadow .15s; border: none; }
         .produto-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,.13) !important; }
         .produto-img { width: 100%; height: 200px; object-fit: cover; }
@@ -17,13 +13,14 @@
         .badge-TRUFADO    { background-color: #6f42c1; }
         .badge-RECHEADO   { background-color: #fd7e14; }
         .badge-DIET       { background-color: #0dcaf0; color: #000 !important; }
-        .badge-VEGANO     { background-color: #198754; }
+        .badge-VEGANO     { background-color: var(--pascoa-brand); }
         .badge-TRADICIONAL{ background-color: #6c757d; }
         .badge-ESPECIAL   { background-color: #d63384; }
-        .filter-btn.active { background-color: #198754 !important; border-color: #198754 !important; color: #fff !important; }
+        .filter-btn.active { background-color: var(--pascoa-brand) !important; border-color: var(--pascoa-brand) !important; color: #fff !important; }
     </style>
 </head>
 <body>
+<main>
 
 <!-- Barra de marca -->
 <div class="brand-bar text-white py-4 mb-4">
@@ -62,7 +59,6 @@
          class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-4">
         <div th:each="p : ${produtos}" class="col">
             <div class="card h-100 produto-card shadow-sm">
-                <!-- Foto ou placeholder -->
                 <a th:href="@{/catalogo/{id}(id=${p.id})}">
                     <img th:if="${p.foto != null and !p.foto.isEmpty()}"
                          th:src="@{/media/{f}(f=${p.foto})}"
@@ -101,10 +97,6 @@
 
 </div>
 
-<footer class="bg-white border-top py-3 mt-4 text-center text-muted small">
-    <i class="bi bi-egg-fill text-success me-1"></i>Páscoa Gestão — Ovos Artesanais
-</footer>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</main>
 </body>
 </html>
