@@ -18,7 +18,10 @@
       "Bash(mvn -q -pl pascoa-monolith -am clean install -DskipTests)",
       "Bash(grep -rn \"btn btn-\\\\\\(success\\\\|primary\\\\|outline-success\\\\|outline-primary\\\\\\)\\\\\"[^>]*>\\\\s*$\\\\|class=\\\\\"btn btn-\" src/main/resources/templates --include=\"*lista.html\" -A1)",
       "Bash(grep -rl \"th:if=\\\\\"\\\\${sucesso}\\\\\"\" src/main/resources/templates --include=\"*.html\")",
-      "Bash(xargs -I{} basename {})"
+      "Bash(xargs -I{} basename {})",
+      "Bash(rtk wc *)",
+      "Bash(mvn test *)",
+      "Bash(mvn clean *)"
     ]
   }
 }
