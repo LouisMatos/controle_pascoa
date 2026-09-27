@@ -1,0 +1,15 @@
+region              = "us-east-1"
+environment         = "sandbox"
+instance_type       = "t3.small"
+
+# openssl rand -base64 24
+db_password           = "TROQUE-ME"
+admin_senha_inicial   = "TROQUE-ME"
+
+# openssl rand -hex 32 — obriga todo tráfego a passar pelo API Gateway.
+# Vazio deixa a EC2 acessível direto pelo IP público.
+gateway_shared_secret = "TROQUE-ME"
+
+# Opcional: SMTP para notificações por email
+mail_username = ""
+mail_password = ""

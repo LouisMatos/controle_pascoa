@@ -1,7 +1,7 @@
 # Convenções de Desenvolvimento — Sistema Controle Páscoa
 
-> **Fonte:** Leitura direta de PedidoController, PedidoService, PedidoRepository, StatusPedido, layout.html, GlobalModelAdvice e GlobalExceptionHandler  
-> **Atualizado em:** 2026-05-26
+> **Fonte:** Monólito (PedidoController, PedidoService, layout.html etc.) + Microsserviços v5 (padrão hexagonal)  
+> **Atualizado em:** 2026-05-29
 
 ---
 
@@ -581,6 +581,51 @@ Arquivo: `src/main/java/br/com/seuprojeto/pascoa/config/SecurityConfig.java`
 
 > **Atenção:** Rotas não declaradas no `SecurityConfig` ficam inacessíveis por padrão (`.anyRequest().authenticated()` no final).
 
+### 9.1 Persistindo `SecurityContext` em fluxos customizados (Spring Security 6)
+
+**Regra:** **Nunca** usar `session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, ctx)` sozinho — esse padrão (do Spring Security 5) **não funciona mais** no Spring Security 6, porque o `SecurityContextPersistenceFilter` foi removido e o `DelegatingSecurityContextRepository` lê primeiro do `RequestAttributeSecurityContextRepository` (que tem precedência e retornaria vazio).
+
+**Padrão correto** para qualquer controller/handler que precise autenticar manualmente (ex.: conclusão de 2FA, SSO callback):
+
+```java
+@RequiredArgsConstructor
+@Controller
+public class MeuFluxoController {
+
+    private final SecurityContextRepository securityContextRepository; // bean exposto em SecurityConfig
+
+    @PostMapping("/meu-fluxo/finalizar")
+    public String finalizar(HttpServletRequest request, HttpServletResponse response) {
+        Authentication auth = /* construir o Authentication */;
+        SecurityContext context = SecurityContextHolder.createEmptyContext();
+        context.setAuthentication(auth);
+        SecurityContextHolder.setContext(context);
+        securityContextRepository.saveContext(context, request, response); // ← obrigatório
+        return "redirect:/dashboard";
+    }
+}
+```
+
+E o bean precisa estar declarado no `SecurityConfig`:
+```java
+@Bean
+public SecurityContextRepository securityContextRepository() {
+    return new DelegatingSecurityContextRepository(
+        new RequestAttributeSecurityContextRepository(),
+        new HttpSessionSecurityContextRepository()
+    );
+}
+
+@Bean
+public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                               SecurityContextRepository securityContextRepository) throws Exception {
+    http.securityContext(sc -> sc.securityContextRepository(securityContextRepository))
+        // ...
+}
+```
+
+Referência do bug que motivou esta convenção: [10-bugfix-login-loop-gateway.md](10-bugfix-login-loop-gateway.md) seção 10 (B13).
+
 ---
 
 ## 10. Criando Migration Flyway
@@ -769,3 +814,71 @@ Disponíveis diretamente em qualquer template — não precisam ser adicionados 
 - [ ] Rota adicionada no `SecurityConfig.java`
 - [ ] Link adicionado no menu do `layout.html`
 - [ ] `ddl-auto=validate` **não alterado**
+
+---
+
+## Convenções — Microsserviços v5 (Arquitetura Hexagonal)
+
+### Checklist 11.1 por Serviço (obrigatório ao criar novo microsserviço)
+
+- [ ] **Domain** — entidades com `@Builder @With`, VOs imutáveis, exceções, enums com lógica de transição. **Zero dependências de framework.**
+- [ ] **Ports/in** — interface `{Entidade}UseCase` com records de `Command` e `Query` como tipos internos
+- [ ] **Ports/out** — interfaces `{Entidade}RepositoryPort`, `{Entidade}EventPublisherPort`
+- [ ] **Use Case** — `@Service @Transactional`, implementa port/in, injeta via port/out
+- [ ] **JPA Entity** — `@Entity` **separada** do domain model, campos mutáveis com `@Setter`
+- [ ] **MapStruct Mapper** — `@Mapper(componentModel = "spring")` com `@Mapping(target=..., ignore=true)` para timestamps
+- [ ] **Repository Adapter** — implementa port/out via Spring Data JPA
+- [ ] **Event Publisher** — implementa port/out via `RabbitTemplate`, nunca lança exceção (tenta e loga)
+- [ ] **Event Consumer** — `@RabbitListener` com **idempotência** por `eventId`
+- [ ] **REST Controller** — `@RestController`, delega ao use case, `@ExceptionHandler` por domínio
+- [ ] **JWT Filter** — `JwtAuthFilter extends OncePerRequestFilter`, stateless, lê `auth.jwt.secret`
+- [ ] **SecurityConfig** — `SessionCreationPolicy.STATELESS`, `@EnableMethodSecurity`
+- [ ] **RabbitConfig** — declara Queue com DLX, Exchange, Binding. `Jackson2JsonMessageConverter`.
+- [ ] **Flyway** — `V1__create_{servico}_schema.sql` no banco correto
+- [ ] **application.yml** — datasource, rabbitmq, redis, auth.jwt.secret, eureka (disabled default), actuator
+- [ ] **Unit Tests** — 100% do domain e use case **sem Spring context** (`@ExtendWith(MockitoExtension.class)`)
+- [ ] **Integration Tests** — `@Testcontainers` PostgreSQL, excluir Rabbit/Mail auto-config
+- [ ] **Registrar no root pom.xml** — `<module>pascoa-{servico}</module>`
+- [ ] **Registrar no config-server** — criar `configs/pascoa-{servico}.yml`
+
+### Naming dos arquivos
+
+| Artefato | Padrão | Exemplo |
+|----------|--------|---------|
+| Application | `{Servico}ServiceApplication.java` | `OrderServiceApplication.java` |
+| Domain entity | `{Entidade}.java` | `Pedido.java` |
+| JPA entity | `{Entidade}JpaEntity.java` | `PedidoJpaEntity.java` |
+| Domain exception | `{Entidade}NotFoundException.java` | `PedidoNotFoundException.java` |
+| Use case interface | `{Entidade}UseCase.java` | `PedidoUseCase.java` |
+| Use case impl | `{Entidade}UseCaseImpl.java` | `PedidoUseCaseImpl.java` |
+| Repo port | `{Entidade}RepositoryPort.java` | `PedidoRepositoryPort.java` |
+| Repo adapter | `{Entidade}RepositoryAdapter.java` | `PedidoRepositoryAdapter.java` |
+| Event publisher port | `{Entidade}EventPublisherPort.java` | `PedidoEventPublisherPort.java` |
+| Event publisher adapter | `{Entidade}EventPublisherAdapter.java` | `PedidoEventPublisherAdapter.java` |
+| Event consumer | `{Origem}EventConsumer.java` | `OrderEventConsumer.java` |
+| REST controller | `{Entidade}Controller.java` | `PedidoController.java` |
+| Request DTO | `{Acao}{Entidade}Request.java` | `CriarPedidoRequest.java` |
+| Response DTO | `{Entidade}Response.java` | `PedidoResponse.java` |
+| Mapper | `{Entidade}Mapper.java` | `PedidoMapper.java` |
+| Migration | `V1__create_{servico}_schema.sql` | `V1__create_order_schema.sql` |
+
+### Estrutura de pacotes (todos os microsserviços)
+
+```
+br.com.seuprojeto.pascoa.{servico}/
+├── {Servico}ServiceApplication.java
+├── domain/
+│   ├── model/          ← entidades, enums, VOs
+│   ├── exception/      ← exceções de negócio
+│   └── service/        ← domain services (opcional)
+├── application/
+│   ├── port/in/        ← interfaces de casos de uso
+│   ├── port/out/       ← interfaces de saída (repo, events, external)
+│   └── usecase/        ← implementações
+├── adapter/
+│   ├── in/rest/        ← controllers + DTOs
+│   └── out/
+│       ├── persistence/ ← JPA entity + repo + mapper + adapter
+│       └── messaging/   ← publisher + consumer
+└── config/             ← JwtAuthFilter, SecurityConfig, RabbitConfig
+```

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+<!-- Badge de status parametrizado -->
+<span th:fragment="badge-status(cssClass, texto)" class="badge" th:classappend="${cssClass}" th:text="${texto}"></span>
+
+<!-- Card de KPI com ícone em caixa colorida -->
+<div th:fragment="kpi-card(icone, corTema, label, valor)" class="col-6 col-lg-3 mb-3">
+    <div class="card">
+        <div class="card-body">
+            <div class="d-flex align-items-center">
+                <div th:classappend="${'bg-' + corTema + ' bg-opacity-10'}" class="rounded-3 p-3 me-3">
+                    <i th:classappend="${'bi bi-' + icone + ' fs-5 text-' + corTema}"></i>
+                </div>
+                <div>
+                    <small class="text-muted d-block" th:text="${label}"></small>
+                    <h5 class="mb-0" th:text="${valor}"></h5>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Empty state -->
+<div th:fragment="empty-state(icone, mensagem, colspan)" th:if="${colspan}" class="text-center py-5">
+    <i th:classappend="${'bi bi-' + icone + ' fs-1 opacity-50 d-block mb-3'}"></i>
+    <p class="text-muted" th:text="${mensagem}"></p>
+</div>
+
+</body>
+</html>

@@ -1,7 +1,7 @@
 # Protocolo de Manutenção da Documentação
 
 > **Quando executar:** Ao final de toda sessão em que código foi criado ou alterado.  
-> **Atualizado em:** 2026-05-26
+> **Atualizado em:** 2026-05-29
 
 ---
 
@@ -20,19 +20,19 @@ Identificar os arquivos alterados e classificá-los:
 
 | Se o arquivo alterado for... | Docs potencialmente impactadas |
 |------------------------------|-------------------------------|
-| `src/main/resources/db/migration/V*.sql` | `06-schema-banco.md` (nova tabela/coluna) |
-| `**/entity/*.java` (novo campo ou entidade) | `02-arquitetura-tecnica.md`, `06-schema-banco.md` |
-| `**/entity/*.java` (novo enum value) | `02-arquitetura-tecnica.md`, `03-fluxos-negocio.md` |
-| `**/controller/*.java` (nova rota) | `04-rotas-endpoints.md` |
-| `**/controller/*.java` (nova permissão) | `04-rotas-endpoints.md` |
-| `config/SecurityConfig.java` | `04-rotas-endpoints.md`, `01-infraestrutura.md` |
-| `notificacao/entity/EventoNotificacao.java` | `02-arquitetura-tecnica.md`, `03-fluxos-negocio.md`, `05-estado-implementacao.md` |
-| `**/service/*.java` (nova lógica de negócio) | `03-fluxos-negocio.md` |
-| `**/service/*.java` (novo service) | `02-arquitetura-tecnica.md` |
+| `src/main/resources/db/migration/V*.sql` (monólito) | `06-schema-banco.md` |
+| `pascoa-{svc}/src/main/resources/db/migration/V*.sql` | `06-schema-banco.md` (seção microsserviços) |
+| `**/entity/*.java` ou `**/domain/model/*.java` | `02-arquitetura-tecnica.md`, `06-schema-banco.md` |
+| `**/controller/*.java` ou `**/adapter/in/rest/*.java` | `04-rotas-endpoints.md` |
+| `config/SecurityConfig.java` ou `**/config/SecurityConfig.java` | `04-rotas-endpoints.md`, `01-infraestrutura.md` |
+| `**/service/*.java` ou `**/usecase/*.java` | `03-fluxos-negocio.md` |
 | `pom.xml` (nova dependência) | `01-infraestrutura.md` |
-| `application.properties` | `01-infraestrutura.md` |
+| `application.properties` ou `application.yml` | `01-infraestrutura.md` |
+| `docker-compose.yml` ou `infra/**` | `01-infraestrutura.md` |
 | `fragments/layout.html` (novo item de menu) | `04-rotas-endpoints.md` |
-| Novo módulo completo | `02-arquitetura-tecnica.md`, `03-fluxos-negocio.md`, `04-rotas-endpoints.md`, `05-estado-implementacao.md` |
+| Novo módulo monólito | `02-arquitetura-tecnica.md`, `03-fluxos-negocio.md`, `04-rotas-endpoints.md`, `05-estado-implementacao.md` |
+| Novo microsserviço | `00-indice.md`, `01-infraestrutura.md`, `02-arquitetura-tecnica.md`, `04-rotas-endpoints.md`, `05-estado-implementacao.md`, `06-schema-banco.md` |
+| `CLAUDE.md` (roadmap) | Atualizar quando items do roadmap concluídos |
 
 ---
 

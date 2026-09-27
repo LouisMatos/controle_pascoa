@@ -1,0 +1,28 @@
+/* Design tokens — Sistema de cores e spacing para Páscoa Gestão */
+
+:root {
+  /* Marca — verde único centralizado */
+  --pascoa-brand: #198754;
+  --pascoa-brand-dark: #146c43;
+  --pascoa-brand-light: #d1e7dd;
+
+  /* Sobrescreve Bootstrap 5.3 para usar marca consistentemente */
+  --bs-success: var(--pascoa-brand);
+  --bs-success-rgb: 25, 135, 84;
+
+  /* Neutros para hierarquia tipográfica */
+  --pascoa-ink: #1f2937;
+  --pascoa-muted: #6b7280;
+  --pascoa-border: #e5e7eb;
+}
+
+/* Indicação de item ativo no navbar */
+.active-group .nav-link {
+  font-weight: 600;
+  border-bottom: 3px solid var(--pascoa-brand);
+  padding-bottom: calc(0.5rem - 3px);
+}
+
+.active-group .dropdown-toggle::after {
+  border-top-color: var(--pascoa-brand);
+}
