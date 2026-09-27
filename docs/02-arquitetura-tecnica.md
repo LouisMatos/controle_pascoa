@@ -1,39 +1,72 @@
 # Documentação de Arquitetura Técnica — Sistema Controle Páscoa
 
 > **Projeto:** Sistema de Gestão de Ovos de Páscoa Artesanal  
-> **Versão:** Spring Boot 3.3.4 / Java 21  
-> **Atualizado em:** 2026-05-26
+> **Versão:** Spring Boot 3.3.4 / Java 21 / Spring Cloud 2023.0.3  
+> **Atualizado em:** 2026-05-29
 
 ---
 
 ## 1. Visão Geral da Arquitetura
 
-O sistema segue a arquitetura **MVC em camadas** (Model-View-Controller) do Spring Framework, com separação clara entre:
+O sistema possui **duas camadas arquiteturais coexistentes** (padrão Strangler Fig):
+
+### 1.1 Monólito (`pascoa-monolith`) — MVC em camadas
 
 ```
-Browser / Cliente HTTP
+Browser / Thymeleaf
         │
         ▼
   [Controller Layer]     ← recebe requisições, valida input, delega ao service
         │
         ▼
-  [Service Layer]        ← lógica de negócio, transações, eventos
+  [Service Layer]        ← lógica de negócio, transações, eventos Spring
         │
         ▼
   [Repository Layer]     ← acesso a dados via Spring Data JPA
         │
         ▼
-  [Database - PostgreSQL]
+  [PostgreSQL — pascoa_monolith]
 ```
 
-**Padrões aplicados:**
-- MVC (Spring Web MVC)
+**Padrões do monólito:**
+- MVC (Spring Web MVC + Thymeleaf)
 - Service Layer (lógica de negócio isolada)
 - Repository/DAO (Spring Data JPA)
 - DTO (objetos de transferência Controller ↔ View)
-- Event-Driven (Spring ApplicationEventPublisher para notificações)
+- Event-Driven interno (Spring `ApplicationEventPublisher`)
 - Soft-delete (Hibernate `@SQLDelete` + `@SQLRestriction`)
-- Spring Data Auditing (rastreabilidade de criação/alteração)
+- Spring Data Auditing (rastreabilidade automática)
+
+### 1.2 Microsserviços v5 — Arquitetura Hexagonal (Ports & Adapters)
+
+Cada microsserviço segue a estrutura:
+
+```
+[REST / RabbitMQ Consumer]  ← adapter IN
+          │
+          ▼
+  [Application — Use Cases] ← lógica de negócio (sem Spring)
+          │
+     ports/in  ports/out
+          │
+          ▼
+  [Domain Model]            ← entidades, VOs, exceções — ZERO dependências externas
+          │
+          ▼
+[JPA / Redis / RabbitMQ]    ← adapters OUT
+```
+
+**Regra de ouro:** O domain **nunca** importa Spring, JPA ou qualquer framework.  
+O use case **nunca** conhece HTTP, mensageria ou banco — só as interfaces de port.
+
+**Padrões dos microsserviços:**
+- Hexagonal Architecture (Ports & Adapters)
+- Domain-Driven Design (bounded contexts isolados)
+- Event-Driven assíncrono (RabbitMQ topic exchanges)
+- CQRS leve (read/write separados nos use cases)
+- Idempotência via `eventId` + banco ou Redis
+- Strangler Fig (migração gradual do monólito)
+- Stateless + JWT (cada serviço valida o token independentemente)
 
 ---
 
@@ -770,3 +803,113 @@ Cada módulo segue a estrutura:
 ```
 
 > Exceções: módulos simples podem ter tudo em um único sub-pacote.
+
+---
+
+## 14. Arquitetura Hexagonal — Microsserviços v5
+
+Cada microsserviço segue a estrutura abaixo. O pacote base é `br.com.seuprojeto.pascoa.{servico}`.
+
+### 14.1 Estrutura de Pacotes
+
+```
+{servico}/
+├── {Servico}Application.java              ← @SpringBootApplication
+│
+├── domain/                                ← ZERO dependências de framework
+│   ├── model/
+│   │   ├── {Entidade}.java               ← @Builder + @With (Lombok) — imutável
+│   │   └── {Enum}.java                   ← enums de estado com tabela de transições
+│   ├── exception/
+│   │   └── {Entidade}NotFoundException.java
+│   └── service/                           ← domain services (lógica pura)
+│
+├── application/
+│   ├── port/
+│   │   ├── in/
+│   │   │   └── {Entidade}UseCase.java    ← interface + records de Command/Query
+│   │   └── out/
+│   │       ├── {Entidade}RepositoryPort.java
+│   │       └── {Entidade}EventPublisherPort.java
+│   └── usecase/
+│       └── {Entidade}UseCaseImpl.java    ← @Service @Transactional, implementa port/in
+│
+├── adapter/
+│   ├── in/
+│   │   └── rest/
+│   │       ├── {Entidade}Controller.java ← @RestController, delega ao UseCase
+│   │       └── dto/                      ← Request + Response records
+│   └── out/
+│       ├── persistence/
+│       │   ├── {Entidade}JpaEntity.java  ← @Entity separado do domain model
+│       │   ├── {Entidade}JpaRepository.java ← extends JpaRepository
+│       │   ├── {Entidade}Mapper.java     ← @Mapper MapStruct (domain ↔ JPA)
+│       │   └── {Entidade}RepositoryAdapter.java ← implementa RepositoryPort
+│       └── messaging/
+│           ├── {Entidade}EventPublisherAdapter.java ← RabbitTemplate
+│           └── {Servico}EventConsumer.java          ← @RabbitListener + idempotência
+│
+└── config/
+    ├── JwtAuthFilter.java                ← OncePerRequestFilter stateless
+    ├── SecurityConfig.java               ← STATELESS, @EnableMethodSecurity
+    └── RabbitConfig.java                 ← Queues, Exchanges, Bindings, DLX
+```
+
+### 14.2 Regras Invioláveis
+
+| # | Regra | Motivo |
+|---|-------|--------|
+| 1 | Domain **nunca** importa Spring, JPA, Lombok `@Data` | Testabilidade pura |
+| 2 | Use case **nunca** conhece HTTP nem RabbitMQ | Só fala com ports |
+| 3 | Adapter IN (`Controller`) **nunca** acessa repository diretamente | Só via use case |
+| 4 | JPA Entity é **separada** do domain model | Domain imutável, JPA mutável |
+| 5 | Idempotência obrigatória em todo `@RabbitListener` | Garantia at-least-once |
+| 6 | `@Transactional` apenas no use case (nunca no adapter) | Consistência de fronteira |
+
+### 14.3 Consumer com Idempotência (padrão)
+
+```java
+@RabbitListener(queues = "#{T(Config).QUEUE_NAME}")
+public void onEvent(Map<String, Object> event) {
+    String eventId = (String) event.get("eventId");
+    if (eventId == null || !processados.add(eventId)) return; // in-memory
+    // ou: if (repository.existsByEventId(eventId)) return;   // via banco
+    // processar...
+}
+```
+
+### 14.4 JWT Stateless (padrão em todos os serviços)
+
+Todos os microsserviços validam o JWT **localmente** (sem chamar o auth-service):
+
+```java
+// JwtAuthFilter.java — padrão copiado em cada serviço
+Claims claims = Jwts.parser()
+    .verifyWith(secretKey)    // chave compartilhada via Config Server
+    .build()
+    .parseSignedClaims(token)
+    .getPayload();
+List<String> roles = claims.get("roles", List.class);
+// → authorities → SecurityContextHolder
+```
+
+> A chave `auth.jwt.secret` é compartilhada via `pascoa-config-server`. Em produção usar variável de ambiente `JWT_SECRET`.
+
+### 14.5 Domain Imutável com `@With` (Lombok)
+
+```java
+@Getter @Builder @With
+public class Pedido {
+    private final Long id;
+    private final StatusPedido status;
+    // ...
+
+    // Transição imutável — retorna nova instância
+    public Pedido transicionarPara(StatusPedido novoStatus) {
+        if (!status.podeTransicionarPara(novoStatus))
+            throw new TransicaoInvalidaException(id, status, novoStatus);
+        return this.withStatus(novoStatus);
+    }
+}
+```
+

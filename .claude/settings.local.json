@@ -1,7 +1,27 @@
 {
   "permissions": {
     "allow": [
-      "Bash(grep -n \"DespesaFixa\\\\|DespesaVariavel\\\\|ConfiguracaoFinanceira\\\\|ContaReceber\\\\|ContaPagar\" /tmp/pascoa_docx_unpacked/word/document.xml | head -40)"
+      "Bash(grep -n \"DespesaFixa\\\\|DespesaVariavel\\\\|ConfiguracaoFinanceira\\\\|ContaReceber\\\\|ContaPagar\" /tmp/pascoa_docx_unpacked/word/document.xml | head -40)",
+      "Bash(rm -rf target)",
+      "Bash(mv .claude/settings.json /tmp/settings.json.bak)",
+      "Bash(mv /tmp/settings.json.bak .claude/settings.json)",
+      "Bash(mv *)",
+      "Bash(mv -f .claude/settings.local.json /tmp/)",
+      "Bash(mv /tmp/settings.local.json .claude/)",
+      "Bash(docker compose *)",
+      "Bash(rtk docker *)",
+      "Bash(mvn -q -pl pascoa-monolith -am install -DskipTests)",
+      "Bash(rtk mvn *)",
+      "Bash(timeout 30 mvn spring-boot:run)",
+      "Bash(java *)",
+      "Bash(rm -rf /Users/luismatos/.m2/repository/org/projectlombok/lombok/1.18.34)",
+      "Bash(mvn -q -pl pascoa-monolith -am clean install -DskipTests)",
+      "Bash(grep -rn \"btn btn-\\\\\\(success\\\\|primary\\\\|outline-success\\\\|outline-primary\\\\\\)\\\\\"[^>]*>\\\\s*$\\\\|class=\\\\\"btn btn-\" src/main/resources/templates --include=\"*lista.html\" -A1)",
+      "Bash(grep -rl \"th:if=\\\\\"\\\\${sucesso}\\\\\"\" src/main/resources/templates --include=\"*.html\")",
+      "Bash(xargs -I{} basename {})",
+      "Bash(rtk wc *)",
+      "Bash(mvn test *)",
+      "Bash(mvn clean *)"
     ]
   }
 }

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-BR" th:replace="~{fragments/layout-publico :: layout(~{::title}, ~{::main})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Login — Sistema Páscoa</title>
+    <style>
+        .login-container { display: flex; align-items: center; justify-content: center; min-height: 80vh; }
+        .login-card { width: 380px; }
+    </style>
+</head>
+<body>
+<main class="login-container">
+    <div class="login-card">
+        <div class="text-center mb-4">
+            <i class="bi bi-egg-fill text-success" style="font-size: 3rem;"></i>
+            <h3 class="fw-bold mt-2 mb-0">Páscoa Gestão</h3>
+            <p class="text-muted small">Sistema de Gestão de Ovos Artesanais</p>
+        </div>
+
+        <div class="card">
+            <div class="card-body p-4">
+
+                <div th:if="${param.erro}" class="alert alert-danger py-2 small mb-3">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                    Usuário ou senha incorretos. Tente novamente.
+                </div>
+                <div th:if="${param.logout}" class="alert alert-success py-2 small mb-3">
+                    <i class="bi bi-check-circle-fill me-1"></i>
+                    Você saiu do sistema. Até logo!
+                </div>
+
+                <form th:action="@{/login}" method="post">
+                    <div class="mb-3">
+                        <label for="username" class="form-label fw-semibold">Login</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-person"></i></span>
+                            <input type="text" id="username" name="username"
+                                   class="form-control" autofocus autocomplete="username"
+                                   placeholder="seu.login" required>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="password" class="form-label fw-semibold">Senha</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                            <input type="password" id="password" name="password"
+                                   class="form-control" autocomplete="current-password"
+                                   placeholder="••••••••" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-success w-100 py-2">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Entrar
+                    </button>
+                    <div class="text-center mt-3">
+                        <a href="/auth/forgot-password" class="text-muted small">
+                            <i class="bi bi-key me-1"></i>Esqueceu sua senha?
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+</body>
+</html>

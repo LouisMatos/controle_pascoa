@@ -1,0 +1,36 @@
+# Gerado pelo Terraform (não editar na instância — será sobrescrito no próximo apply).
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file:
+      - /opt/pascoa/postgres.env
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d pascoa_monolith"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+  app:
+    image: ${image}
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - /opt/pascoa/app.env
+    ports:
+      - "${app_port}:8080"
+    volumes:
+      - /opt/pascoa/uploads:/opt/pascoa/uploads
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+
+volumes:
+  pgdata:

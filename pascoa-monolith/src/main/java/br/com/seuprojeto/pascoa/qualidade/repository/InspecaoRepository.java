@@ -1,0 +1,27 @@
+package br.com.seuprojeto.pascoa.qualidade.repository;
+
+import br.com.seuprojeto.pascoa.qualidade.entity.InspecaoQualidade;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Repository
+public interface InspecaoRepository extends JpaRepository<InspecaoQualidade, Long> {
+
+    Optional<InspecaoQualidade> findByOrdemProducaoId(Long ordemId);
+
+    @Query(value = "SELECT i FROM InspecaoQualidade i JOIN FETCH i.ordemProducao o JOIN FETCH o.produto ORDER BY i.dataInspecao DESC",
+           countQuery = "SELECT count(i) FROM InspecaoQualidade i")
+    Page<InspecaoQualidade> findComDetalhes(Pageable pageable);
+
+    long countByAprovadoTrue();
+    long countByAprovadoFalse();
+
+    @Query("SELECT COUNT(i) FROM InspecaoQualidade i WHERE i.dataInspecao IS NULL")
+    long countPendentes();
+}

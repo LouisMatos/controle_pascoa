@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Dashboard — Sistema Páscoa</title>
+</head>
+<body>
+<div id="pageContent">
+
+    <div class="d-flex align-items-center mb-4">
+        <i class="bi bi-egg-fill text-success me-2 fs-3"></i>
+        <h2 class="mb-0">Dashboard</h2>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-lg-4">
+            <div class="card h-100 border-danger border-2">
+                <div class="card-header bg-white fw-semibold d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-exclamation-triangle text-danger me-2"></i>Atrasados</span>
+                    <span class="badge bg-danger" th:text="${totalAtrasados}">0</span>
+                </div>
+                <div class="card-body p-0">
+                    <div th:if="${#lists.isEmpty(atrasados)}" class="text-muted small p-3 mb-0">
+                        Nenhum pedido atrasado.
+                    </div>
+                    <ul class="list-group list-group-flush" th:unless="${#lists.isEmpty(atrasados)}">
+                        <li class="list-group-item d-flex justify-content-between align-items-center"
+                            th:each="p : ${atrasados}">
+                            <a th:href="@{/pedidos/{id}(id=${p.id})}"
+                               th:text="'#' + ${p.id} + ' · ' + ${p.cliente?.nome}">#0</a>
+                            <span class="badge bg-danger-subtle text-danger-emphasis"
+                                  th:text="${#temporals.format(p.dataEntrega,'dd/MM')}"></span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-footer bg-white text-center py-2"
+                     th:if="${totalAtrasados > #lists.size(atrasados)}">
+                    <a th:href="@{/pedidos}" class="small text-decoration-none"
+                       th:text="|ver todos os atrasados (${totalAtrasados})|">ver todos</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card h-100 border-primary border-2">
+                <div class="card-header bg-white fw-semibold d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-truck text-primary me-2"></i>Entregar hoje</span>
+                    <span class="badge bg-primary" th:text="${totalEntregarHoje}">0</span>
+                </div>
+                <div class="card-body p-0">
+                    <div th:if="${#lists.isEmpty(entregarHoje)}" class="text-muted small p-3 mb-0">
+                        Nada para entregar hoje.
+                    </div>
+                    <ul class="list-group list-group-flush" th:unless="${#lists.isEmpty(entregarHoje)}">
+                        <li class="list-group-item d-flex justify-content-between align-items-center"
+                            th:each="p : ${entregarHoje}">
+                            <a th:href="@{/pedidos/{id}(id=${p.id})}"
+                               th:text="'#' + ${p.id} + ' · ' + ${p.cliente?.nome}">#0</a>
+                            <span class="badge" th:classappend="${p.status.badgeCss}"
+                                  th:text="${p.status.descricao}"></span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-footer bg-white text-center py-2"
+                     th:if="${totalEntregarHoje > #lists.size(entregarHoje)}">
+                    <a th:href="@{/pedidos}" class="small text-decoration-none"
+                       th:text="|ver todos os pedidos de hoje (${totalEntregarHoje})|">ver todos</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card h-100 border-warning border-2">
+                <div class="card-header bg-white fw-semibold d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-clipboard2-check text-warning me-2"></i>Produzir</span>
+                    <span class="badge bg-warning text-dark" th:text="${totalProduzir}">0</span>
+                </div>
+                <div class="card-body p-0">
+                    <div th:if="${#lists.isEmpty(produzir)}" class="text-muted small p-3 mb-0">
+                        Nenhuma ordem aberta.
+                    </div>
+                    <ul class="list-group list-group-flush" th:unless="${#lists.isEmpty(produzir)}">
+                        <li class="list-group-item d-flex justify-content-between align-items-center"
+                            th:each="o : ${produzir}">
+                            <a th:href="@{/producao/{id}(id=${o.id})}"
+                               th:text="${o.quantidade} + 'x ' + ${o.produto.nome}">0x</a>
+                            <span class="badge bg-light text-dark"
+                                  th:text="${o.pedido?.dataEntrega != null} ? ${#temporals.format(o.pedido.dataEntrega,'dd/MM')} : '—'"></span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-footer bg-white text-center py-2"
+                     th:if="${totalProduzir > #lists.size(produzir)}">
+                    <a th:href="@{/producao}" class="small text-decoration-none"
+                       th:text="|ver todos os em produção (${totalProduzir})|">ver todos</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Linha 1: KPIs Críticos (números grandes) ─────────────────────── -->
+    <div class="row g-3 mb-4">
+        <!-- Receita do mês -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card h-100 border-success border-2">
+                <div class="card-body">
+                    <div class="text-muted small fw-semibold text-uppercase mb-2">Receita do Mês</div>
+                    <div class="fs-2 fw-bold text-success">
+                        R$ <span th:text="${#numbers.formatDecimal(receitaMes,1,'POINT',2,'COMMA')}">0,00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Margem bruta -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card h-100 border-primary border-2">
+                <div class="card-body">
+                    <div class="text-muted small fw-semibold text-uppercase mb-2">Margem Bruta</div>
+                    <div class="fs-2 fw-bold text-primary">
+                        <span th:if="${pctMargemMes != null}" th:text="${pctMargemMes}">0</span><span th:if="${pctMargemMes != null}">%</span>
+                        <span th:unless="${pctMargemMes != null}" class="text-muted">—</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Pedidos em produção -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card h-100 border-warning border-2">
+                <div class="card-body">
+                    <div class="text-muted small fw-semibold text-uppercase mb-2">Em Produção</div>
+                    <div class="fs-2 fw-bold text-warning" th:text="${ordensPendentes + ordensEmAndamento}">0</div>
+                </div>
+            </div>
+        </div>
+        <!-- Alertas críticos -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card h-100 border-danger border-2">
+                <div class="card-body">
+                    <div class="text-muted small fw-semibold text-uppercase mb-2">Alertas Críticos</div>
+                    <div class="fs-2 fw-bold text-danger" th:text="${alertasEstoque + inspeccoesPendentes}">0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Linha 2: KPIs Secundários ────────────────────────────────────── -->
+    <div class="row g-3 mb-3">
+        <div class="col-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="rounded-3 bg-primary bg-opacity-10 p-3">
+                        <i class="bi bi-people-fill fs-3 text-primary"></i>
+                    </div>
+                    <div>
+                        <div class="fs-4 fw-bold" th:text="${totalClientes}">0</div>
+                        <div class="text-muted small">Clientes</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="rounded-3 bg-success bg-opacity-10 p-3">
+                        <i class="bi bi-box-seam-fill fs-3 text-success"></i>
+                    </div>
+                    <div>
+                        <div class="fs-4 fw-bold" th:text="${totalProdutos}">0</div>
+                        <div class="text-muted small">Produtos</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="rounded-3 bg-warning bg-opacity-10 p-3">
+                        <i class="bi bi-cart3 fs-3 text-warning"></i>
+                    </div>
+                    <div>
+                        <div class="fs-4 fw-bold" th:text="${pedidosAbertos}">0</div>
+                        <div class="text-muted small">Abertos</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <div class="rounded-3 bg-info bg-opacity-10 p-3">
+                        <i class="bi bi-clipboard2-check fs-3 text-info"></i>
+                    </div>
+                    <div>
+                        <div class="fs-4 fw-bold" th:text="${inspeccoesPendentes}">0</div>
+                        <div class="text-muted small">Inspeções</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Linha 3: Financeiro detalhado ─────────────────────────────────── -->
+    <div class="row g-3 mb-4">
+        <!-- Faturamento em aberto -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-hourglass-split text-warning fs-5"></i>
+                        <span class="text-muted small fw-semibold text-uppercase">Em Aberto</span>
+                    </div>
+                    <div class="fs-5 fw-bold">
+                        R$ <span th:text="${#numbers.formatDecimal(faturamentoAberto,1,'POINT',2,'COMMA')}">0,00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Total recebido -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                        <span class="text-muted small fw-semibold text-uppercase">Total Recebido</span>
+                    </div>
+                    <div class="fs-5 fw-bold text-success">
+                        R$ <span th:text="${#numbers.formatDecimal(totalRecebido,1,'POINT',2,'COMMA')}">0,00</span>
+                    </div>
+                    <div th:if="${pctMeta != null}" class="text-muted" style="font-size:.75rem; margin-top:.5rem;">
+                        <span th:text="${pctMeta}">0</span>% da meta
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Gastos do mês -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-graph-down text-danger fs-5"></i>
+                        <span class="text-muted small fw-semibold text-uppercase">Gastos do Mês</span>
+                    </div>
+                    <div class="fs-5 fw-bold">
+                        R$ <span th:text="${#numbers.formatDecimal(gastosMes,1,'POINT',2,'COMMA')}">0,00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Meta mensal -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-bullseye text-info fs-5"></i>
+                        <span class="text-muted small fw-semibold text-uppercase">Meta Mensal</span>
+                    </div>
+                    <div class="fs-5 fw-bold" th:if="${metaDefinida}">
+                        R$ <span th:text="${#numbers.formatDecimal(metaMensal,1,'POINT',2,'COMMA')}">0,00</span>
+                    </div>
+                    <div class="fs-5 fw-bold text-muted" th:unless="${metaDefinida}">
+                        <a th:href="@{/financeiro/dashboard}" class="text-decoration-none text-muted" style="font-size:.85rem;">Definir meta</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <!-- Alertas de estoque crítico -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-white fw-semibold">
+                    <i class="bi bi-exclamation-triangle text-warning me-2"></i>Estoque Crítico
+                </div>
+                <div class="card-body p-0">
+                    <div th:if="${#lists.isEmpty(mpsCriticas)}" class="text-center text-muted py-4">
+                        <i class="bi bi-check-circle text-success fs-4 d-block mb-1"></i>
+                        Nenhuma matéria-prima abaixo do mínimo.
+                    </div>
+                    <ul class="list-group list-group-flush" th:unless="${#lists.isEmpty(mpsCriticas)}">
+                        <li class="list-group-item d-flex justify-content-between align-items-center"
+                            th:each="mp : ${mpsCriticas}">
+                            <span th:text="${mp.nome}"></span>
+                            <span class="badge bg-danger">
+                                <span th:text="${mp.quantidadeAtual}"></span>
+                                <span th:text="${mp.unidade.simbolo}"></span>
+                            </span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Atalhos -->
+        <div class="col-lg-6">
+            <div class="card h-100">
+                <div class="card-header bg-white fw-semibold">
+                    <i class="bi bi-lightning-charge me-2 text-primary"></i>Acesso Rápido
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a th:href="@{/pedidos/wizard}" class="btn btn-outline-success">
+                            <i class="bi bi-magic me-2"></i>Novo Pedido (Wizard)
+                        </a>
+                        <a th:href="@{/clientes/novo}" class="btn btn-outline-primary">
+                            <i class="bi bi-person-plus me-2"></i>Novo Cliente
+                        </a>
+                        <a th:href="@{/producao/kanban}" class="btn btn-outline-warning">
+                            <i class="bi bi-kanban me-2"></i>Kanban de Produção
+                        </a>
+                        <a th:href="@{/estoque/entrada}" class="btn btn-outline-secondary">
+                            <i class="bi bi-box-arrow-in-down me-2"></i>Entrada de Matéria-Prima
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

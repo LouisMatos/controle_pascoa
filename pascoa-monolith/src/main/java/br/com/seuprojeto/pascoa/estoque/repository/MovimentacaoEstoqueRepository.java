@@ -1,0 +1,43 @@
+package br.com.seuprojeto.pascoa.estoque.repository;
+
+import br.com.seuprojeto.pascoa.estoque.entity.MovimentacaoEstoque;
+import br.com.seuprojeto.pascoa.estoque.entity.TipoMovimentacao;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Repository
+public interface MovimentacaoEstoqueRepository extends JpaRepository<MovimentacaoEstoque, Long> {
+
+    List<MovimentacaoEstoque> findAllByOrderByDataDesc();
+
+    List<MovimentacaoEstoque> findByMateriaPrimaIdOrderByDataDesc(Long materiaPrimaId);
+
+    List<MovimentacaoEstoque> findByTipoOrderByDataDesc(TipoMovimentacao tipo);
+
+    @Query("SELECT m FROM MovimentacaoEstoque m JOIN FETCH m.materiaPrima " +
+           "WHERE (:mpId IS NULL OR m.materiaPrima.id = :mpId) " +
+           "AND   (:tipo IS NULL OR m.tipo = :tipo) " +
+           "ORDER BY m.data DESC")
+    Page<MovimentacaoEstoque> filtrar(@Param("mpId") Long mpId,
+                                      @Param("tipo") TipoMovimentacao tipo,
+                                      Pageable pageable);
+
+    @Query("""
+        SELECT COALESCE(SUM(m.quantidade * COALESCE(m.custoUnitario, 0)), 0)
+        FROM MovimentacaoEstoque m
+        WHERE m.tipo = :tipo
+          AND m.data >= :inicio
+          AND m.data <  :fimExclusivo
+    """)
+    BigDecimal sumCustoByTipoEPeriodo(@Param("tipo") TipoMovimentacao tipo,
+                                      @Param("inicio") LocalDateTime inicio,
+                                      @Param("fimExclusivo") LocalDateTime fimExclusivo);
+}
