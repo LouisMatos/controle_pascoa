@@ -4,18 +4,19 @@ import br.com.seuprojeto.pascoa.estoque.service.EstoqueService;
 import br.com.seuprojeto.pascoa.fichaTecnica.entity.FichaTecnica;
 import br.com.seuprojeto.pascoa.fichaTecnica.entity.FichaTecnicaItem;
 import br.com.seuprojeto.pascoa.fichaTecnica.repository.FichaTecnicaRepository;
-import br.com.seuprojeto.pascoa.notificacao.entity.EventoNotificacao;
-import br.com.seuprojeto.pascoa.notificacao.event.PedidoStatusEvent;
 import br.com.seuprojeto.pascoa.notificacao.service.AlertaInternoService;
 import br.com.seuprojeto.pascoa.pedido.entity.ItemPedido;
 import br.com.seuprojeto.pascoa.pedido.entity.Pedido;
 import br.com.seuprojeto.pascoa.producao.entity.OrdemProducao;
 import br.com.seuprojeto.pascoa.producao.entity.StatusOrdem;
+import br.com.seuprojeto.pascoa.producao.event.ProducaoAtualizadaEvent;
 import br.com.seuprojeto.pascoa.producao.repository.OrdemProducaoRepository;
 import br.com.seuprojeto.pascoa.shared.exception.EstoqueInsuficienteException;
 import br.com.seuprojeto.pascoa.shared.exception.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,13 +43,11 @@ public class ProducaoService {
     // -----------------------------------------------------------------------
 
     @Transactional(readOnly = true)
-    public List<OrdemProducao> listarTodas() {
-        return ordemRepository.findAllComDetalhes();
-    }
-
-    @Transactional(readOnly = true)
-    public List<OrdemProducao> listarPorStatus(StatusOrdem status) {
-        return ordemRepository.findByStatusComDetalhes(status);
+    public Page<OrdemProducao> listarFila(StatusOrdem status, int pagina) {
+        PageRequest pageRequest = PageRequest.of(pagina, 50);
+        return status != null
+            ? ordemRepository.findByStatusComDetalhes(status, pageRequest)
+            : ordemRepository.findComDetalhes(pageRequest);
     }
 
     @Transactional(readOnly = true)
@@ -63,35 +62,27 @@ public class ProducaoService {
     }
 
     @Transactional(readOnly = true)
+    public boolean existeOrdem(Long pedidoId, StatusOrdem... status) {
+        return ordemRepository.existsByPedidoIdAndStatusIn(pedidoId, List.of(status));
+    }
+
+    @Transactional(readOnly = true)
     public Optional<FichaTecnica> buscarFicha(Long produtoId) {
         return fichaTecnicaRepository.findByProdutoIdComItens(produtoId);
     }
 
-    /**
-     * Retorna ordens agrupadas por status para o Kanban.
-     * Colunas exibidas: PENDENTE, EM_ANDAMENTO, CONCLUIDA (as últimas 20).
-     */
     @Transactional(readOnly = true)
-    public java.util.Map<StatusOrdem, java.util.List<OrdemProducao>> listarKanban() {
-        var todas = ordemRepository.findAllComDetalhes();
-        // Mantém todas as PENDENTE e EM_ANDAMENTO; limita CONCLUIDA/CANCELADA às 20 mais recentes
-        java.util.Map<StatusOrdem, java.util.List<OrdemProducao>> mapa = new java.util.LinkedHashMap<>();
-        for (StatusOrdem s : StatusOrdem.values()) {
-            mapa.put(s, new java.util.ArrayList<>());
-        }
-        todas.forEach(o -> mapa.get(o.getStatus()).add(o));
-        // Limita concluídas e canceladas para não poluir o board
-        limitarLista(mapa, StatusOrdem.CONCLUIDA, 20);
-        limitarLista(mapa, StatusOrdem.CANCELADA, 10);
+    public java.util.Map<StatusOrdem, List<OrdemProducao>> listarKanban() {
+        java.util.Map<StatusOrdem, List<OrdemProducao>> mapa = new java.util.LinkedHashMap<>();
+        mapa.put(StatusOrdem.PENDENTE, colunaKanban(StatusOrdem.PENDENTE, 50));
+        mapa.put(StatusOrdem.EM_ANDAMENTO, colunaKanban(StatusOrdem.EM_ANDAMENTO, 50));
+        mapa.put(StatusOrdem.CONCLUIDA, colunaKanban(StatusOrdem.CONCLUIDA, 20));
+        mapa.put(StatusOrdem.CANCELADA, colunaKanban(StatusOrdem.CANCELADA, 10));
         return mapa;
     }
 
-    private void limitarLista(java.util.Map<StatusOrdem, java.util.List<OrdemProducao>> mapa,
-                               StatusOrdem status, int max) {
-        var lista = mapa.get(status);
-        if (lista.size() > max) {
-            mapa.put(status, lista.subList(0, max));
-        }
+    private List<OrdemProducao> colunaKanban(StatusOrdem status, int max) {
+        return ordemRepository.findByStatusComDetalhes(status, PageRequest.of(0, max)).getContent();
     }
 
     // -----------------------------------------------------------------------
@@ -122,7 +113,7 @@ public class ProducaoService {
         }
         ordem.setStatus(StatusOrdem.EM_ANDAMENTO);
         ordemRepository.save(ordem);
-        eventPublisher.publishEvent(new PedidoStatusEvent(ordem.getPedido(), EventoNotificacao.PRODUCAO_INICIADA));
+        publicarProducaoAtualizada(ordem);
     }
 
     @Transactional(isolation = Isolation.SERIALIZABLE)
@@ -175,6 +166,13 @@ public class ProducaoService {
         ordem.setStatus(StatusOrdem.CONCLUIDA);
         ordem.setDataConclusao(LocalDateTime.now());
         ordemRepository.save(ordem);
+        publicarProducaoAtualizada(ordem);
+    }
+
+    private void publicarProducaoAtualizada(OrdemProducao ordem) {
+        if (ordem.getPedido() != null) {
+            eventPublisher.publishEvent(new ProducaoAtualizadaEvent(ordem.getPedido().getId()));
+        }
     }
 
     private void verificarDisponibilidadeMP(List<FichaTecnicaItem> itens, BigDecimal qtdOrdem,
@@ -213,6 +211,7 @@ public class ProducaoService {
         boolean estaEmAndamento = ordem.getStatus() == StatusOrdem.EM_ANDAMENTO;
         ordem.setStatus(StatusOrdem.CANCELADA);
         ordemRepository.save(ordem);
+        publicarProducaoAtualizada(ordem);
 
         if (estaEmAndamento) {
             alertaInternoService.criar(

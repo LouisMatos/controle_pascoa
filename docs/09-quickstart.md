@@ -121,7 +121,22 @@ UI continua em http://localhost:8080.
 
 ---
 
-## 8. Referências cruzadas
+## 8. Massa de testes (banco local)
+
+Popular o banco de desenvolvimento com todos os cenários da aplicação em volume de estresse
+(5.000 pedidos em 3 safras, 30k movimentações de estoque, todos os status e casos limítrofes):
+
+```bash
+docker compose exec -T postgres psql -U postgres -d pascoa_monolith < infra/seed/seed-massa-teste.sql
+```
+
+Apaga os dados de negócio e preserva `usuarios` e `configuracao_*`. Determinístico: reexecutar
+gera exatamente o mesmo banco. O volume é ajustável nas variáveis `\set` do topo do arquivo.
+Usuários criados (senha igual à do `admin`): `financeiro`, `atendente`, `confeiteiro`,
+`qualidade`, `analista`, `admin2`, `admin2fa` (com 2FA), `bloqueada`, `inativo`, `semmail`.
+Achados de performance/bug com essa massa estão em `EVOLUCAO_FLUXO_PASCOA.md`.
+
+## 9. Referências cruzadas
 
 - [docs/01-infraestrutura.md](01-infraestrutura.md) — detalhes de stack, bancos, portas.
 - [docs/02-arquitetura-tecnica.md](02-arquitetura-tecnica.md) — desenho dos microsserviços e eventos.

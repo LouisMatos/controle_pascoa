@@ -33,8 +33,12 @@ public class EstoqueController {
     @GetMapping("/movimentacoes")
     public String movimentacoes(@RequestParam(required = false) Long mpId,
                                 @RequestParam(required = false) TipoMovimentacao tipo,
+                                @RequestParam(defaultValue = "0") int pagina,
                                 Model model) {
-        model.addAttribute("movimentacoes", estoqueService.filtrar(mpId, tipo));
+        var page = estoqueService.filtrar(mpId, tipo, pagina);
+        model.addAttribute("movimentacoes", page.getContent());
+        model.addAttribute("page", page);
+        model.addAttribute("pagina", pagina);
         model.addAttribute("materiasPrimas", materiaPrimaService.listarTodas());
         model.addAttribute("tipos", TipoMovimentacao.values());
         model.addAttribute("mpIdFiltro", mpId);

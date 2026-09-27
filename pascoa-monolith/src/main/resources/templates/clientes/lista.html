@@ -76,8 +76,22 @@
             </table>
           </div>
         </div>
-        <div class="card-footer text-muted small" th:if="${!#lists.isEmpty(clientes)}">
-            <span th:text="${#lists.size(clientes)}"></span> cliente(s) encontrado(s).
+        <div class="card-footer d-flex justify-content-between align-items-center"
+             th:if="${!#lists.isEmpty(clientes)}">
+            <span class="text-muted small"
+                  th:text="|Página ${pagina + 1} de ${page.totalPages} — ${page.totalElements} cliente(s)|"></span>
+            <div class="d-flex gap-1" th:if="${page.totalPages > 1}">
+                <a th:if="${pagina > 0}"
+                   th:href="@{/clientes(busca=${busca},pagina=${pagina - 1})}"
+                   class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+                <a th:if="${pagina < page.totalPages - 1}"
+                   th:href="@{/clientes(busca=${busca},pagina=${pagina + 1})}"
+                   class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </div>
         </div>
     </div>
 

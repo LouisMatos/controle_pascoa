@@ -17,7 +17,7 @@
         <div class="card-body text-center">
           <div class="text-muted small fw-semibold text-uppercase">Corrente</div>
           <div class="fs-5 fw-bold text-success mt-1">R$ <span th:text="${#numbers.formatDecimal(aging.totalCorrente,1,'POINT',2,'COMMA')}"></span></div>
-          <div class="text-muted small" th:text="${#lists.size(aging.corrente)} + ' conta(s)'"></div>
+          <div class="text-muted small" th:text="${#lists.size(aging.corrente)} + ' pedido(s)'"></div>
         </div>
       </div>
     </div>
@@ -26,7 +26,7 @@
         <div class="card-body text-center">
           <div class="text-muted small fw-semibold text-uppercase">1–30 dias</div>
           <div class="fs-5 fw-bold text-warning mt-1">R$ <span th:text="${#numbers.formatDecimal(aging.total1a30,1,'POINT',2,'COMMA')}"></span></div>
-          <div class="text-muted small" th:text="${#lists.size(aging.atraso1a30)} + ' conta(s)'"></div>
+          <div class="text-muted small" th:text="${#lists.size(aging.atraso1a30)} + ' pedido(s)'"></div>
         </div>
       </div>
     </div>
@@ -35,7 +35,7 @@
         <div class="card-body text-center">
           <div class="text-muted small fw-semibold text-uppercase">31–60 dias</div>
           <div class="fs-5 fw-bold mt-1" style="color:#fd7e14">R$ <span th:text="${#numbers.formatDecimal(aging.total31a60,1,'POINT',2,'COMMA')}"></span></div>
-          <div class="text-muted small" th:text="${#lists.size(aging.atraso31a60)} + ' conta(s)'"></div>
+          <div class="text-muted small" th:text="${#lists.size(aging.atraso31a60)} + ' pedido(s)'"></div>
         </div>
       </div>
     </div>
@@ -44,7 +44,7 @@
         <div class="card-body text-center">
           <div class="text-muted small fw-semibold text-uppercase">61–90 dias</div>
           <div class="fs-5 fw-bold text-danger mt-1">R$ <span th:text="${#numbers.formatDecimal(aging.total61a90,1,'POINT',2,'COMMA')}"></span></div>
-          <div class="text-muted small" th:text="${#lists.size(aging.atraso61a90)} + ' conta(s)'"></div>
+          <div class="text-muted small" th:text="${#lists.size(aging.atraso61a90)} + ' pedido(s)'"></div>
         </div>
       </div>
     </div>
@@ -53,7 +53,7 @@
         <div class="card-body text-center">
           <div class="text-muted small fw-semibold text-uppercase">&gt;90 dias</div>
           <div class="fs-5 fw-bold text-dark mt-1">R$ <span th:text="${#numbers.formatDecimal(aging.totalAcima90,1,'POINT',2,'COMMA')}"></span></div>
-          <div class="text-muted small" th:text="${#lists.size(aging.atrasoAcima90)} + ' conta(s)'"></div>
+          <div class="text-muted small" th:text="${#lists.size(aging.atrasoAcima90)} + ' pedido(s)'"></div>
         </div>
       </div>
     </div>
@@ -73,16 +73,15 @@
     <div th:if="${!#lists.isEmpty(lista)}" class="card mb-3">
       <div class="card-header bg-light fw-semibold">
         <span th:class="'badge me-2 ' + ${corBadge}" th:text="${titulo}"></span>
-        <span th:text="${#lists.size(lista)} + ' conta(s)'"></span>
+        <span th:text="${#lists.size(lista)} + ' pedido(s)'"></span>
       </div>
       <div class="card-body p-0">
         <table class="table table-sm table-hover mb-0">
           <thead class="table-light">
-            <tr><th>#Conta</th><th>Cliente</th><th>Pedido</th><th>Vencimento</th><th class="text-center">Atraso</th><th class="text-end">Saldo</th></tr>
+            <tr><th>Cliente</th><th>Pedido</th><th>Vencimento</th><th class="text-center">Atraso</th><th class="text-end">Saldo</th></tr>
           </thead>
           <tbody>
             <tr th:each="l : ${lista}">
-              <td th:text="${l.contaId}"></td>
               <td th:text="${l.clienteNome}"></td>
               <td><a th:href="@{/pedidos/{id}(id=${l.pedidoId})}" th:text="'#' + ${l.pedidoId}"></a></td>
               <td th:text="${#temporals.format(l.vencimento,'dd/MM/yyyy')}"></td>

@@ -3,6 +3,8 @@ package br.com.seuprojeto.pascoa.orcamento.repository;
 import br.com.seuprojeto.pascoa.orcamento.entity.Orcamento;
 import br.com.seuprojeto.pascoa.orcamento.entity.StatusOrcamento;
 import jakarta.persistence.LockModeType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -14,8 +16,9 @@ import java.util.Optional;
 
 public interface OrcamentoRepository extends JpaRepository<Orcamento, Long> {
 
-    @Query("SELECT o FROM Orcamento o JOIN FETCH o.cliente ORDER BY o.dataCriacao DESC")
-    List<Orcamento> findAllComCliente();
+    @Query(value = "SELECT o FROM Orcamento o JOIN FETCH o.cliente ORDER BY o.dataCriacao DESC",
+           countQuery = "SELECT count(o) FROM Orcamento o")
+    Page<Orcamento> findComCliente(Pageable pageable);
 
     @Query("SELECT o FROM Orcamento o JOIN FETCH o.cliente JOIN FETCH o.itens i JOIN FETCH i.produto WHERE o.id = :id")
     Optional<Orcamento> findByIdComItens(Long id);

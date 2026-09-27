@@ -25,7 +25,6 @@ public class AgingDto {
     @Data
     @Builder
     public static class LinhaAgingDto {
-        private Long   contaId;
         private String clienteNome;
         private Long   pedidoId;
         private java.time.LocalDate vencimento;

@@ -30,8 +30,11 @@ public class QualidadeController {
     // ── Dashboard ─────────────────────────────────────────────────────────
 
     @GetMapping
-    public String lista(Model model) {
-        model.addAttribute("inspecoes", service.listarInspecoes());
+    public String lista(@RequestParam(defaultValue = "0") int pagina, Model model) {
+        var page = service.listarInspecoes(pagina);
+        model.addAttribute("inspecoes", page.getContent());
+        model.addAttribute("page", page);
+        model.addAttribute("pagina", pagina);
         model.addAttribute("totalAprovadas", service.totalAprovadas());
         model.addAttribute("totalReprovadas", service.totalReprovadas());
         model.addAttribute("produtos", produtoRepo.findByAtivoTrueOrderByNomeAsc());

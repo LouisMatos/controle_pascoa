@@ -1,8 +1,6 @@
 package br.com.seuprojeto.pascoa.cadastro.entity;
 
 import br.com.seuprojeto.pascoa.common.entity.BaseEntity;
-import br.com.seuprojeto.pascoa.fichaTecnica.entity.FichaTecnica;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -11,7 +9,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
@@ -24,7 +21,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLRestriction;
 
 
 import java.math.BigDecimal;
@@ -37,7 +33,6 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "produtos")
 @SQLDelete(sql = "UPDATE produtos SET excluido_em = NOW() WHERE id = ?")
-@SQLRestriction("excluido_em IS NULL")
 @Data
 @EqualsAndHashCode(callSuper = false, of = "id")
 @NoArgsConstructor
@@ -89,9 +84,4 @@ public class Produto extends BaseEntity {
     /** Timestamp de soft-delete — null enquanto o registro estiver ativo. */
     @Column(name = "excluido_em")
     private LocalDateTime excluidoEm;
-
-    @OneToOne(mappedBy = "produto", cascade = CascadeType.ALL, orphanRemoval = true,
-              fetch = FetchType.LAZY)
-    @ToString.Exclude
-    private FichaTecnica fichaTecnica;
 }

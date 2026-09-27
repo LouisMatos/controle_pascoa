@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.util.List;
 
 @Controller
 @RequestMapping("/producao")
@@ -23,11 +22,13 @@ public class ProducaoController {
     private final ProducaoService producaoService;
 
     @GetMapping
-    public String fila(@RequestParam(required = false) StatusOrdem status, Model model) {
-        List<OrdemProducao> ordens = status != null
-            ? producaoService.listarPorStatus(status)
-            : producaoService.listarTodas();
-        model.addAttribute("ordens", ordens);
+    public String fila(@RequestParam(required = false) StatusOrdem status,
+                       @RequestParam(defaultValue = "0") int pagina,
+                       Model model) {
+        var page = producaoService.listarFila(status, pagina);
+        model.addAttribute("ordens", page.getContent());
+        model.addAttribute("page", page);
+        model.addAttribute("pagina", pagina);
         model.addAttribute("statusFiltro", status);
         model.addAttribute("statusList", StatusOrdem.values());
         return "producao/fila";

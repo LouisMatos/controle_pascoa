@@ -46,7 +46,7 @@ public class ProdutoService {
 
     @Transactional(readOnly = true)
     public Produto buscarPorId(Long id) {
-        return repository.findById(id)
+        return repository.findVigenteById(id)
             .orElseThrow(() -> new RecursoNaoEncontradoException("Produto não encontrado: " + id));
     }
 

@@ -25,7 +25,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -47,7 +46,6 @@ import java.util.List;
     column = @Column(name = "data_cadastro", nullable = false, updatable = false))
 // Soft-delete
 @SQLDelete(sql = "UPDATE clientes SET excluido_em = NOW() WHERE id = ?")
-@SQLRestriction("excluido_em IS NULL")
 @Data
 @EqualsAndHashCode(callSuper = false, of = "id")
 @NoArgsConstructor

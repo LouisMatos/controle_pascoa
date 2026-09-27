@@ -9,7 +9,10 @@ import br.com.seuprojeto.pascoa.cadastro.repository.ProdutoRepository;
 import br.com.seuprojeto.pascoa.gastos.entity.CategoriaGasto;
 import br.com.seuprojeto.pascoa.gastos.entity.GastoVariavel;
 import br.com.seuprojeto.pascoa.gastos.repository.GastoVariavelRepository;
+import br.com.seuprojeto.pascoa.notificacao.repository.AlertaInternoRepository;
+import br.com.seuprojeto.pascoa.pedido.dto.PagamentoForm;
 import br.com.seuprojeto.pascoa.pedido.entity.Pedido;
+import br.com.seuprojeto.pascoa.pedido.entity.TipoPagamento;
 import br.com.seuprojeto.pascoa.pedido.entity.StatusPedido;
 import br.com.seuprojeto.pascoa.pedido.repository.PedidoRepository;
 import jakarta.persistence.EntityManager;
@@ -47,6 +50,7 @@ class PedidoStateMachineTest {
     @Autowired private ProdutoRepository      produtoRepository;
     @Autowired private PedidoRepository       pedidoRepository;
     @Autowired private GastoVariavelRepository gastoRepository;
+    @Autowired private AlertaInternoRepository alertaRepository;
     @Autowired private EntityManager          em;
 
     private Cliente cliente;
@@ -323,5 +327,85 @@ class PedidoStateMachineTest {
 
         BigDecimal soma = gastoRepository.sumTotal(ano, mes);
         assertThat(soma).isEqualByComparingTo(new BigDecimal("100.00"));
+    }
+
+    private PagamentoForm pagamento(String valor) {
+        PagamentoForm form = new PagamentoForm();
+        form.setValor(new BigDecimal(valor));
+        form.setTipoPagamento(TipoPagamento.PIX);
+        form.setDataPagamento(LocalDate.now());
+        return form;
+    }
+
+    private Long pedidoConfirmado() {
+        Pedido pedido = pedidoNovo();
+        pedidoService.confirmar(pedido.getId());
+        em.flush(); em.clear();
+        return pedido.getId();
+    }
+
+    @Test
+    @DisplayName("Pagamento acima do saldo em aberto é recusado")
+    @WithMockUser(roles = "ADMIN")
+    void registrarPagamento_acimaDoSaldo_lancaExcecao() {
+        Long pedidoId = pedidoConfirmado();
+
+        assertThatThrownBy(() -> pedidoService.registrarPagamento(pedidoId, pagamento("100.01")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("saldo em aberto");
+    }
+
+    @Test
+    @DisplayName("Pagamento idêntico repetido é recusado (duplo submit)")
+    @WithMockUser(roles = "ADMIN")
+    void registrarPagamento_duplicado_lancaExcecao() {
+        Long pedidoId = pedidoConfirmado();
+        pedidoService.registrarPagamento(pedidoId, pagamento("40.00"));
+        em.flush(); em.clear();
+
+        assertThatThrownBy(() -> pedidoService.registrarPagamento(pedidoId, pagamento("40.00")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("já foi registrado");
+    }
+
+    @Test
+    @DisplayName("Pedido quitado recusa novo pagamento")
+    @WithMockUser(roles = "ADMIN")
+    void registrarPagamento_pedidoQuitado_lancaExcecao() {
+        Long pedidoId = pedidoConfirmado();
+        pedidoService.registrarPagamento(pedidoId, pagamento("100.00"));
+        em.flush(); em.clear();
+
+        assertThatThrownBy(() -> pedidoService.registrarPagamento(pedidoId, pagamento("10.00")))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("quitado");
+    }
+
+    @Test
+    @DisplayName("Pagamento parcial dentro do saldo é aceito e soma corretamente")
+    @WithMockUser(roles = "ADMIN")
+    void registrarPagamento_parcial_somaCorretamente() {
+        Long pedidoId = pedidoConfirmado();
+        pedidoService.registrarPagamento(pedidoId, pagamento("40.00"));
+        em.flush(); em.clear();
+        pedidoService.registrarPagamento(pedidoId, pagamento("60.00"));
+        em.flush(); em.clear();
+
+        assertThat(pedidoService.totalPago(pedidoId)).isEqualByComparingTo(new BigDecimal("100.00"));
+    }
+
+    @Test
+    @DisplayName("Cancelar pedido com pagamento recebido gera alerta interno de devolução")
+    @WithMockUser(roles = "ADMIN")
+    void cancelar_comPagamento_geraAlerta() {
+        Long pedidoId = pedidoConfirmado();
+        pedidoService.registrarPagamento(pedidoId, pagamento("40.00"));
+        em.flush(); em.clear();
+
+        pedidoService.cancelar(pedidoId);
+        em.flush(); em.clear();
+
+        assertThat(alertaRepository.findAll())
+                .anySatisfy(a -> assertThat(a.getMensagem()).contains("#" + pedidoId, "devolução"));
     }
 }

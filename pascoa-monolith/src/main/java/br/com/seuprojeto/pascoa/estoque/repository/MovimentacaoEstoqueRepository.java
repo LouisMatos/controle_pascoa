@@ -2,6 +2,8 @@ package br.com.seuprojeto.pascoa.estoque.repository;
 
 import br.com.seuprojeto.pascoa.estoque.entity.MovimentacaoEstoque;
 import br.com.seuprojeto.pascoa.estoque.entity.TipoMovimentacao;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -20,12 +22,13 @@ public interface MovimentacaoEstoqueRepository extends JpaRepository<Movimentaca
 
     List<MovimentacaoEstoque> findByTipoOrderByDataDesc(TipoMovimentacao tipo);
 
-    @Query("SELECT m FROM MovimentacaoEstoque m " +
+    @Query("SELECT m FROM MovimentacaoEstoque m JOIN FETCH m.materiaPrima " +
            "WHERE (:mpId IS NULL OR m.materiaPrima.id = :mpId) " +
            "AND   (:tipo IS NULL OR m.tipo = :tipo) " +
            "ORDER BY m.data DESC")
-    List<MovimentacaoEstoque> filtrar(@Param("mpId") Long mpId,
-                                      @Param("tipo") TipoMovimentacao tipo);
+    Page<MovimentacaoEstoque> filtrar(@Param("mpId") Long mpId,
+                                      @Param("tipo") TipoMovimentacao tipo,
+                                      Pageable pageable);
 
     @Query("""
         SELECT COALESCE(SUM(m.quantidade * COALESCE(m.custoUnitario, 0)), 0)

@@ -3,9 +3,7 @@ package br.com.seuprojeto.pascoa.financeiro.service;
 import br.com.seuprojeto.pascoa.financeiro.dto.BreakevenDto;
 import br.com.seuprojeto.pascoa.financeiro.dto.ProjecaoSafraDto;
 import br.com.seuprojeto.pascoa.financeiro.dto.AgingDto;
-import br.com.seuprojeto.pascoa.financeiro.entity.StatusConta;
 import br.com.seuprojeto.pascoa.financeiro.repository.ConfiguracaoFinanceiraRepository;
-import br.com.seuprojeto.pascoa.financeiro.repository.ContaReceberRepository;
 import br.com.seuprojeto.pascoa.financeiro.repository.DespesaFixaRepository;
 import br.com.seuprojeto.pascoa.gastos.repository.GastoVariavelRepository;
 import br.com.seuprojeto.pascoa.pedido.entity.StatusPedido;
@@ -17,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +29,6 @@ public class BreakevenService {
     private final DespesaFixaRepository despesaFixaRepository;
     private final PedidoRepository pedidoRepository;
     private final ConfiguracaoFinanceiraRepository configuracaoRepository;
-    private final ContaReceberRepository contaReceberRepository;
     private final GastoVariavelRepository gastoRepository;
 
     @Transactional(readOnly = true)
@@ -169,44 +168,49 @@ public class BreakevenService {
 
     @Transactional(readOnly = true)
     public AgingDto aging() {
-        var contas = contaReceberRepository.findByStatusOrderByVencimento(StatusConta.ABERTA);
         LocalDate hoje = LocalDate.now();
 
-        List<AgingDto.LinhaAgingDto> corrente    = new ArrayList<>();
-        List<AgingDto.LinhaAgingDto> a1a30       = new ArrayList<>();
-        List<AgingDto.LinhaAgingDto> a31a60      = new ArrayList<>();
-        List<AgingDto.LinhaAgingDto> a61a90      = new ArrayList<>();
-        List<AgingDto.LinhaAgingDto> aAcima90    = new ArrayList<>();
+        List<AgingDto.LinhaAgingDto> corrente = new ArrayList<>();
+        List<AgingDto.LinhaAgingDto> a1a30    = new ArrayList<>();
+        List<AgingDto.LinhaAgingDto> a31a60   = new ArrayList<>();
+        List<AgingDto.LinhaAgingDto> a61a90   = new ArrayList<>();
+        List<AgingDto.LinhaAgingDto> aAcima90 = new ArrayList<>();
 
-        for (var c : contas) {
-            long dias = c.getVencimento().until(hoje).getDays();
-            var linha = AgingDto.LinhaAgingDto.builder()
-                .contaId(c.getId())
-                .clienteNome(c.getPedido().getCliente().getNome())
-                .pedidoId(c.getPedido().getId())
-                .vencimento(c.getVencimento())
+        for (Object[] linha : pedidoRepository.saldosEmAberto()) {
+            Long pedidoId = (Long) linha[0];
+            String clienteNome = linha[1] != null ? (String) linha[1] : "(cliente removido)";
+            LocalDate vencimento = linha[2] != null
+                ? (LocalDate) linha[2]
+                : ((LocalDateTime) linha[3]).toLocalDate();
+            BigDecimal saldo = (BigDecimal) linha[4];
+
+            long dias = ChronoUnit.DAYS.between(vencimento, hoje);
+            var dto = AgingDto.LinhaAgingDto.builder()
+                .clienteNome(clienteNome)
+                .pedidoId(pedidoId)
+                .vencimento(vencimento)
                 .diasAtraso((int) Math.max(0, dias))
-                .saldo(c.getSaldo())
+                .saldo(saldo)
                 .build();
 
             if (dias <= 0) {
-                corrente.add(linha);
+                corrente.add(dto);
             } else if (dias <= 30) {
-                a1a30.add(linha);
+                a1a30.add(dto);
             } else if (dias <= 60) {
-                a31a60.add(linha);
+                a31a60.add(dto);
             } else if (dias <= 90) {
-                a61a90.add(linha);
+                a61a90.add(dto);
             } else {
-                aAcima90.add(linha);
+                aAcima90.add(dto);
             }
         }
 
-        BigDecimal tCorrente  = soma(corrente);
-        BigDecimal t1a30      = soma(a1a30);
-        BigDecimal t31a60     = soma(a31a60);
-        BigDecimal t61a90     = soma(a61a90);
-        BigDecimal tAcima90   = soma(aAcima90);
+        BigDecimal tCorrente = soma(corrente);
+        BigDecimal t1a30     = soma(a1a30);
+        BigDecimal t31a60    = soma(a31a60);
+        BigDecimal t61a90    = soma(a61a90);
+        BigDecimal tAcima90  = soma(aAcima90);
 
         return AgingDto.builder()
             .corrente(corrente).atraso1a30(a1a30).atraso31a60(a31a60)

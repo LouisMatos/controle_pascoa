@@ -2,6 +2,8 @@ package br.com.seuprojeto.pascoa.cadastro.repository;
 
 import br.com.seuprojeto.pascoa.cadastro.dto.ClienteComboDto;
 import br.com.seuprojeto.pascoa.cadastro.entity.Cliente;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,14 +14,24 @@ import java.util.List;
 @Repository
 public interface ClienteRepository extends JpaRepository<Cliente, Long> {
 
+    @Query("SELECT c FROM Cliente c WHERE c.excluidoEm IS NULL ORDER BY c.nome ASC")
     List<Cliente> findAllByOrderByNomeAsc();
 
     /** Projeção leve para combos/selects (id + nome), já ordenada — evita carregar a entidade inteira. */
     @Query("SELECT new br.com.seuprojeto.pascoa.cadastro.dto.ClienteComboDto(c.id, c.nome) " +
-           "FROM Cliente c ORDER BY c.nome ASC")
+           "FROM Cliente c WHERE c.excluidoEm IS NULL ORDER BY c.nome ASC")
     List<ClienteComboDto> findAllComboBox();
 
-    List<Cliente> findByNomeContainingIgnoreCaseOrderByNomeAsc(String nome);
+    @Query("SELECT c FROM Cliente c WHERE c.excluidoEm IS NULL "
+         + "AND LOWER(c.nome) LIKE LOWER(CONCAT('%', :nome, '%')) ORDER BY c.nome ASC")
+    List<Cliente> findByNomeContainingIgnoreCaseOrderByNomeAsc(@Param("nome") String nome);
+
+    @Query("SELECT c FROM Cliente c WHERE c.excluidoEm IS NULL ORDER BY c.nome ASC")
+    Page<Cliente> findPaginado(Pageable pageable);
+
+    @Query("SELECT c FROM Cliente c WHERE c.excluidoEm IS NULL "
+         + "AND LOWER(c.nome) LIKE LOWER(CONCAT('%', :nome, '%')) ORDER BY c.nome ASC")
+    Page<Cliente> buscarPorNomePaginado(@Param("nome") String nome, Pageable pageable);
 
     /**
      * Item 25: Clientes cujo aniversário é hoje (por mês e dia), com opt-in ativo.
@@ -33,4 +45,7 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
                    "AND excluido_em IS NULL",
            nativeQuery = true)
     List<Cliente> findAniversariantesHoje(@Param("mes") int mes, @Param("dia") int dia);
+
+    @Query("SELECT c FROM Cliente c WHERE c.excluidoEm IS NULL AND c.id = :id")
+    java.util.Optional<Cliente> findVigenteById(@Param("id") Long id);
 }

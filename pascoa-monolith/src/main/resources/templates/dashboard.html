@@ -12,6 +12,92 @@
         <h2 class="mb-0">Dashboard</h2>
     </div>
 
+    <div class="row g-3 mb-4">
+        <div class="col-lg-4">
+            <div class="card h-100 border-danger border-2">
+                <div class="card-header bg-white fw-semibold d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-exclamation-triangle text-danger me-2"></i>Atrasados</span>
+                    <span class="badge bg-danger" th:text="${totalAtrasados}">0</span>
+                </div>
+                <div class="card-body p-0">
+                    <div th:if="${#lists.isEmpty(atrasados)}" class="text-muted small p-3 mb-0">
+                        Nenhum pedido atrasado.
+                    </div>
+                    <ul class="list-group list-group-flush" th:unless="${#lists.isEmpty(atrasados)}">
+                        <li class="list-group-item d-flex justify-content-between align-items-center"
+                            th:each="p : ${atrasados}">
+                            <a th:href="@{/pedidos/{id}(id=${p.id})}"
+                               th:text="'#' + ${p.id} + ' · ' + ${p.cliente?.nome}">#0</a>
+                            <span class="badge bg-danger-subtle text-danger-emphasis"
+                                  th:text="${#temporals.format(p.dataEntrega,'dd/MM')}"></span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-footer bg-white text-center py-2"
+                     th:if="${totalAtrasados > #lists.size(atrasados)}">
+                    <a th:href="@{/pedidos}" class="small text-decoration-none"
+                       th:text="|ver todos os atrasados (${totalAtrasados})|">ver todos</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card h-100 border-primary border-2">
+                <div class="card-header bg-white fw-semibold d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-truck text-primary me-2"></i>Entregar hoje</span>
+                    <span class="badge bg-primary" th:text="${totalEntregarHoje}">0</span>
+                </div>
+                <div class="card-body p-0">
+                    <div th:if="${#lists.isEmpty(entregarHoje)}" class="text-muted small p-3 mb-0">
+                        Nada para entregar hoje.
+                    </div>
+                    <ul class="list-group list-group-flush" th:unless="${#lists.isEmpty(entregarHoje)}">
+                        <li class="list-group-item d-flex justify-content-between align-items-center"
+                            th:each="p : ${entregarHoje}">
+                            <a th:href="@{/pedidos/{id}(id=${p.id})}"
+                               th:text="'#' + ${p.id} + ' · ' + ${p.cliente?.nome}">#0</a>
+                            <span class="badge" th:classappend="${p.status.badgeCss}"
+                                  th:text="${p.status.descricao}"></span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-footer bg-white text-center py-2"
+                     th:if="${totalEntregarHoje > #lists.size(entregarHoje)}">
+                    <a th:href="@{/pedidos}" class="small text-decoration-none"
+                       th:text="|ver todos os pedidos de hoje (${totalEntregarHoje})|">ver todos</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card h-100 border-warning border-2">
+                <div class="card-header bg-white fw-semibold d-flex justify-content-between align-items-center">
+                    <span><i class="bi bi-clipboard2-check text-warning me-2"></i>Produzir</span>
+                    <span class="badge bg-warning text-dark" th:text="${totalProduzir}">0</span>
+                </div>
+                <div class="card-body p-0">
+                    <div th:if="${#lists.isEmpty(produzir)}" class="text-muted small p-3 mb-0">
+                        Nenhuma ordem aberta.
+                    </div>
+                    <ul class="list-group list-group-flush" th:unless="${#lists.isEmpty(produzir)}">
+                        <li class="list-group-item d-flex justify-content-between align-items-center"
+                            th:each="o : ${produzir}">
+                            <a th:href="@{/producao/{id}(id=${o.id})}"
+                               th:text="${o.quantidade} + 'x ' + ${o.produto.nome}">0x</a>
+                            <span class="badge bg-light text-dark"
+                                  th:text="${o.pedido?.dataEntrega != null} ? ${#temporals.format(o.pedido.dataEntrega,'dd/MM')} : '—'"></span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-footer bg-white text-center py-2"
+                     th:if="${totalProduzir > #lists.size(produzir)}">
+                    <a th:href="@{/producao}" class="small text-decoration-none"
+                       th:text="|ver todos os em produção (${totalProduzir})|">ver todos</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ── Linha 1: KPIs Críticos (números grandes) ─────────────────────── -->
     <div class="row g-3 mb-4">
         <!-- Receita do mês -->

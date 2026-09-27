@@ -47,15 +47,15 @@
                 </thead>
                 <tbody>
                     <tr th:each="o : ${orcamentos}"
-                        th:classappend="${o.expirado()} ? 'table-warning'">
+                        th:classappend="${o.isExpirado()} ? 'table-warning'">
                         <td class="ps-3 text-muted small" th:text="${o.id}"></td>
                         <td class="fw-semibold" th:text="${o.cliente.nome}"></td>
                         <td class="text-muted small"
                             th:text="${#temporals.format(o.dataCriacao, 'dd/MM/yyyy')}"></td>
                         <td>
                             <span th:text="${#temporals.format(o.validade, 'dd/MM/yyyy')}"
-                                  th:classappend="${o.expirado()} ? 'text-danger fw-semibold'"></span>
-                            <small th:if="${o.expirado()}" class="text-danger ms-1">(expirado)</small>
+                                  th:classappend="${o.isExpirado()} ? 'text-danger fw-semibold'"></span>
+                            <small th:if="${o.isExpirado()}" class="text-danger ms-1">(expirado)</small>
                         </td>
                         <td class="text-end fw-semibold">
                             R$ <span th:text="${#numbers.formatDecimal(o.total, 1, 'POINT', 2, 'COMMA')}"></span>
@@ -81,6 +81,23 @@
                     </tr>
                 </tbody>
             </table>
+        </div>
+        <div class="card-footer d-flex justify-content-between align-items-center"
+             th:if="${!#lists.isEmpty(orcamentos)}">
+            <span class="text-muted small"
+                  th:text="|Página ${pagina + 1} de ${page.totalPages} — ${page.totalElements} orçamento(s)|"></span>
+            <div class="d-flex gap-1" th:if="${page.totalPages > 1}">
+                <a th:if="${pagina > 0}"
+                   th:href="@{/orcamentos(pagina=${pagina - 1})}"
+                   class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+                <a th:if="${pagina < page.totalPages - 1}"
+                   th:href="@{/orcamentos(pagina=${pagina + 1})}"
+                   class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </div>
         </div>
     </div>
 

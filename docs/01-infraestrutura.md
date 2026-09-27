@@ -452,3 +452,31 @@ controle_pascoa/
 ├── pascoa-analytics-service/      ← Hexagonal + CQRS leve
 └── docs/                          ← documentação do projeto
 ```
+
+---
+
+## Sandbox AWS (acesso trial)
+
+Existe uma infra mínima em `aws/` (Terraform) para expor o **monólito** em acesso trial:
+API Gateway HTTP API → EIP:8080 → EC2 t3.small com `docker compose` (app + `postgres:16-alpine`).
+Sem ALB, sem RDS, sem VPC própria; administração por SSM Session Manager, sem porta 22.
+
+Fases de execução, custo (~US$ 22/mês), variáveis de ambiente do container e limitações
+conhecidas: `aws/README.md`. Estado e mudanças de código que ela exigiu: `docs/05-estado-implementacao.md` §23.
+
+### Carregar a massa de teste no sandbox
+
+O banco do sandbox roda em container na EC2 (`/opt/pascoa/docker-compose.yml`), sem porta exposta.
+Para aplicar `infra/seed/seed-massa-teste.sql` lá, envie o script comprimido por SSM — o arquivo
+tem ~39 KB e cabe no parâmetro do comando depois do gzip+base64 (~14 KB):
+
+```bash
+B64=$(gzip -9c infra/seed/seed-massa-teste.sql | base64 | tr -d '\n')
+INSTANCE=$(cd aws/terraform && terraform output -raw instance_id)
+aws ssm send-command --region us-east-1 --instance-ids "$INSTANCE" \
+  --document-name AWS-RunShellScript \
+  --parameters "commands=[\"echo '$B64' | base64 -d | gunzip > /tmp/seed-massa.sql\",\"cd /opt/pascoa\",\"docker compose exec -T postgres psql -U postgres -d pascoa_monolith < /tmp/seed-massa.sql | tail -40\"]"
+```
+
+Apaga os dados de negócio do sandbox e preserva `usuarios` e `configuracao_*`. Depois disso os
+usuários da massa entram com a mesma senha do `admin` (`admin_senha_inicial` do `terraform.tfvars`).

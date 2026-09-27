@@ -1,5 +1,7 @@
 package br.com.seuprojeto.pascoa.estoque.service;
 
+import br.com.seuprojeto.pascoa.shared.SecurityUtils;
+
 import br.com.seuprojeto.pascoa.cadastro.entity.MateriaPrima;
 import br.com.seuprojeto.pascoa.cadastro.repository.MateriaPrimaRepository;
 import br.com.seuprojeto.pascoa.estoque.dto.AjusteEstoqueForm;
@@ -10,13 +12,12 @@ import br.com.seuprojeto.pascoa.estoque.repository.MovimentacaoEstoqueRepository
 import br.com.seuprojeto.pascoa.shared.exception.EstoqueInsuficienteException;
 import br.com.seuprojeto.pascoa.shared.exception.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -30,13 +31,8 @@ public class EstoqueService {
     // -----------------------------------------------------------------------
 
     @Transactional(readOnly = true)
-    public List<MovimentacaoEstoque> listarTodas() {
-        return movimentacaoRepository.findAllByOrderByDataDesc();
-    }
-
-    @Transactional(readOnly = true)
-    public List<MovimentacaoEstoque> filtrar(Long mpId, TipoMovimentacao tipo) {
-        return movimentacaoRepository.filtrar(mpId, tipo);
+    public Page<MovimentacaoEstoque> filtrar(Long mpId, TipoMovimentacao tipo, int pagina) {
+        return movimentacaoRepository.filtrar(mpId, tipo, PageRequest.of(pagina, 50));
     }
 
     // -----------------------------------------------------------------------
@@ -133,11 +129,6 @@ public class EstoqueService {
 
     /** Retorna o login do usuário autenticado ou "Sistema" quando não há sessão (jobs, testes). */
     private String usuarioAtual() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.isAuthenticated()
-                && !"anonymousUser".equals(auth.getPrincipal())) {
-            return auth.getName();
-        }
-        return "Sistema";
+        return SecurityUtils.login("Sistema");
     }
 }

@@ -12,6 +12,8 @@ import br.com.seuprojeto.pascoa.qualidade.repository.ChecklistItemRepository;
 import br.com.seuprojeto.pascoa.qualidade.repository.InspecaoRepository;
 import br.com.seuprojeto.pascoa.shared.exception.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -72,8 +74,8 @@ public class QualidadeService {
     // ── Inspeção ──────────────────────────────────────────────────────────
 
     @Transactional(readOnly = true)
-    public List<InspecaoQualidade> listarInspecoes() {
-        return inspecaoRepo.findAllComDetalhes();
+    public Page<InspecaoQualidade> listarInspecoes(int pagina) {
+        return inspecaoRepo.findComDetalhes(PageRequest.of(pagina, 50));
     }
 
     @Transactional(readOnly = true)

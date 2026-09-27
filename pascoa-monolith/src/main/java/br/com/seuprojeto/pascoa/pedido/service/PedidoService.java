@@ -8,6 +8,7 @@ import br.com.seuprojeto.pascoa.fichaTecnica.entity.FichaTecnica;
 import br.com.seuprojeto.pascoa.fichaTecnica.service.FichaTecnicaService;
 import br.com.seuprojeto.pascoa.notificacao.entity.EventoNotificacao;
 import br.com.seuprojeto.pascoa.notificacao.event.PedidoStatusEvent;
+import br.com.seuprojeto.pascoa.notificacao.service.AlertaInternoService;
 import br.com.seuprojeto.pascoa.pedido.dto.PagamentoForm;
 import br.com.seuprojeto.pascoa.pedido.dto.PedidoForm;
 import br.com.seuprojeto.pascoa.pedido.entity.ItemPedido;
@@ -18,16 +19,22 @@ import br.com.seuprojeto.pascoa.pedido.repository.ItemPedidoRepository;
 import br.com.seuprojeto.pascoa.pedido.repository.PagamentoRepository;
 import br.com.seuprojeto.pascoa.pedido.repository.PedidoRepository;
 import br.com.seuprojeto.pascoa.gastos.repository.GastoVariavelRepository;
+import br.com.seuprojeto.pascoa.producao.entity.StatusOrdem;
+import br.com.seuprojeto.pascoa.producao.event.ProducaoAtualizadaEvent;
 import br.com.seuprojeto.pascoa.producao.service.ProducaoService;
 import br.com.seuprojeto.pascoa.shared.exception.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import br.com.seuprojeto.pascoa.auditoria.annotation.Auditavel;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.event.EventListener;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +53,7 @@ public class PedidoService {
     private final ProducaoService producaoService;
     private final FichaTecnicaService fichaTecnicaService;
     private final GastoVariavelRepository gastoVariavelRepository;
+    private final AlertaInternoService alertaInternoService;
     private final ApplicationEventPublisher eventPublisher;
 
     // -----------------------------------------------------------------------
@@ -58,8 +66,11 @@ public class PedidoService {
     }
 
     @Transactional(readOnly = true)
-    public List<Pedido> listarPorStatus(StatusPedido status) {
-        return pedidoRepository.findByStatusComCliente(status);
+    public Page<Pedido> listarPaginado(StatusPedido status, int pagina) {
+        PageRequest pageRequest = PageRequest.of(pagina, 50);
+        return status != null
+            ? pedidoRepository.findByStatusComCliente(status, pageRequest)
+            : pedidoRepository.findComCliente(pageRequest);
     }
 
     @Transactional(readOnly = true)
@@ -68,18 +79,13 @@ public class PedidoService {
             .orElseThrow(() -> new RecursoNaoEncontradoException("Pedido não encontrado: " + id));
     }
 
-    @Transactional
-    public void salvarSemRecalculo(Pedido pedido) {
-        pedidoRepository.save(pedido);
-    }
-
     // -----------------------------------------------------------------------
     // CRUD básico
     // -----------------------------------------------------------------------
 
     @Transactional
     public Pedido criar(PedidoForm form) {
-        Cliente cliente = clienteRepository.findById(form.getClienteId())
+        Cliente cliente = clienteRepository.findVigenteById(form.getClienteId())
             .orElseThrow(() -> new RecursoNaoEncontradoException("Cliente não encontrado"));
         Pedido pedido = Pedido.builder()
             .cliente(cliente)
@@ -103,7 +109,7 @@ public class PedidoService {
         if (produtoIds == null || produtoIds.isEmpty()) {
             throw new IllegalArgumentException("O pedido precisa ter pelo menos um produto.");
         }
-        Cliente cliente = clienteRepository.findById(clienteId)
+        Cliente cliente = clienteRepository.findVigenteById(clienteId)
             .orElseThrow(() -> new RecursoNaoEncontradoException("Cliente não encontrado"));
 
         Pedido pedido = Pedido.builder()
@@ -119,7 +125,7 @@ public class PedidoService {
             .filter(Objects::nonNull)
             .distinct()
             .toList();
-        Map<Long, Produto> produtosPorId = produtoRepository.findAllById(idsValidos).stream()
+        Map<Long, Produto> produtosPorId = produtoRepository.findVigentesByIds(idsValidos).stream()
             .collect(Collectors.toMap(Produto::getId, p -> p));
         if (produtosPorId.size() != idsValidos.size()) {
             throw new RecursoNaoEncontradoException("Um ou mais produtos não foram encontrados.");
@@ -154,7 +160,7 @@ public class PedidoService {
         if (pedido.getStatus() != StatusPedido.NOVO) {
             throw new IllegalStateException("Apenas pedidos com status NOVO podem ser editados.");
         }
-        Cliente cliente = clienteRepository.findById(form.getClienteId())
+        Cliente cliente = clienteRepository.findVigenteById(form.getClienteId())
             .orElseThrow(() -> new RecursoNaoEncontradoException("Cliente não encontrado"));
         pedido.setCliente(cliente);
         pedido.setDataEntrega(form.getDataEntrega());
@@ -175,7 +181,7 @@ public class PedidoService {
         if (itemRepository.existsByPedidoIdAndProdutoId(pedidoId, produtoId)) {
             throw new IllegalArgumentException("Este produto já está no pedido. Remova-o antes de adicionar novamente.");
         }
-        Produto produto = produtoRepository.findById(produtoId)
+        Produto produto = produtoRepository.findVigenteById(produtoId)
             .orElseThrow(() -> new RecursoNaoEncontradoException("Produto não encontrado"));
 
         ItemPedido item = ItemPedido.builder()
@@ -239,16 +245,25 @@ public class PedidoService {
         if (!pedido.getStatus().podeCancelar()) {
             throw new IllegalStateException("Pedido entregue não pode ser cancelado.");
         }
+        BigDecimal pagoAntesDoCancelamento = pagamentoRepository.somarPorPedido(id);
         pedido.setStatus(StatusPedido.CANCELADO);
         Pedido pedidoCancelado = pedidoRepository.save(pedido);
 
-        // Propaga cancelamento para ordens de produção não concluídas
         producaoService.listarPorPedido(id).stream()
             .filter(o -> o.getStatus().podeCancelar())
             .forEach(o -> producaoService.cancelarOrdem(o.getId()));
 
-        // F6: Desconsiderar gastos vinculados a este pedido do cálculo de custo
         gastoVariavelRepository.desconsiderarPorPedido(id);
+
+        if (pagoAntesDoCancelamento.compareTo(BigDecimal.ZERO) > 0) {
+            alertaInternoService.criar(
+                "Pedido #" + id + " cancelado com R$ " + pagoAntesDoCancelamento
+                    + " já recebido — verificar devolução ao cliente.",
+                "/pedidos/" + id,
+                "bi-cash-coin",
+                "warning"
+            );
+        }
 
         eventPublisher.publishEvent(new PedidoStatusEvent(pedidoCancelado, EventoNotificacao.PEDIDO_CANCELADO));
         return pedidoCancelado;
@@ -262,10 +277,32 @@ public class PedidoService {
         if (!pedido.getStatus().podePronto()) {
             throw new IllegalStateException("Pedido deve estar CONFIRMADO ou EM_PRODUCAO.");
         }
-        pedido.setStatus(StatusPedido.PRONTO);
-        Pedido pedidoPronto = pedidoRepository.save(pedido);
-        eventPublisher.publishEvent(new PedidoStatusEvent(pedidoPronto, EventoNotificacao.PEDIDO_PRONTO));
-        return pedidoPronto;
+        return aplicarStatus(pedido, StatusPedido.PRONTO, EventoNotificacao.PEDIDO_PRONTO);
+    }
+
+    @EventListener
+    @Transactional
+    public void sincronizarComProducao(ProducaoAtualizadaEvent evento) {
+        Pedido pedido = pedidoRepository.findById(evento.pedidoId()).orElse(null);
+        if (pedido == null) {
+            return;
+        }
+        boolean emFabricacao = producaoService.existeOrdem(pedido.getId(), StatusOrdem.EM_ANDAMENTO);
+        boolean pendente = producaoService.existeOrdem(pedido.getId(), StatusOrdem.PENDENTE);
+        boolean concluida = producaoService.existeOrdem(pedido.getId(), StatusOrdem.CONCLUIDA);
+
+        if (emFabricacao && pedido.getStatus() == StatusPedido.CONFIRMADO) {
+            aplicarStatus(pedido, StatusPedido.EM_PRODUCAO, EventoNotificacao.PRODUCAO_INICIADA);
+        } else if (!emFabricacao && !pendente && concluida && pedido.getStatus().podePronto()) {
+            aplicarStatus(pedido, StatusPedido.PRONTO, EventoNotificacao.PEDIDO_PRONTO);
+        }
+    }
+
+    private Pedido aplicarStatus(Pedido pedido, StatusPedido status, EventoNotificacao evento) {
+        pedido.setStatus(status);
+        Pedido salvo = pedidoRepository.save(pedido);
+        eventPublisher.publishEvent(new PedidoStatusEvent(salvo, evento));
+        return salvo;
     }
 
     @Auditavel(acao = "ENTREGAR_PEDIDO", entidade = "Pedido")
@@ -276,10 +313,7 @@ public class PedidoService {
         if (!pedido.getStatus().podeEntregar()) {
             throw new IllegalStateException("Pedido deve estar PRONTO para ser entregue.");
         }
-        pedido.setStatus(StatusPedido.ENTREGUE);
-        Pedido pedidoEntregue = pedidoRepository.save(pedido);
-        eventPublisher.publishEvent(new PedidoStatusEvent(pedidoEntregue, EventoNotificacao.PEDIDO_ENTREGUE));
-        return pedidoEntregue;
+        return aplicarStatus(pedido, StatusPedido.ENTREGUE, EventoNotificacao.PEDIDO_ENTREGUE);
     }
 
     private void snapshotCustos(Pedido pedido) {
@@ -302,10 +336,6 @@ public class PedidoService {
         itemRepository.saveAll(pedido.getItens());
     }
 
-    // -----------------------------------------------------------------------
-    // Pagamentos
-    // -----------------------------------------------------------------------
-
     @Transactional
     public void registrarPagamento(Long pedidoId, PagamentoForm form) {
         Pedido pedido = pedidoRepository.findById(pedidoId)
@@ -313,14 +343,29 @@ public class PedidoService {
         if (!pedido.getStatus().podeAdicionarPagamento()) {
             throw new IllegalStateException("Pagamentos só podem ser registrados após a confirmação do pedido.");
         }
-        Pagamento pagamento = Pagamento.builder()
+
+        LocalDate dataPagamento = form.getDataPagamento() != null ? form.getDataPagamento() : LocalDate.now();
+        if (pagamentoRepository.existsByPedidoIdAndValorAndTipoPagamentoAndDataPagamento(
+                pedidoId, form.getValor(), form.getTipoPagamento(), dataPagamento)) {
+            throw new IllegalArgumentException(
+                "Este pagamento já foi registrado neste pedido. Recarregue a tela antes de lançar novamente.");
+        }
+
+        BigDecimal saldoEmAberto = pedido.getTotalPedido().subtract(pagamentoRepository.somarPorPedido(pedidoId));
+        if (saldoEmAberto.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalStateException("Pedido já está quitado.");
+        }
+        if (form.getValor().compareTo(saldoEmAberto) > 0) {
+            throw new IllegalArgumentException("Valor acima do saldo em aberto do pedido: " + saldoEmAberto);
+        }
+
+        pagamentoRepository.save(Pagamento.builder()
             .pedido(pedido)
             .valor(form.getValor())
             .tipoPagamento(form.getTipoPagamento())
-            .dataPagamento(form.getDataPagamento())
+            .dataPagamento(dataPagamento)
             .observacoes(form.getObservacoes())
-            .build();
-        pagamentoRepository.save(pagamento);
+            .build());
         eventPublisher.publishEvent(new PedidoStatusEvent(pedido, EventoNotificacao.PAGAMENTO_RECEBIDO));
     }
 

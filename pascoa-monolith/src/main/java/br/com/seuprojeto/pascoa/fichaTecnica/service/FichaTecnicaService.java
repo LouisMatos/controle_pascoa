@@ -45,7 +45,7 @@ public class FichaTecnicaService {
     @Transactional
     public FichaTecnica buscarOuCriar(Long produtoId) {
         return fichaRepository.findByProdutoId(produtoId).orElseGet(() -> {
-            Produto produto = produtoRepository.findById(produtoId)
+            Produto produto = produtoRepository.findVigenteById(produtoId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Produto não encontrado: " + produtoId));
             return fichaRepository.save(FichaTecnica.builder()
                 .produto(produto)

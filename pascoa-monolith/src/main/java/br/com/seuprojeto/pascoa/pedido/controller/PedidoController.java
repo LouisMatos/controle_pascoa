@@ -44,11 +44,13 @@ public class PedidoController {
     // -----------------------------------------------------------------------
 
     @GetMapping
-    public String listar(@RequestParam(required = false) StatusPedido status, Model model) {
-        var pedidos = (status != null)
-            ? pedidoService.listarPorStatus(status)
-            : pedidoService.listarTodos();
-        model.addAttribute("pedidos", pedidos);
+    public String listar(@RequestParam(required = false) StatusPedido status,
+                         @RequestParam(defaultValue = "0") int pagina,
+                         Model model) {
+        var page = pedidoService.listarPaginado(status, pagina);
+        model.addAttribute("pedidos", page.getContent());
+        model.addAttribute("page", page);
+        model.addAttribute("pagina", pagina);
         model.addAttribute("statusFiltro", status);
         model.addAttribute("statusValues", StatusPedido.values());
         return "pedidos/lista";
@@ -138,15 +140,6 @@ public class PedidoController {
         Pedido pedido = pedidoService.buscarPorId(id);
         BigDecimal totalPago = pedidoService.totalPago(id);
         BigDecimal saldo = pedido.getTotalPedido().subtract(totalPago);
-
-        // Recalcula o total baseado nos subtotais dos itens (workaround para sincronização)
-        BigDecimal totalRecalculado = pedido.getItens().stream()
-            .map(i -> i.getSubtotal() != null ? i.getSubtotal() : BigDecimal.ZERO)
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
-        if (totalRecalculado.compareTo(pedido.getTotalPedido()) != 0) {
-            pedido.setTotalPedido(totalRecalculado);
-            pedidoService.salvarSemRecalculo(pedido);
-        }
 
         model.addAttribute("pedido", pedido);
         model.addAttribute("pagamentos", pedidoService.listarPagamentos(id));

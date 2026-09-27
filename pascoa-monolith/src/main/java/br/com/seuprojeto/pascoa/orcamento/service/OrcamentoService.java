@@ -18,6 +18,8 @@ import br.com.seuprojeto.pascoa.pedido.repository.PedidoRepository;
 import br.com.seuprojeto.pascoa.shared.exception.OrcamentoJaConvertidoException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
@@ -41,8 +43,8 @@ public class OrcamentoService {
     private final ApplicationEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
-    public List<Orcamento> listar() {
-        return orcamentoRepo.findAllComCliente();
+    public Page<Orcamento> listar(int pagina) {
+        return orcamentoRepo.findComCliente(PageRequest.of(pagina, 50));
     }
 
     @Transactional(readOnly = true)

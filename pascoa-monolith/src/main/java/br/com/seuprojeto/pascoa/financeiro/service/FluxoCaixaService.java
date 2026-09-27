@@ -4,10 +4,10 @@ import br.com.seuprojeto.pascoa.estoque.entity.TipoMovimentacao;
 import br.com.seuprojeto.pascoa.estoque.repository.MovimentacaoEstoqueRepository;
 import br.com.seuprojeto.pascoa.financeiro.dto.FluxoCaixaDto;
 import br.com.seuprojeto.pascoa.financeiro.repository.ContaPagarRepository;
-import br.com.seuprojeto.pascoa.financeiro.repository.ContaReceberRepository;
 import br.com.seuprojeto.pascoa.financeiro.repository.DespesaFixaRepository;
 import br.com.seuprojeto.pascoa.gastos.repository.GastoVariavelRepository;
 import br.com.seuprojeto.pascoa.pedido.repository.PagamentoRepository;
+import br.com.seuprojeto.pascoa.pedido.repository.PedidoRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +23,7 @@ import java.time.temporal.ChronoUnit;
 public class FluxoCaixaService {
 
     private final PagamentoRepository pagamentoRepository;
-    private final ContaReceberRepository contaReceberRepository;
+    private final PedidoRepository pedidoRepository;
     private final ContaPagarRepository contaPagarRepository;
     private final DespesaFixaRepository despesaFixaRepository;
     private final MovimentacaoEstoqueRepository movimentacaoRepository;
@@ -34,8 +34,7 @@ public class FluxoCaixaService {
         // ENTRADA — recebido real: pagamentos no período (agregação no DB, ver V15)
         BigDecimal recebidoReal = pagamentoRepository.sumValorByPeriodo(inicio, fim);
 
-        // ENTRADA — previsto: contas a receber com vencimento no período
-        BigDecimal previstoEntrada = contaReceberRepository.sumPrevistoEntrada(inicio, fim);
+        BigDecimal previstoEntrada = pedidoRepository.sumSaldoEmAbertoPorVencimento(inicio, fim);
 
         // SAÍDA — MP comprada: entradas de estoque com custo no período (agregação no DB, ver V15)
         LocalDateTime inicioDt      = inicio.atStartOfDay();

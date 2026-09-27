@@ -15,6 +15,7 @@ import br.com.seuprojeto.pascoa.gastos.repository.GastoVariavelRepository;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -53,6 +54,16 @@ public class DashboardController {
         // ── KPIs de produção ──────────────────────────────────────────────────
         long ordensPendentes   = ordemRepository.countByStatus(StatusOrdem.PENDENTE);
         long ordensEmAndamento = ordemRepository.countByStatus(StatusOrdem.EM_ANDAMENTO);
+
+        LocalDate hoje = LocalDate.now();
+        var statusOrdemAberta = List.of(StatusOrdem.PENDENTE, StatusOrdem.EM_ANDAMENTO);
+        var top = PageRequest.of(0, 10);
+        var entregarHoje = pedidoRepository.findPorDataEntrega(hoje, statusAtivos, top);
+        var atrasados    = pedidoRepository.findAtrasados(hoje, statusAtivos, top);
+        var produzir     = ordemRepository.findAbertasPorPrazo(statusOrdemAberta, top);
+        long totalEntregarHoje = pedidoRepository.countByDataEntregaAndStatusIn(hoje, statusAtivos);
+        long totalAtrasados    = pedidoRepository.countByDataEntregaBeforeAndStatusIn(hoje, statusAtivos);
+        long totalProduzir     = ordemRepository.countByStatusIn(statusOrdemAberta);
 
         // ── KPIs financeiros ──────────────────────────────────────────────────
         BigDecimal totalRecebido = pagamentoRepository.sumTotal();
@@ -106,6 +117,13 @@ public class DashboardController {
 
         model.addAttribute("pedidosAbertos",     pedidosAbertos);
         model.addAttribute("faturamentoAberto",  faturamentoAberto);
+
+        model.addAttribute("entregarHoje",       entregarHoje);
+        model.addAttribute("atrasados",          atrasados);
+        model.addAttribute("produzir",           produzir);
+        model.addAttribute("totalEntregarHoje",  totalEntregarHoje);
+        model.addAttribute("totalAtrasados",     totalAtrasados);
+        model.addAttribute("totalProduzir",      totalProduzir);
 
         model.addAttribute("ordensPendentes",    ordensPendentes);
         model.addAttribute("ordensEmAndamento",  ordensEmAndamento);

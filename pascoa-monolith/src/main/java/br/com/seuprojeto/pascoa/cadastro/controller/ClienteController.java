@@ -23,11 +23,13 @@ public class ClienteController {
     private final ClienteService service;
 
     @GetMapping
-    public String listar(@RequestParam(required = false) String busca, Model model) {
-        var clientes = (busca != null && !busca.isBlank())
-            ? service.buscar(busca.trim())
-            : service.listarTodos();
-        model.addAttribute("clientes", clientes);
+    public String listar(@RequestParam(required = false) String busca,
+                         @RequestParam(defaultValue = "0") int pagina,
+                         Model model) {
+        var page = service.listarPaginado(busca, pagina);
+        model.addAttribute("clientes", page.getContent());
+        model.addAttribute("page", page);
+        model.addAttribute("pagina", pagina);
         model.addAttribute("busca", busca);
         return "clientes/lista";
     }

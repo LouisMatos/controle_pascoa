@@ -312,6 +312,10 @@ configuracao_sistema — tabela singleton (id = 1 fixo)
 | `moeda` | VARCHAR(5) | NN, DEF `'BRL'` | |
 
 ### `contas_receber`
+> **Sem uso desde 2026-09-26:** nenhum código escreve ou lê esta tabela. Aging e previsto de
+> entrada do fluxo de caixa passaram a derivar o saldo de `pedidos` − `pagamentos`. Tabela e
+> entidade mantidas por compatibilidade; remoção em migration futura.
+
 | Coluna | Tipo | Restrições | Notas |
 |--------|------|-----------|-------|
 | `id` | BIGSERIAL | PK | |

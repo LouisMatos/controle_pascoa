@@ -2,12 +2,15 @@ package br.com.seuprojeto.pascoa.pedido.repository;
 
 import br.com.seuprojeto.pascoa.pedido.entity.Pedido;
 import br.com.seuprojeto.pascoa.pedido.entity.StatusPedido;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,8 +20,13 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     @Query("SELECT p FROM Pedido p LEFT JOIN FETCH p.cliente ORDER BY p.dataPedido DESC")
     List<Pedido> findAllComCliente();
 
-    @Query("SELECT p FROM Pedido p LEFT JOIN FETCH p.cliente WHERE p.status = :status ORDER BY p.dataPedido DESC")
-    List<Pedido> findByStatusComCliente(@Param("status") StatusPedido status);
+    @Query(value = "SELECT p FROM Pedido p LEFT JOIN FETCH p.cliente ORDER BY p.dataPedido DESC",
+           countQuery = "SELECT count(p) FROM Pedido p")
+    Page<Pedido> findComCliente(Pageable pageable);
+
+    @Query(value = "SELECT p FROM Pedido p LEFT JOIN FETCH p.cliente WHERE p.status = :status ORDER BY p.dataPedido DESC",
+           countQuery = "SELECT count(p) FROM Pedido p WHERE p.status = :status")
+    Page<Pedido> findByStatusComCliente(@Param("status") StatusPedido status, Pageable pageable);
 
     @Query("SELECT DISTINCT p FROM Pedido p " +
            "LEFT JOIN FETCH p.itens i " +
@@ -86,4 +94,45 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
            "AND MONTH(p.dataPedido) = :mes AND YEAR(p.dataPedido) = :ano")
     BigDecimal sumTotalPorStatusAndMes(@Param("statuses") List<StatusPedido> statuses,
                                        @Param("mes") int mes, @Param("ano") int ano);
+
+    @Query("""
+        SELECT p.id, c.nome, p.dataEntrega, p.dataPedido,
+               p.totalPedido - COALESCE((SELECT SUM(g.valor) FROM Pagamento g WHERE g.pedido = p), 0)
+        FROM Pedido p LEFT JOIN p.cliente c
+        WHERE p.status <> br.com.seuprojeto.pascoa.pedido.entity.StatusPedido.CANCELADO
+          AND p.totalPedido > COALESCE((SELECT SUM(g.valor) FROM Pagamento g WHERE g.pedido = p), 0)
+        ORDER BY p.dataEntrega
+    """)
+    List<Object[]> saldosEmAberto();
+
+    @Query("""
+        SELECT COALESCE(SUM(p.totalPedido - COALESCE((SELECT SUM(g.valor) FROM Pagamento g WHERE g.pedido = p), 0)), 0)
+        FROM Pedido p
+        WHERE p.status <> br.com.seuprojeto.pascoa.pedido.entity.StatusPedido.CANCELADO
+          AND p.dataEntrega BETWEEN :inicio AND :fim
+          AND p.totalPedido > COALESCE((SELECT SUM(g.valor) FROM Pagamento g WHERE g.pedido = p), 0)
+    """)
+    BigDecimal sumSaldoEmAbertoPorVencimento(@Param("inicio") LocalDate inicio, @Param("fim") LocalDate fim);
+
+    @Query("""
+        SELECT p FROM Pedido p LEFT JOIN FETCH p.cliente
+        WHERE p.dataEntrega = :data AND p.status IN :statuses
+        ORDER BY p.slotEntrega, p.id
+    """)
+    List<Pedido> findPorDataEntrega(@Param("data") LocalDate data,
+                                    @Param("statuses") List<StatusPedido> statuses,
+                                    Pageable pageable);
+
+    long countByDataEntregaAndStatusIn(LocalDate dataEntrega, List<StatusPedido> statuses);
+
+    @Query("""
+        SELECT p FROM Pedido p LEFT JOIN FETCH p.cliente
+        WHERE p.dataEntrega < :data AND p.status IN :statuses
+        ORDER BY p.dataEntrega, p.id
+    """)
+    List<Pedido> findAtrasados(@Param("data") LocalDate data,
+                               @Param("statuses") List<StatusPedido> statuses,
+                               Pageable pageable);
+
+    long countByDataEntregaBeforeAndStatusIn(LocalDate dataEntrega, List<StatusPedido> statuses);
 }

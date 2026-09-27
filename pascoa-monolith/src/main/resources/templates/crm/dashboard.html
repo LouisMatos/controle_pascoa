@@ -78,9 +78,9 @@
                             <div class="text-muted small" th:text="${c.cliente().email}"></div>
                         </td>
                         <td class="text-center">
-                            <span th:classappend="'bg-' + ${c.segmento().badgeColor()}"
+                            <span th:classappend="'bg-' + ${c.segmento().badgeColor}"
                                   class="badge"
-                                  th:text="${c.segmento().descricao()}"></span>
+                                  th:text="${c.segmento().descricao}"></span>
                         </td>
                         <td class="text-end fw-semibold text-success">
                             R$ <span th:text="${#numbers.formatDecimal(c.ltv(), 1, 'POINT', 2, 'COMMA')}"></span>
