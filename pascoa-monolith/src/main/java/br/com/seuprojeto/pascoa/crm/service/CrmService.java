@@ -14,7 +14,6 @@ import br.com.seuprojeto.pascoa.pedido.repository.PedidoRepository;
 import br.com.seuprojeto.pascoa.shared.exception.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -145,10 +144,9 @@ public class CrmService {
 
     /**
      * F8: Job diário que recalcula e persiste o segmento de cada cliente.
-     * Executa às 02h00, protegido por ShedLock (exatamente um nó em cluster).
+     * Executa às 02h00.
      */
     @Scheduled(cron = "0 0 2 * * *")
-    @SchedulerLock(name = "crm_recalcularSegmentos", lockAtMostFor = "PT30M", lockAtLeastFor = "PT1M")
     @Transactional
     public void recalcularSegmentos() {
         log.info("[CRM] Iniciando recalculo de segmentos de clientes...");

@@ -10,7 +10,6 @@ import br.com.seuprojeto.pascoa.notificacao.service.EmailService;
 import br.com.seuprojeto.pascoa.notificacao.service.WhatsAppService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
@@ -64,7 +63,6 @@ public class CampanhaService {
 
     /** Worker: processa 1 item a cada 6 segundos = 10 envios/minuto. */
     @Scheduled(fixedRate = 6_000)
-    @SchedulerLock(name = "campanha_processarProximo", lockAtMostFor = "PT10S", lockAtLeastFor = "PT5S")
     public void processarProximo() {
         CampanhaItem item = campanhaQueue.poll();
         if (item == null) { return; }

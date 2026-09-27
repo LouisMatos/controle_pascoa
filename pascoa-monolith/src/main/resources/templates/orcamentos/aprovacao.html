@@ -73,9 +73,9 @@
                     </div>
                     <div class="col-sm-6">
                         <span class="text-muted small">Válido até</span>
-                        <div th:classappend="${orc.expirado()} ? 'text-danger fw-semibold' : 'fw-semibold'">
+                        <div th:classappend="${orc.isExpirado()} ? 'text-danger fw-semibold' : 'fw-semibold'">
                             <span th:text="${#temporals.format(orc.validade, 'dd/MM/yyyy')}"></span>
-                            <small th:if="${orc.expirado()}" class="ms-1">(expirado)</small>
+                            <small th:if="${orc.isExpirado()}" class="ms-1">(expirado)</small>
                         </div>
                     </div>
                     <div th:if="${orc.observacoes != null and !orc.observacoes.isEmpty()}" class="col-12">
@@ -126,7 +126,7 @@
         </div>
 
         <!-- Botões de ação (apenas PENDENTE e não expirado) -->
-        <div th:if="${orc.isPendente() and !orc.expirado()}" class="card border-0 shadow-sm mb-4">
+        <div th:if="${orc.isPendente() and !orc.isExpirado()}" class="card border-0 shadow-sm mb-4">
             <div class="card-body text-center py-4">
                 <p class="text-muted mb-3">Como deseja responder a esta proposta?</p>
                 <div class="d-flex justify-content-center gap-3 flex-wrap">
@@ -157,7 +157,7 @@
             <strong>Orçamento recusado.</strong><br>
             Obrigado pelo seu retorno.
         </div>
-        <div th:if="${orc.status.name() == 'EXPIRADO' or (orc.isPendente() and orc.expirado())}"
+        <div th:if="${orc.status.name() == 'EXPIRADO' or (orc.isPendente() and orc.isExpirado())}"
              class="alert alert-warning text-center">
             <i class="bi bi-clock-history fs-4 d-block mb-2"></i>
             <strong>Este orçamento expirou.</strong><br>

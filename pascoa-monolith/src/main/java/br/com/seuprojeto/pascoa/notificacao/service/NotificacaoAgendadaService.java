@@ -8,7 +8,6 @@ import br.com.seuprojeto.pascoa.orcamento.entity.StatusOrcamento;
 import br.com.seuprojeto.pascoa.orcamento.repository.OrcamentoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,9 +24,6 @@ import java.util.List;
  *   <li>{@link #notificarOrcamentosExpirando()} — todo dia às 09h00,
  *       alerta clientes sobre orçamentos PENDENTE que vencem em 2 dias.</li>
  * </ul>
- *
- * <p>Ambos os jobs usam {@link SchedulerLock} para evitar execução duplicada
- * em ambientes com múltiplas instâncias.
  */
 @Service
 @RequiredArgsConstructor
@@ -53,9 +49,6 @@ public class NotificacaoAgendadaService {
      * {@link NotificacaoService#processarParaCliente} via consulta ao banco.
      */
     @Scheduled(cron = "0 0 8 * * *")
-    @SchedulerLock(name = "notif_aniversariantes",
-                   lockAtMostFor = "PT30M",
-                   lockAtLeastFor = "PT1M")
     @Transactional
     public void notificarAniversariantes() {
         LocalDate hoje = LocalDate.now();
@@ -87,9 +80,6 @@ public class NotificacaoAgendadaService {
      * por índice único no banco ({@code uq_notif_orcamento_expirando}).
      */
     @Scheduled(cron = "0 0 9 * * *")
-    @SchedulerLock(name = "notif_orcamentos_expirando",
-                   lockAtMostFor = "PT30M",
-                   lockAtLeastFor = "PT1M")
     @Transactional
     public void notificarOrcamentosExpirando() {
         LocalDate dataAlerta = LocalDate.now().plusDays(DIAS_AVISO_ORCAMENTO);

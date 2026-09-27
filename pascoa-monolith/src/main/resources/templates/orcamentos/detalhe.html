@@ -47,8 +47,8 @@
                         <dt class="col-5 text-muted">Válido até</dt>
                         <dd class="col-7">
                             <span th:text="${#temporals.format(orc.validade, 'dd/MM/yyyy')}"
-                                  th:classappend="${orc.expirado()} ? 'text-danger fw-semibold'"></span>
-                            <small th:if="${orc.expirado()}" class="text-danger ms-1">(expirado)</small>
+                                  th:classappend="${orc.isExpirado()} ? 'text-danger fw-semibold'"></span>
+                            <small th:if="${orc.isExpirado()}" class="text-danger ms-1">(expirado)</small>
                         </dd>
 
                         <dt class="col-5 text-muted">Total</dt>

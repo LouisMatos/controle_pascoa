@@ -99,7 +99,9 @@ public class SecurityConfig {
                 // Apenas ADMIN
                 .requestMatchers("/usuarios/**", "/notificacoes/**", "/auditoria/**", "/lgpd/**").hasRole("ADMIN")
                 .requestMatchers("/admin/**").hasRole("ADMIN")
-                // Actuator — somente ADMIN (health com detalhes, métricas)
+                // Actuator — health liberado para probes de infra (mostra apenas status,
+                // pois management.endpoint.health.show-details=when-authorized); resto só ADMIN
+                .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
                 .requestMatchers("/actuator/**").hasRole("ADMIN")
                 // ADMIN e ATENDENTE — CRM
                 .requestMatchers("/crm/**").hasAnyRole("ADMIN", "ATENDENTE")

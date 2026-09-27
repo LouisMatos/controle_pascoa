@@ -1,5 +1,6 @@
 package br.com.seuprojeto.pascoa.config;
 
+import br.com.seuprojeto.pascoa.shared.SecurityUtils;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -67,9 +68,7 @@ public class MaintenanceFilter extends OncePerRequestFilter {
 
         // Verifica se o usuário autenticado é ADMIN
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        boolean isAdmin = auth != null
-            && auth.isAuthenticated()
-            && !"anonymousUser".equals(auth.getPrincipal())
+        boolean isAdmin = SecurityUtils.autenticado()
             && auth.getAuthorities().stream()
                    .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
 

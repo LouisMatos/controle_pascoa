@@ -2,20 +2,15 @@ package br.com.seuprojeto.pascoa.pedido.service;
 
 import br.com.seuprojeto.pascoa.pedido.entity.ItemPedido;
 import br.com.seuprojeto.pascoa.pedido.entity.Pedido;
-// OpenPDF — modelo de documento (sem wildcard para evitar conflito com POI)
-import com.lowagie.text.Document;
+import br.com.seuprojeto.pascoa.shared.pdf.PdfKit;
+// OpenPDF — sem wildcard para evitar conflito com POI
 import com.lowagie.text.DocumentException;
 import com.lowagie.text.Element;
 import com.lowagie.text.Font;
-import com.lowagie.text.PageSize;
-import com.lowagie.text.Paragraph;
 import com.lowagie.text.Phrase;
 import com.lowagie.text.Rectangle;
-// OpenPDF — PDF writer e tabelas
-import com.lowagie.text.pdf.BaseFont;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
-import com.lowagie.text.pdf.PdfWriter;
 // Apache POI — modelo de planilha (sem wildcard para evitar conflito com OpenPDF)
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
@@ -35,11 +30,9 @@ import java.awt.Color;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.text.NumberFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * Gera arquivos Excel (.xlsx) e PDF a partir dos dados do sistema.
@@ -50,9 +43,6 @@ public class ExportService {
     @Value("${app.base-url:http://localhost:8080}")
     private String baseUrl;
 
-    private static final DateTimeFormatter DATE_FMT     = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-    private static final DateTimeFormatter DATETIME_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
-    private static final Locale PT_BR = new Locale("pt", "BR");
 
     // ─────────────────────────────────────────────────────────────────────────
     // EXCEL
@@ -80,7 +70,7 @@ public class ExportService {
             // ── Linha 1: subtítulo ───────────────────────────────────────────
             Row r1 = sheet.createRow(1);
             r1.createCell(0).setCellValue(
-                "Gerado em: " + LocalDateTime.now().format(DATETIME_FMT));
+                "Gerado em: " + LocalDateTime.now().format(PdfKit.DATETIME_FMT));
             sheet.addMergedRegion(new CellRangeAddress(1, 1, 0, 6));
 
             // ── Linha 2: vazia ───────────────────────────────────────────────
@@ -105,9 +95,9 @@ public class ExportService {
                 row.createCell(1).setCellValue(p.getCliente().getNome());
                 row.createCell(2).setCellValue(
                     nvl(p.getCliente().getTelefone()));
-                row.createCell(3).setCellValue(p.getDataPedido().format(DATETIME_FMT));
+                row.createCell(3).setCellValue(p.getDataPedido().format(PdfKit.DATETIME_FMT));
                 row.createCell(4).setCellValue(
-                    p.getDataEntrega() != null ? p.getDataEntrega().format(DATE_FMT) : "");
+                    p.getDataEntrega() != null ? p.getDataEntrega().format(PdfKit.DATE_FMT) : "");
                 row.createCell(5).setCellValue(p.getStatus().getDescricao());
                 Cell totalCell = row.createCell(6);
                 totalCell.setCellValue(p.getTotalPedido().doubleValue());
@@ -187,278 +177,82 @@ public class ExportService {
         s.setBorderTop(BorderStyle.DOUBLE);
         return s;
     }
-
     // ─────────────────────────────────────────────────────────────────────────
     // PDF
     // ─────────────────────────────────────────────────────────────────────────
 
     public byte[] gerarPdfPedido(Pedido pedido, BigDecimal totalPago, BigDecimal saldo) {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        Document doc = new Document(PageSize.A4, 40f, 40f, 50f, 50f);
-        try {
-            PdfWriter.getInstance(doc, out);
-            doc.open();
+        try (PdfKit pdf = new PdfKit()) {
+            pdf.cabecalho("Comprovante de Pedido #" + pedido.getId());
 
-            // ── Fontes com suporte a caracteres portugueses (CP1252) ─────────
-            BaseFont bf     = BaseFont.createFont(BaseFont.HELVETICA,
-                    "Cp1252", BaseFont.NOT_EMBEDDED);
-            BaseFont bfBold = BaseFont.createFont(BaseFont.HELVETICA_BOLD,
-                    "Cp1252", BaseFont.NOT_EMBEDDED);
-
-            Color verde    = new Color(45, 106, 79);
-            Color cinzaCl  = new Color(245, 245, 245);
-            Color cinzaSep = new Color(220, 220, 220);
-            Color preto    = Color.BLACK;
-            Color branco   = Color.WHITE;
-            Color vermelho = new Color(185, 28, 28);
-            Color esmeralda = new Color(21, 128, 61);
-
-            Font fTituloW  = new Font(bfBold, 18, Font.NORMAL, branco);
-            Font fSubW     = new Font(bf,     11, Font.NORMAL, branco);
-            Font fSecao    = new Font(bfBold, 10, Font.NORMAL, verde);
-            Font fNormal   = new Font(bf,     10, Font.NORMAL, preto);
-            Font fNegrito  = new Font(bfBold, 10, Font.NORMAL, preto);
-            Font fPeq      = new Font(bf,      9, Font.NORMAL, new Color(100, 100, 100));
-            Font fPeqBold  = new Font(bfBold,  9, Font.NORMAL, preto);
-            Font fThW      = new Font(bfBold,  9, Font.NORMAL, branco);
-
-            // ── Cabeçalho verde ──────────────────────────────────────────────
-            PdfPTable headerTbl = new PdfPTable(1);
-            headerTbl.setWidthPercentage(100f);
-            headerTbl.setSpacingAfter(14f);
-
-            PdfPCell hCell = new PdfPCell();
-            hCell.setBackgroundColor(verde);
-            hCell.setPadding(14f);
-            hCell.setBorder(Rectangle.NO_BORDER);
-
-            Paragraph pTit = new Paragraph("Pascoa Artesanal", fTituloW);
-            pTit.setAlignment(Element.ALIGN_CENTER);
-            hCell.addElement(pTit);
-
-            Paragraph pSub = new Paragraph("Comprovante de Pedido #" + pedido.getId(), fSubW);
-            pSub.setAlignment(Element.ALIGN_CENTER);
-            hCell.addElement(pSub);
-
-            Paragraph pDt = new Paragraph(
-                "Gerado em " + LocalDateTime.now().format(DATETIME_FMT), fSubW);
-            pDt.setAlignment(Element.ALIGN_CENTER);
-            hCell.addElement(pDt);
-
-            headerTbl.addCell(hCell);
-            doc.add(headerTbl);
-
-            // ── Informações do cliente / pedido ──────────────────────────────
-            doc.add(new Paragraph("CLIENTE E PEDIDO", fSecao));
-            doc.add(espaço());
-
-            PdfPTable infoTbl = new PdfPTable(2);
-            infoTbl.setWidthPercentage(100f);
-            infoTbl.setWidths(new float[]{35f, 65f});
-            infoTbl.setSpacingAfter(12f);
-
-            addInfo(infoTbl, "Cliente:",    pedido.getCliente().getNome(),    fPeqBold, fNormal, cinzaSep);
-            if (str(pedido.getCliente().getTelefone())) {
-                addInfo(infoTbl, "Telefone:", pedido.getCliente().getTelefone(), fPeqBold, fNormal, cinzaSep);
-            }
-            if (str(pedido.getCliente().getEmail())) {
-                addInfo(infoTbl, "E-mail:",   pedido.getCliente().getEmail(),    fPeqBold, fNormal, cinzaSep);
-            }
-            addInfo(infoTbl, "Data do Pedido:",
-                    pedido.getDataPedido().format(DATETIME_FMT), fPeqBold, fNormal, cinzaSep);
+            pdf.secao("CLIENTE E PEDIDO");
+            PdfPTable infoTbl = pdf.infoTable();
+            pdf.addInfo(infoTbl, "Cliente:",  pedido.getCliente().getNome());
+            pdf.addInfo(infoTbl, "Telefone:", pedido.getCliente().getTelefone());
+            pdf.addInfo(infoTbl, "E-mail:",   pedido.getCliente().getEmail());
+            pdf.addInfo(infoTbl, "Data do Pedido:", pedido.getDataPedido().format(PdfKit.DATETIME_FMT));
             if (pedido.getDataEntrega() != null) {
-                String entrega = pedido.getDataEntrega().format(DATE_FMT);
+                String entrega = pedido.getDataEntrega().format(PdfKit.DATE_FMT);
                 if (pedido.getSlotEntrega() != null) {
-                    entrega += " as " + pedido.getSlotEntrega()
-                            .format(DateTimeFormatter.ofPattern("HH:mm"));
+                    entrega += " as " + pedido.getSlotEntrega().format(DateTimeFormatter.ofPattern("HH:mm"));
                 }
-                addInfo(infoTbl, "Previsao de Entrega:", entrega, fPeqBold, fNormal, cinzaSep);
+                pdf.addInfo(infoTbl, "Previsao de Entrega:", entrega);
             }
-            addInfo(infoTbl, "Status:", pedido.getStatus().getDescricao(), fPeqBold, fNormal, cinzaSep);
-            doc.add(infoTbl);
+            pdf.addInfo(infoTbl, "Status:", pedido.getStatus().getDescricao());
+            pdf.add(infoTbl);
 
-            // ── Tabela de produtos ───────────────────────────────────────────
-            doc.add(new Paragraph("PRODUTOS", fSecao));
-            doc.add(espaço());
-
-            PdfPTable itensTbl = new PdfPTable(4);
-            itensTbl.setWidthPercentage(100f);
-            itensTbl.setWidths(new float[]{46f, 11f, 21f, 22f});
-            itensTbl.setSpacingAfter(12f);
-
-            // Cabeçalho
-            addTh(itensTbl, "Produto",     Element.ALIGN_LEFT,   verde, fThW);
-            addTh(itensTbl, "Qtd",         Element.ALIGN_CENTER, verde, fThW);
-            addTh(itensTbl, "Preco Unit.", Element.ALIGN_RIGHT,  verde, fThW);
-            addTh(itensTbl, "Subtotal",    Element.ALIGN_RIGHT,  verde, fThW);
-
-            // Itens
+            pdf.secao("PRODUTOS");
+            PdfPTable itensTbl = pdf.itensTable();
             for (ItemPedido item : pedido.getItens()) {
-                addTd(itensTbl, item.getProduto().getNome(),      Element.ALIGN_LEFT,   fNormal, cinzaSep);
-                addTd(itensTbl, String.valueOf(item.getQuantidade()), Element.ALIGN_CENTER, fNormal, cinzaSep);
-                addTd(itensTbl, brl(item.getPrecoUnitario()),    Element.ALIGN_RIGHT,  fNormal, cinzaSep);
-                addTd(itensTbl, brl(item.getSubtotal()),         Element.ALIGN_RIGHT,  fNormal, cinzaSep);
+                pdf.addTd(itensTbl, item.getProduto().getNome(),          Element.ALIGN_LEFT);
+                pdf.addTd(itensTbl, String.valueOf(item.getQuantidade()), Element.ALIGN_CENTER);
+                pdf.addTd(itensTbl, PdfKit.brl(item.getPrecoUnitario()),  Element.ALIGN_RIGHT);
+                pdf.addTd(itensTbl, PdfKit.brl(item.getSubtotal()),       Element.ALIGN_RIGHT);
             }
+            pdf.addLinhaTotal(itensTbl, pedido.getTotalPedido());
+            pdf.add(itensTbl);
 
-            // Linha de total
-            PdfPCell totLbl = new PdfPCell(new Phrase("TOTAL:", fNegrito));
-            totLbl.setColspan(3);
-            totLbl.setHorizontalAlignment(Element.ALIGN_RIGHT);
-            totLbl.setPadding(5f);
-            totLbl.setBorder(Rectangle.TOP);
-            itensTbl.addCell(totLbl);
-
-            PdfPCell totVal = new PdfPCell(new Phrase(brl(pedido.getTotalPedido()), fNegrito));
-            totVal.setHorizontalAlignment(Element.ALIGN_RIGHT);
-            totVal.setPadding(5f);
-            totVal.setBorder(Rectangle.TOP);
-            itensTbl.addCell(totVal);
-
-            doc.add(itensTbl);
-
-            // ── Situação financeira ──────────────────────────────────────────
-            doc.add(new Paragraph("SITUACAO FINANCEIRA", fSecao));
-            doc.add(espaço());
-
-            // 3 colunas: cabeçalhos na linha 1, valores na linha 2
+            pdf.secao("SITUACAO FINANCEIRA");
             PdfPTable finTbl = new PdfPTable(3);
             finTbl.setWidthPercentage(70f);
             finTbl.setHorizontalAlignment(Element.ALIGN_LEFT);
             finTbl.setSpacingAfter(14f);
-
-            // Linha 1 — labels (fundo verde)
             for (String lbl : new String[]{"Total", "Pago", "Saldo"}) {
-                PdfPCell c = new PdfPCell(new Phrase(lbl, fThW));
-                c.setBackgroundColor(verde);
-                c.setHorizontalAlignment(Element.ALIGN_CENTER);
-                c.setPadding(5f);
-                c.setBorder(Rectangle.NO_BORDER);
-                finTbl.addCell(c);
+                pdf.addTh(finTbl, lbl, Element.ALIGN_CENTER);
             }
+            Color saldoCor = saldo.signum() > 0 ? PdfKit.VERMELHO : PdfKit.ESMERALDA;
+            finTbl.addCell(finCell(PdfKit.brl(pedido.getTotalPedido()), pdf.fNegrito));
+            finTbl.addCell(finCell(PdfKit.brl(totalPago),               pdf.fNegrito));
+            finTbl.addCell(finCell(PdfKit.brl(saldo), new Font(pdf.bfBold, 11, Font.NORMAL, saldoCor)));
+            pdf.add(finTbl);
 
-            // Linha 2 — valores
-            Color saldoCor = saldo.signum() > 0 ? vermelho : esmeralda;
-            Font  fSaldo   = new Font(bfBold, 11, Font.NORMAL, saldoCor);
+            pdf.observacoes(pedido.getObservacoes());
 
-            PdfPCell cTotal = finCell(brl(pedido.getTotalPedido()), fNegrito, cinzaCl);
-            PdfPCell cPago  = finCell(brl(totalPago),               fNegrito, cinzaCl);
-            PdfPCell cSaldo = finCell(brl(saldo),                   fSaldo,   cinzaCl);
-            finTbl.addCell(cTotal);
-            finTbl.addCell(cPago);
-            finTbl.addCell(cSaldo);
-
-            doc.add(finTbl);
-
-            // ── Observações ──────────────────────────────────────────────────
-            if (str(pedido.getObservacoes())) {
-                doc.add(new Paragraph("OBSERVACOES", fSecao));
-                doc.add(espaço());
-                Paragraph obs = new Paragraph(pedido.getObservacoes(), fNormal);
-                obs.setSpacingAfter(14f);
-                doc.add(obs);
-            }
-
-            // ── Link de acompanhamento ───────────────────────────────────────
             if (pedido.getTokenAcompanhamento() != null) {
-                String link = baseUrl + "/acompanhamento/" + pedido.getTokenAcompanhamento();
-                doc.add(new Paragraph("Acompanhe seu pedido em:", fPeq));
-                Font fLink = new Font(bf, 9, Font.UNDERLINE, verde);
-                Paragraph linkPara = new Paragraph(link, fLink);
-                linkPara.setSpacingAfter(10f);
-                doc.add(linkPara);
+                pdf.link("Acompanhe seu pedido em:",
+                         baseUrl + "/acompanhamento/" + pedido.getTokenAcompanhamento());
             }
 
-            // ── Rodapé ───────────────────────────────────────────────────────
-            // Linha separadora via tabela com borda superior
-            PdfPTable rodapeSep = new PdfPTable(1);
-            rodapeSep.setWidthPercentage(100f);
-            PdfPCell rodapeSepCell = new PdfPCell(new Phrase(" "));
-            rodapeSepCell.setBorder(Rectangle.TOP);
-            rodapeSepCell.setBorderColorTop(cinzaSep);
-            rodapeSepCell.setPaddingTop(0f);
-            rodapeSepCell.setPaddingBottom(4f);
-            rodapeSep.addCell(rodapeSepCell);
-            doc.add(rodapeSep);
+            pdf.rodape();
+            return pdf.finalizar();
 
-            Paragraph rodape = new Paragraph("Obrigado pela preferencia! Pascoa Artesanal.", fPeq);
-            rodape.setAlignment(Element.ALIGN_CENTER);
-            doc.add(rodape);
-
-        } catch (DocumentException | java.io.IOException e) {
+        } catch (DocumentException | IOException e) {
             throw new RuntimeException("Erro ao gerar PDF do pedido #" + pedido.getId(), e);
-        } finally {
-            if (doc.isOpen()) { doc.close(); }
         }
-        return out.toByteArray();
-    }
-
-    // ── Helpers de layout PDF ────────────────────────────────────────────────
-
-    /** Linha de informação: [label | valor] com borda inferior */
-    private void addInfo(PdfPTable tbl, String label, String value,
-                         Font lf, Font vf, Color sepColor) {
-        PdfPCell l = new PdfPCell(new Phrase(label, lf));
-        l.setPadding(4f);
-        l.setBorder(Rectangle.BOTTOM);
-        l.setBorderColorBottom(sepColor);
-        tbl.addCell(l);
-
-        PdfPCell v = new PdfPCell(new Phrase(nvl(value), vf));
-        v.setPadding(4f);
-        v.setBorder(Rectangle.BOTTOM);
-        v.setBorderColorBottom(sepColor);
-        tbl.addCell(v);
-    }
-
-    /** Célula de cabeçalho de tabela (fundo colorido, texto branco) */
-    private void addTh(PdfPTable tbl, String text, int align, Color bg, Font f) {
-        PdfPCell c = new PdfPCell(new Phrase(text, f));
-        c.setBackgroundColor(bg);
-        c.setHorizontalAlignment(align);
-        c.setPadding(6f);
-        c.setBorder(Rectangle.NO_BORDER);
-        tbl.addCell(c);
-    }
-
-    /** Célula de dados da tabela de itens */
-    private void addTd(PdfPTable tbl, String text, int align, Font f, Color sepColor) {
-        PdfPCell c = new PdfPCell(new Phrase(text, f));
-        c.setHorizontalAlignment(align);
-        c.setPadding(5f);
-        c.setBorder(Rectangle.BOTTOM);
-        c.setBorderColorBottom(sepColor);
-        tbl.addCell(c);
     }
 
     /** Célula de valor na tabela financeira */
-    private PdfPCell finCell(String text, Font f, Color bg) {
+    private PdfPCell finCell(String text, Font f) {
         PdfPCell c = new PdfPCell(new Phrase(text, f));
-        c.setBackgroundColor(bg);
+        c.setBackgroundColor(PdfKit.CINZA_CLARO);
         c.setHorizontalAlignment(Element.ALIGN_CENTER);
         c.setPadding(6f);
         c.setBorder(Rectangle.NO_BORDER);
         return c;
     }
 
-    /** Parágrafo vazio de espaçamento */
-    private Paragraph espaço() {
-        return new Paragraph(" ");
-    }
-
-    // ── Utilitários ──────────────────────────────────────────────────────────
-
-    /** Formata BigDecimal como moeda BR (ex.: R$ 1.234,56) */
-    private String brl(BigDecimal v) {
-        return NumberFormat.getCurrencyInstance(PT_BR).format(v != null ? v : BigDecimal.ZERO);
-    }
-
-    /** Retorna s se não nulo/vazio, caso contrário "" */
+    /** Retorna s se não nulo, caso contrário "" */
     private String nvl(String s) {
         return (s != null) ? s : "";
-    }
-
-    /** true se string não-nula e não-vazia */
-    private boolean str(String s) {
-        return s != null && !s.isBlank();
     }
 }

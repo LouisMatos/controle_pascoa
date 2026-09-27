@@ -1,13 +1,13 @@
 package br.com.seuprojeto.pascoa.auditoria.service;
 
+import br.com.seuprojeto.pascoa.shared.SecurityUtils;
+
 import br.com.seuprojeto.pascoa.auditoria.entity.AuditLog;
 import br.com.seuprojeto.pascoa.auditoria.repository.AuditLogRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -54,11 +54,6 @@ public class AuditLogService {
 
     /** Usuário autenticado atual — fallback "sistema". */
     public static String usuarioAtual() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.isAuthenticated()
-                && !"anonymousUser".equals(auth.getName())) {
-            return auth.getName();
-        }
-        return "sistema";
+        return SecurityUtils.login("sistema");
     }
 }
