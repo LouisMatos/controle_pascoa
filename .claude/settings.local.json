@@ -21,7 +21,12 @@
       "Bash(xargs -I{} basename {})",
       "Bash(rtk wc *)",
       "Bash(mvn test *)",
-      "Bash(mvn clean *)"
+      "Bash(mvn clean *)",
+      "Bash(curl -s http://localhost:8080)",
+      "Bash(pkill -f \"spring-boot:run\")",
+      "Bash(xargs kill -9)",
+      "Bash(rtk curl *)",
+      "Bash(curl -s -b /tmp/cookies.txt http://localhost:8080/dashboard)"
     ]
   }
 }
