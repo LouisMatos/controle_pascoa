@@ -95,7 +95,7 @@ public class SecurityConfig {
                 .requestMatchers("/uploads/**").permitAll()  // legado — mantido por compatibilidade
                 .requestMatchers("/media/**").permitAll()
                 // PWA
-                .requestMatchers("/manifest.json", "/sw.js", "/icons/**").permitAll()
+                .requestMatchers("/manifest.json", "/sw.js", "/icons/**", "/css/**", "/js/**").permitAll()
                 // Apenas ADMIN
                 .requestMatchers("/usuarios/**", "/notificacoes/**", "/auditoria/**", "/lgpd/**").hasRole("ADMIN")
                 .requestMatchers("/admin/**").hasRole("ADMIN")

@@ -10,14 +10,14 @@
 <main>
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h4 class="mb-0"><i class="bi bi-gear-wide-connected me-2 text-success"></i>Configurações do Sistema</h4>
+            <h4 class="mb-0"><i class="bi bi-gear-wide-connected me-2 text-success" aria-hidden="true"></i>Configurações do Sistema</h4>
             <p class="text-muted small mb-0 mt-1">Modo manutenção e parâmetros gerais da plataforma.</p>
         </div>
     </div>
 
     <!-- Banner de aviso quando manutenção está ativa -->
     <div th:if="${config.modoManutencao}" class="alert alert-warning d-flex align-items-center gap-2 mb-4" role="alert">
-        <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+        <i class="bi bi-exclamation-triangle-fill fs-5" aria-hidden="true"></i>
         <div>
             <strong>Modo manutenção está ATIVO.</strong>
             Todos os usuários não-ADMIN estão sendo redirecionados para a página de manutenção.
@@ -30,12 +30,12 @@
         <div class="col-md-5">
             <div class="card h-100">
                 <div class="card-header py-2 fw-semibold">
-                    <i class="bi bi-power me-2"></i>Modo Manutenção
+                    <i class="bi bi-power me-2" aria-hidden="true"></i>Modo Manutenção
                 </div>
                 <div class="card-body text-center py-4">
                     <div class="fs-1 mb-3"
                          th:class="${config.modoManutencao} ? 'text-warning' : 'text-success'">
-                        <i th:class="${config.modoManutencao} ? 'bi bi-tools' : 'bi bi-check-circle'"></i>
+                        <i th:class="${config.modoManutencao} ? 'bi bi-tools' : 'bi bi-check-circle'" aria-hidden="true"></i>
                     </div>
                     <h5 class="mb-1"
                         th:text="${config.modoManutencao} ? 'Sistema em manutenção' : 'Sistema operacional'">
@@ -56,7 +56,7 @@
                                 >
                             <i th:class="${config.modoManutencao}
                                 ? 'bi bi-play-circle me-2'
-                                : 'bi bi-pause-circle me-2'"></i>
+                                : 'bi bi-pause-circle me-2'" aria-hidden="true"></i>
                             <span th:text="${config.modoManutencao}
                                 ? 'Desativar Manutenção'
                                 : 'Ativar Manutenção'"></span>
@@ -70,7 +70,7 @@
         <div class="col-md-7">
             <div class="card h-100">
                 <div class="card-header py-2 fw-semibold">
-                    <i class="bi bi-pencil-square me-2"></i>Mensagem da Página de Manutenção
+                    <i class="bi bi-pencil-square me-2" aria-hidden="true"></i>Mensagem da Página de Manutenção
                 </div>
                 <div class="card-body">
                     <form th:action="@{/admin/sistema}" method="post" th:object="${config}">
@@ -78,7 +78,7 @@
                         <input type="hidden" th:field="*{modoManutencao}">
 
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Mensagem principal</label>
+                            <label class="form-label fw-semibold" for="mensagemManutencao">Mensagem principal</label>
                             <textarea th:field="*{mensagemManutencao}"
                                       class="form-control" rows="3"
                                       placeholder="O sistema está temporariamente indisponível para manutenção."
@@ -87,7 +87,7 @@
                         </div>
 
                         <div class="mb-4">
-                            <label class="form-label fw-semibold">Previsão de retorno</label>
+                            <label class="form-label fw-semibold" for="previsaoRetorno">Previsão de retorno</label>
                             <input type="text" th:field="*{previsaoRetorno}"
                                    class="form-control"
                                    placeholder="Ex.: hoje às 18h00, amanhã às 9h…"
@@ -97,10 +97,10 @@
 
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-success">
-                                <i class="bi bi-floppy me-1"></i>Salvar Mensagem
+                                <i class="bi bi-floppy me-1" aria-hidden="true"></i>Salvar Mensagem
                             </button>
                             <a th:href="@{/manutencao}" target="_blank" class="btn btn-outline-secondary">
-                                <i class="bi bi-eye me-1"></i>Pré-visualizar
+                                <i class="bi bi-eye me-1" aria-hidden="true"></i>Pré-visualizar
                             </a>
                         </div>
                     </form>

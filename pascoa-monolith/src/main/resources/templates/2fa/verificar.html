@@ -1,41 +1,41 @@
 <!DOCTYPE html>
-<html lang="pt-BR" th:replace="~{fragments/layout-publico :: layout(~{::title}, ~{::main})}"
+<html lang="pt-BR" th:replace="~{fragments/layout-auth :: layout(~{::title}, ~{::main})}"
       xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Verificação em Duas Etapas</title>
-    <style>
-        .otp-container { display: flex; justify-content: center; align-items: center; min-height: 80vh; }
-        .otp-card { width: 100%; max-width: 400px; }
-    </style>
+    <title>Verificação em duas etapas — Páscoa Gestão</title>
 </head>
 <body>
-<main class="otp-container">
-    <div class="otp-card">
-        <div class="card shadow-sm">
-            <div class="card-body p-4">
-                <div class="text-center mb-4">
-                    <i class="bi bi-shield-lock-fill text-primary" style="font-size:2.5rem;"></i>
-                    <h5 class="mt-2 fw-semibold">Verificação em Duas Etapas</h5>
-                    <p class="text-muted small">Digite o código de 6 dígitos do seu aplicativo autenticador.</p>
-                </div>
+<main class="auth-shell">
+    <div th:replace="~{fragments/auth-brand :: brand('Verificação em duas etapas')}"></div>
 
-                <div th:if="${erro}" class="alert alert-danger py-2 small" th:text="${erro}"></div>
+    <div class="card auth-card">
+        <div class="card-body p-4">
+            <h1 class="h4 fw-bold mb-1">Digite o código</h1>
+            <p class="text-body-secondary small mb-3">
+                Abra o aplicativo autenticador e informe o código de 6 dígitos.
+            </p>
 
-                <form th:action="@{/2fa/verificar}" method="post">
-                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                    <div class="mb-3">
-                        <input type="text" name="codigo" class="form-control form-control-lg text-center"
-                               placeholder="000000" maxlength="6" inputmode="numeric"
-                               autofocus autocomplete="one-time-code" required>
-                    </div>
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="bi bi-check-circle me-1"></i> Verificar
-                    </button>
-                </form>
-                <div class="text-center mt-3">
-                    <a href="/logout" class="text-muted small">Cancelar e voltar ao login</a>
-                </div>
+            <div th:if="${erro}" class="alert alert-danger py-2 small" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"></i>
+                <span th:text="${erro}"></span>
             </div>
+
+            <form th:action="@{/2fa/verificar}" method="post" data-loading="Verificando…">
+                <label for="codigo" class="form-label fw-semibold">Código de verificação</label>
+                <input type="text" id="codigo" name="codigo"
+                       class="form-control form-control-lg text-center auth-otp mb-3"
+                       th:classappend="${erro} ? 'is-invalid'"
+                       maxlength="6" minlength="6" pattern="[0-9]{6}" inputmode="numeric"
+                       autofocus autocomplete="one-time-code" spellcheck="false"
+                       data-auto-submit required>
+                <button type="submit" class="btn btn-success w-100 py-2">
+                    <i class="bi bi-check-circle me-2" aria-hidden="true"></i><span class="rotulo">Verificar</span>
+                </button>
+            </form>
+
+            <form th:action="@{/logout}" method="post" class="text-center mt-3">
+                <button type="submit" class="btn btn-link auth-link small p-0">Cancelar e voltar ao login</button>
+            </form>
         </div>
     </div>
 </main>

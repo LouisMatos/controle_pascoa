@@ -151,8 +151,11 @@ function atualizarIndicadores(atual) {
   document.querySelectorAll('.step-indicator').forEach(el => {
     const s = parseInt(el.dataset.step);
     el.classList.remove('active', 'done');
-    if (s === atual) el.classList.add('active');
-    else if (s < atual) el.classList.add('done');
+    if (s === atual) { el.classList.add('active'); el.setAttribute('aria-current', 'step'); }
+    else {
+      el.removeAttribute('aria-current');
+      if (s < atual) el.classList.add('done');
+    }
   });
   // Linhas de progresso
   document.querySelectorAll('.step-line').forEach((line, i) => {

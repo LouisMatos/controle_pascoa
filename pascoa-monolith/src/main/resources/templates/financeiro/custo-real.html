@@ -6,9 +6,9 @@
 <div id="pageContent">
 
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="mb-0"><i class="bi bi-calculator me-2 text-primary"></i>Custo Real — Pedido #<span th:text="${custo.pedidoId}"></span></h2>
+    <h2 class="mb-0"><i class="bi bi-calculator me-2 text-success" aria-hidden="true"></i>Custo Real — Pedido #<span th:text="${custo.pedidoId}"></span></h2>
     <a th:href="@{/pedidos/{id}(id=${custo.pedidoId})}" class="btn btn-outline-secondary btn-sm">
-      <i class="bi bi-arrow-left me-1"></i>Voltar ao Pedido
+      <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Voltar ao Pedido
     </a>
   </div>
 
@@ -61,12 +61,12 @@
     <div class="col-lg-6">
       <div class="card h-100">
         <div class="card-header bg-light fw-semibold">
-          <i class="bi bi-box-seam me-1 text-warning"></i>Camada 1 — Custo de Matéria-Prima
+          <i class="bi bi-box-seam me-1 text-warning" aria-hidden="true"></i>Camada 1 — Custo de Matéria-Prima
           <span class="float-end text-danger fw-bold">R$ <span th:text="${#numbers.formatDecimal(custo.custoMP,1,'POINT',2,'COMMA')}"></span></span>
         </div>
         <div class="card-body p-0">
-          <table class="table table-sm table-hover mb-0">
-            <thead class="table-light"><tr><th>Produto</th><th class="text-center">Qtd</th><th class="text-end">Custo Unit.</th><th class="text-end">Subtotal</th></tr></thead>
+          <div class="table-responsive"><table class="table table-sm table-hover mb-0">
+            <thead class="table-light"><tr><th scope="col">Produto</th><th scope="col" class="text-center">Qtd</th><th scope="col" class="text-end">Custo Unit.</th><th scope="col" class="text-end">Subtotal</th></tr></thead>
             <tbody>
               <tr th:each="linha : ${custo.linhasMP}">
                 <td th:text="${linha.produto}"></td>
@@ -78,7 +78,7 @@
                 <td colspan="4" class="text-muted text-center small py-3">Sem fichas técnicas cadastradas</td>
               </tr>
             </tbody>
-          </table>
+          </table></div>
         </div>
       </div>
     </div>
@@ -87,7 +87,7 @@
     <div class="col-lg-6">
       <div class="card mb-3">
         <div class="card-header bg-light fw-semibold">
-          <i class="bi bi-building me-1 text-secondary"></i>Camada 2 — Rateio de Despesas Fixas
+          <i class="bi bi-building me-1 text-secondary" aria-hidden="true"></i>Camada 2 — Rateio de Despesas Fixas
           <span class="float-end text-danger fw-bold">R$ <span th:text="${#numbers.formatDecimal(custo.rateioFixo,1,'POINT',2,'COMMA')}"></span></span>
         </div>
         <div class="card-body py-2">
@@ -96,12 +96,12 @@
       </div>
       <div class="card">
         <div class="card-header bg-light fw-semibold">
-          <i class="bi bi-truck me-1 text-info"></i>Camada 3 — Despesas Variáveis
+          <i class="bi bi-truck me-1 text-info" aria-hidden="true"></i>Camada 3 — Despesas Variáveis
           <span class="float-end text-danger fw-bold">R$ <span th:text="${#numbers.formatDecimal(custo.despesasVariaveis,1,'POINT',2,'COMMA')}"></span></span>
         </div>
         <div class="card-body p-0">
-          <table class="table table-sm table-hover mb-0">
-            <thead class="table-light"><tr><th>Descrição</th><th>Categoria</th><th class="text-end">Valor</th></tr></thead>
+          <div class="table-responsive"><table class="table table-sm table-hover mb-0">
+            <thead class="table-light"><tr><th scope="col">Descrição</th><th scope="col">Categoria</th><th scope="col" class="text-end">Valor</th></tr></thead>
             <tbody>
               <tr th:each="d : ${custo.despesasDetalhadas}">
                 <td th:text="${d.descricao}"></td>
@@ -112,7 +112,7 @@
                 <td colspan="3" class="text-muted text-center small py-3">Sem despesas variáveis</td>
               </tr>
             </tbody>
-          </table>
+          </table></div>
         </div>
       </div>
     </div>

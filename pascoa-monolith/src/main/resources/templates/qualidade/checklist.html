@@ -9,11 +9,11 @@
 
     <div class="d-flex align-items-center mb-4 gap-3">
         <a th:href="@{/qualidade}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left"></i>
+            <i class="bi bi-arrow-left" aria-hidden="true"></i>
         </a>
         <div>
             <h2 class="mb-0">
-                <i class="bi bi-list-check me-2 text-info"></i>Checklist de Qualidade
+                <i class="bi bi-list-check me-2 text-success" aria-hidden="true"></i>Checklist de Qualidade
             </h2>
             <div class="text-muted small" th:text="${produto.nome}"></div>
         </div>
@@ -23,16 +23,16 @@
         <div class="col-lg-5">
             <!-- Adicionar item -->
             <div class="card">
-                <div class="card-header fw-semibold"><i class="bi bi-plus-circle me-2"></i>Novo Item</div>
+                <div class="card-header fw-semibold"><i class="bi bi-plus-circle me-2" aria-hidden="true"></i>Novo Item</div>
                 <div class="card-body">
                     <form th:action="@{/qualidade/checklist/{id}(id=${produto.id})}" method="post">
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Descrição do item de verificação</label>
-                            <textarea name="descricao" class="form-control" rows="3"
+                            <label class="form-label fw-semibold" for="descricao">Descrição do item de verificação</label>
+                            <textarea name="descricao" id="descricao" class="form-control" rows="3"
                                       placeholder="Ex.: Temperatura do chocolate entre 45°C e 50°C" required></textarea>
                         </div>
                         <button type="submit" class="btn btn-success w-100">
-                            <i class="bi bi-plus-lg me-1"></i>Adicionar ao Checklist
+                            <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Adicionar ao Checklist
                         </button>
                     </form>
                 </div>
@@ -43,12 +43,12 @@
             <!-- Lista de itens -->
             <div class="card">
                 <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
-                    <span><i class="bi bi-card-checklist me-2"></i>Itens do Checklist</span>
+                    <span><i class="bi bi-card-checklist me-2" aria-hidden="true"></i>Itens do Checklist</span>
                     <span class="badge bg-secondary" th:text="${#lists.size(itens)} + ' itens'"></span>
                 </div>
                 <div class="card-body p-0">
                     <div th:if="${#lists.isEmpty(itens)}" class="text-center text-muted py-4 small">
-                        <i class="bi bi-clipboard2 d-block fs-3 mb-2 opacity-40"></i>
+                        <i class="bi bi-clipboard2 d-block fs-3 mb-2 opacity-40" aria-hidden="true"></i>
                         Nenhum item cadastrado ainda.
                     </div>
                     <div th:each="item, i : ${itens}"
@@ -65,16 +65,16 @@
                             <form th:action="@{/qualidade/checklist/item/{id}/toggle(id=${item.id})}" method="post">
                                 <input type="hidden" name="produtoId" th:value="${produto.id}">
                                 <button type="submit" class="btn btn-xs btn-outline-secondary py-0 px-2"
-                                        th:title="${item.ativo} ? 'Desativar' : 'Ativar'">
+                                        th:title="${item.ativo} ? 'Desativar' : 'Ativar'" th:aria-label="${item.ativo} ? 'Desativar item' : 'Ativar item'">
                                     <i th:classappend="${item.ativo} ? 'bi-eye' : 'bi-eye-slash'"
-                                       class="bi" style="font-size:.8rem;"></i>
+                                       class="bi icone-pequeno" aria-hidden="true"></i>
                                 </button>
                             </form>
                             <!-- Excluir -->
                             <form th:action="@{/qualidade/checklist/item/{id}/excluir(id=${item.id})}" method="post">
                                 <input type="hidden" name="produtoId" th:value="${produto.id}">
-                                <button type="submit" class="btn btn-xs btn-outline-danger py-0 px-2" data-confirm="Excluir este item?">
-                                    <i class="bi bi-trash" style="font-size:.8rem;"></i>
+                                <button type="submit" class="btn btn-xs btn-outline-danger py-0 px-2" data-confirm="Excluir este item?" title="Excluir item" aria-label="Excluir item">
+                                    <i class="bi bi-trash icone-pequeno" aria-hidden="true"></i>
                                 </button>
                             </form>
                         </div>

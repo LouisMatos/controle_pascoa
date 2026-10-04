@@ -6,43 +6,43 @@
 <div id="pageContent">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0"><i class="bi bi-file-earmark-text me-2 text-warning"></i>Orçamentos</h2>
+        <h2 class="mb-0"><i class="bi bi-file-earmark-text me-2 text-success" aria-hidden="true"></i>Orçamentos</h2>
         <a th:href="@{/orcamentos/novo}" class="btn btn-success btn-sm">
-            <i class="bi bi-plus-lg me-1"></i>Novo Orçamento
+            <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Novo Orçamento
         </a>
     </div>
 
-    <div th:if="${sucesso}" class="alert alert-success alert-dismissible fade show">
-        <i class="bi bi-check-circle me-2"></i><span th:text="${sucesso}"></span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <div th:if="${sucesso}" class="alert alert-success alert-dismissible fade show" role="status">
+        <i class="bi bi-check-circle me-2" aria-hidden="true"></i><span th:text="${sucesso}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
     </div>
-    <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show">
-        <i class="bi bi-exclamation-triangle me-2"></i><span th:text="${erro}"></span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2" aria-hidden="true"></i><span th:text="${erro}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
     </div>
 
     <div class="card">
         <div class="card-body p-0">
             <div th:if="${#lists.isEmpty(orcamentos)}" class="text-center text-muted py-5">
-                <i class="bi bi-file-earmark-text fs-2 d-block mb-2 opacity-40"></i>
+                <i class="bi bi-file-earmark-text fs-2 d-block mb-2 opacity-40" aria-hidden="true"></i>
                 Nenhum orçamento cadastrado.
                 <div class="mt-3">
                     <a th:href="@{/orcamentos/novo}" class="btn btn-sm btn-success">
-                        <i class="bi bi-plus-lg me-1"></i>Criar Orçamento
+                        <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Criar Orçamento
                     </a>
                 </div>
             </div>
-            <table th:unless="${#lists.isEmpty(orcamentos)}"
-                   class="table table-hover align-middle mb-0">
+            <div class="table-responsive" th:unless="${#lists.isEmpty(orcamentos)}">
+            <table class="table table-hover align-middle mb-0 tabela-cadastro">
                 <thead>
                     <tr>
-                        <th class="ps-3">#</th>
-                        <th>Cliente</th>
-                        <th>Criado em</th>
-                        <th>Validade</th>
-                        <th class="text-end">Total</th>
-                        <th class="text-center">Status</th>
-                        <th class="text-end pe-3">Ações</th>
+                        <th scope="col" class="ps-3">#</th>
+                        <th scope="col">Cliente</th>
+                        <th scope="col">Criado em</th>
+                        <th scope="col">Validade</th>
+                        <th scope="col" class="text-end">Total</th>
+                        <th scope="col" class="text-center">Status</th>
+                        <th scope="col" class="text-end pe-3">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -70,17 +70,18 @@
                         </td>
                         <td class="text-end pe-3">
                             <a th:href="@{/orcamentos/{id}(id=${o.id})}"
-                               class="btn btn-sm btn-outline-primary me-1">
-                                <i class="bi bi-eye"></i>
+                               class="btn btn-sm btn-outline-primary me-1" title="Ver detalhes" aria-label="Ver detalhes">
+                                <i class="bi bi-eye" aria-hidden="true"></i>
                             </a>
                             <a th:href="@{/orcamentos/{id}/pdf(id=${o.id})}"
-                               class="btn btn-sm btn-outline-secondary" target="_blank">
-                                <i class="bi bi-file-pdf"></i>
+                               class="btn btn-sm btn-outline-secondary" target="_blank" rel="noopener" title="Gerar PDF" aria-label="Gerar PDF (abre em nova aba)">
+                                <i class="bi bi-file-pdf" aria-hidden="true"></i>
                             </a>
                         </td>
                     </tr>
                 </tbody>
             </table>
+            </div>
         </div>
         <div class="card-footer d-flex justify-content-between align-items-center"
              th:if="${!#lists.isEmpty(orcamentos)}">
@@ -90,12 +91,12 @@
                 <a th:if="${pagina > 0}"
                    th:href="@{/orcamentos(pagina=${pagina - 1})}"
                    class="btn btn-sm btn-outline-secondary">
-                    <i class="bi bi-chevron-left"></i>
+                    <i class="bi bi-chevron-left" aria-hidden="true"></i><span class="visually-hidden">Página anterior</span>
                 </a>
                 <a th:if="${pagina < page.totalPages - 1}"
                    th:href="@{/orcamentos(pagina=${pagina + 1})}"
                    class="btn btn-sm btn-outline-secondary">
-                    <i class="bi bi-chevron-right"></i>
+                    <i class="bi bi-chevron-right" aria-hidden="true"></i><span class="visually-hidden">Próxima página</span>
                 </a>
             </div>
         </div>

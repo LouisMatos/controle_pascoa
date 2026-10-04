@@ -6,26 +6,26 @@
 <div id="pageContent">
 
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="mb-0"><i class="bi bi-gear me-2 text-secondary"></i>Configuração de Canais</h2>
+    <h2 class="mb-0"><i class="bi bi-gear me-2 text-success" aria-hidden="true"></i>Configuração de Canais</h2>
     <a th:href="@{/notificacoes/templates}" class="btn btn-outline-secondary btn-sm">
-      <i class="bi bi-arrow-left me-1"></i>Voltar aos Templates
+      <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Voltar aos Templates
     </a>
   </div>
 
   <!-- Resultados do teste de conexão / envio -->
   <div th:if="${testeOk}" class="alert alert-success alert-dismissible fade show">
-    <i class="bi bi-check-circle-fill me-2"></i>
+    <i class="bi bi-check-circle-fill me-2" aria-hidden="true"></i>
     <span th:text="${testeOk}"></span>
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
   </div>
   <div th:if="${testeErro}" class="alert alert-danger alert-dismissible fade show">
-    <i class="bi bi-x-circle-fill me-2"></i>
+    <i class="bi bi-x-circle-fill me-2" aria-hidden="true"></i>
     <span th:text="${testeErro}"></span>
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
   </div>
 
   <div class="alert alert-warning small mb-4">
-    <i class="bi bi-exclamation-triangle me-1"></i>
+    <i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>
     <strong>Atenção:</strong> Enquanto <strong>Modo de Teste</strong> estiver ativo, nenhuma mensagem real é enviada —
     os disparos são apenas registrados no log da aplicação.
     Use o painel de teste abaixo para validar a integração antes de desativar o modo de teste.
@@ -36,15 +36,15 @@
     <div class="col-md-6" th:each="canal : ${canais}">
       <div class="card">
         <div class="card-header bg-light fw-semibold d-flex align-items-center gap-2">
-          <i th:if="${canal.tipo.name() == 'WHATSAPP'}" class="bi bi-whatsapp text-success fs-5"></i>
-          <i th:if="${canal.tipo.name() == 'EMAIL'}"    class="bi bi-envelope text-primary fs-5"></i>
-          <i th:if="${canal.tipo.name() == 'SMS'}"      class="bi bi-phone text-warning fs-5"></i>
+          <i th:if="${canal.tipo.name() == 'WHATSAPP'}" class="bi bi-whatsapp text-success fs-5" aria-hidden="true"></i>
+          <i th:if="${canal.tipo.name() == 'EMAIL'}"    class="bi bi-envelope text-primary fs-5" aria-hidden="true"></i>
+          <i th:if="${canal.tipo.name() == 'SMS'}"      class="bi bi-phone text-warning fs-5" aria-hidden="true"></i>
           <span th:text="${canal.tipo.name()}"></span>
           <span th:if="${canal.testMode}" class="badge bg-warning text-dark ms-auto">
-            <i class="bi bi-flask me-1"></i>Modo Teste
+            <i class="bi bi-flask me-1" aria-hidden="true"></i>Modo Teste
           </span>
           <span th:if="${!canal.testMode and canal.ativo}" class="badge bg-success ms-auto">
-            <i class="bi bi-check-circle me-1"></i>Ativo
+            <i class="bi bi-check-circle me-1" aria-hidden="true"></i>Ativo
           </span>
           <span th:if="${!canal.testMode and !canal.ativo}" class="badge bg-secondary ms-auto">Inativo</span>
         </div>
@@ -54,12 +54,12 @@
             <input type="hidden" name="tipo" th:value="${canal.tipo}"/>
 
             <div class="mb-2">
-              <label class="form-label fw-semibold small mb-1">
+              <label class="form-label fw-semibold small mb-1" th:for="'url_' + ${canal.id}">
                 <span th:if="${canal.tipo.name() == 'WHATSAPP'}">URL da Evolution API</span>
                 <span th:if="${canal.tipo.name() == 'EMAIL'}">SMTP Host (configurado em application.properties)</span>
                 <span th:if="${canal.tipo.name() == 'SMS'}">URL do Provedor SMS (webhook HTTP POST)</span>
               </label>
-              <input type="text" name="apiUrl" class="form-control form-control-sm"
+              <input type="text" name="apiUrl" th:id="'url_' + ${canal.id}" class="form-control form-control-sm" autocomplete="off" spellcheck="false"
                      th:value="${canal.apiUrl}"
                      th:placeholder="${canal.tipo.name() == 'WHATSAPP'} ? 'http://localhost:8080' : (${canal.tipo.name() == 'SMS'} ? 'https://api.provedor-sms.com/send' : 'smtp.gmail.com')"/>
               <div th:if="${canal.tipo.name() == 'WHATSAPP'}" class="form-text">
@@ -71,21 +71,21 @@
             </div>
 
             <div class="mb-2" th:if="${canal.tipo.name() == 'WHATSAPP' or canal.tipo.name() == 'SMS'}">
-              <label class="form-label fw-semibold small mb-1">
+              <label class="form-label fw-semibold small mb-1" th:for="'key_' + ${canal.id}">
                 <span th:if="${canal.tipo.name() == 'WHATSAPP'}">API Key (Evolution)</span>
                 <span th:if="${canal.tipo.name() == 'SMS'}">Token de Autenticação (Bearer)</span>
               </label>
-              <input type="text" name="apiKey" class="form-control form-control-sm"
+              <input type="password" name="apiKey" th:id="'key_' + ${canal.id}" class="form-control form-control-sm" autocomplete="new-password" spellcheck="false"
                      th:value="${canal.apiKey}" placeholder="sua-api-key"/>
             </div>
 
             <div class="mb-2">
-              <label class="form-label fw-semibold small mb-1">
+              <label class="form-label fw-semibold small mb-1" th:for="'rem_' + ${canal.id}">
                 <span th:if="${canal.tipo.name() == 'WHATSAPP'}">Nome da Instância</span>
                 <span th:if="${canal.tipo.name() == 'EMAIL'}">E-mail Remetente</span>
                 <span th:if="${canal.tipo.name() == 'SMS'}">Remetente / ID do Sender</span>
               </label>
-              <input type="text" name="remetente" class="form-control form-control-sm"
+              <input type="text" name="remetente" th:id="'rem_' + ${canal.id}" class="form-control form-control-sm" autocomplete="off" spellcheck="false"
                      th:value="${canal.remetente}"
                      th:placeholder="${canal.tipo.name() == 'WHATSAPP'} ? 'pascoa' : (${canal.tipo.name() == 'SMS'} ? 'PascoaApp' : 'noreply@seudominio.com')"/>
             </div>
@@ -100,12 +100,12 @@
               <input type="checkbox" class="form-check-input" name="testMode"
                      th:id="'test_' + ${canal.id}" value="true" th:checked="${canal.testMode}"/>
               <label class="form-check-label small text-warning fw-semibold" th:for="'test_' + ${canal.id}">
-                <i class="bi bi-flask me-1"></i>Modo de Teste (não envia de verdade)
+                <i class="bi bi-flask me-1" aria-hidden="true"></i>Modo de Teste (não envia de verdade)
               </label>
             </div>
 
-            <button type="submit" class="btn btn-primary btn-sm">
-              <i class="bi bi-save me-1"></i>Salvar
+            <button type="submit" class="btn btn-success btn-sm">
+              <i class="bi bi-save me-1" aria-hidden="true"></i>Salvar
             </button>
           </form>
         </div>
@@ -118,7 +118,7 @@
        ==================================================================== -->
   <div class="card border-primary">
     <div class="card-header bg-primary text-white fw-semibold">
-      <i class="bi bi-whatsapp me-2"></i>Validação da Evolution API
+      <i class="bi bi-whatsapp me-2" aria-hidden="true"></i>Validação da Evolution API
     </div>
     <div class="card-body">
 
@@ -126,7 +126,7 @@
 
         <!-- Verificar conectividade -->
         <div class="col-md-6">
-          <h6 class="fw-semibold mb-1"><i class="bi bi-wifi me-1 text-primary"></i>1. Verificar Conexão</h6>
+          <h6 class="fw-semibold mb-1"><i class="bi bi-wifi me-1 text-primary" aria-hidden="true"></i>1. Verificar Conexão</h6>
           <p class="small text-muted mb-3">
             Consulta o estado da instância WhatsApp na Evolution API
             (<code>GET /instance/connectionState/{instancia}</code>).
@@ -134,34 +134,34 @@
           </p>
           <form th:action="@{/notificacoes/verificar-conexao}" method="post">
             <button type="submit" class="btn btn-outline-primary btn-sm">
-              <i class="bi bi-plug me-1"></i>Verificar Conexão Agora
+              <i class="bi bi-plug me-1" aria-hidden="true"></i>Verificar Conexão Agora
             </button>
           </form>
         </div>
 
         <!-- Enviar mensagem de teste -->
         <div class="col-md-6">
-          <h6 class="fw-semibold mb-1"><i class="bi bi-send me-1 text-success"></i>2. Enviar Mensagem de Teste</h6>
+          <h6 class="fw-semibold mb-1"><i class="bi bi-send me-1 text-success" aria-hidden="true"></i>2. Enviar Mensagem de Teste</h6>
           <p class="small text-muted mb-3">
             Envia uma mensagem <strong>real</strong> para o número informado,
             independente do Modo de Teste — para confirmar que a API está funcionando end-to-end.
           </p>
           <form th:action="@{/notificacoes/enviar-teste}" method="post" class="d-flex flex-column gap-2">
             <div>
-              <label class="form-label small fw-semibold mb-1">Número destino (com DDD)</label>
-              <input type="text" name="numeroTeste" class="form-control form-control-sm"
+              <label class="form-label small fw-semibold mb-1" for="numeroTeste">Número destino (com DDD)</label>
+              <input type="tel" id="numeroTeste" inputmode="numeric" autocomplete="off" name="numeroTeste" class="form-control form-control-sm"
                      placeholder="11999998888" pattern="[0-9]{10,13}" required
                      title="Apenas dígitos — DDD + número (10 ou 11 dígitos)"/>
               <div class="form-text">Somente dígitos: DDD + número. Ex: <code>11999998888</code></div>
             </div>
             <div>
-              <label class="form-label small fw-semibold mb-1">Mensagem (opcional)</label>
-              <input type="text" name="mensagemTeste" class="form-control form-control-sm"
+              <label class="form-label small fw-semibold mb-1" for="mensagemTeste">Mensagem (opcional)</label>
+              <input type="text" id="mensagemTeste" autocomplete="off" name="mensagemTeste" class="form-control form-control-sm"
                      placeholder="Deixe em branco para usar mensagem padrão de teste"/>
             </div>
             <div>
               <button type="submit" class="btn btn-success btn-sm">
-                <i class="bi bi-send me-1"></i>Enviar Teste
+                <i class="bi bi-send me-1" aria-hidden="true"></i>Enviar Teste
               </button>
             </div>
           </form>
@@ -171,7 +171,7 @@
 
       <!-- Passos de configuração da Evolution API -->
       <hr class="my-4"/>
-      <h6 class="fw-semibold mb-2"><i class="bi bi-list-ol me-1"></i>Passo a passo para configurar a Evolution API</h6>
+      <h6 class="fw-semibold mb-2"><i class="bi bi-list-ol me-1" aria-hidden="true"></i>Passo a passo para configurar a Evolution API</h6>
       <ol class="small text-muted mb-0">
         <li>Instale a Evolution API via Docker:
           <code class="d-block bg-light p-1 rounded mt-1 mb-2">docker run -d --name evolution-api -p 8080:8080 atendai/evolution-api:latest</code>

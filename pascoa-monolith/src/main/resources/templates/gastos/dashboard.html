@@ -9,21 +9,21 @@
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">
-            <i class="bi bi-bar-chart me-2 text-danger"></i>Dashboard de Gastos
+            <i class="bi bi-bar-chart me-2 text-success" aria-hidden="true"></i>Dashboard de Gastos
         </h2>
         <a th:href="@{/gastos}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-list-ul me-1"></i>Ver Lançamentos
+            <i class="bi bi-list-ul me-1" aria-hidden="true"></i>Ver Lançamentos
         </a>
     </div>
 
     <!-- Alertas -->
     <div th:if="${sucesso}" class="alert alert-success alert-dismissible fade show">
-        <i class="bi bi-check-circle me-2"></i><span th:text="${sucesso}"></span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <i class="bi bi-check-circle me-2" aria-hidden="true"></i><span th:text="${sucesso}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
     </div>
     <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show">
-        <i class="bi bi-exclamation-triangle me-2"></i><span th:text="${erro}"></span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <i class="bi bi-exclamation-triangle me-2" aria-hidden="true"></i><span th:text="${erro}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
     </div>
 
     <!-- Filtro de período -->
@@ -31,8 +31,8 @@
         <div class="card-body py-3">
             <form th:action="@{/gastos/dashboard}" method="get" class="row g-2 align-items-end">
                 <div class="col-auto">
-                    <label class="form-label small fw-semibold mb-1">Mês</label>
-                    <select name="mes" class="form-select form-select-sm">
+                    <label class="form-label small fw-semibold mb-1" for="mes">Mês</label>
+                    <select name="mes" id="mes" class="form-select form-select-sm">
                         <option th:each="m : ${#numbers.sequence(1,12)}"
                                 th:value="${m}"
                                 th:text="${{'Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'}[m-1]}"
@@ -40,13 +40,13 @@
                     </select>
                 </div>
                 <div class="col-auto">
-                    <label class="form-label small fw-semibold mb-1">Ano</label>
-                    <input type="number" name="ano" class="form-control form-control-sm"
-                           th:value="${anoAtual}" min="2020" max="2100" style="width:90px">
+                    <label class="form-label small fw-semibold mb-1" for="ano">Ano</label>
+                    <input type="number" name="ano" id="ano" class="form-control form-control-sm col-w-90"
+                           th:value="${anoAtual}" min="2020" max="2100">
                 </div>
                 <div class="col-auto">
-                    <button type="submit" class="btn btn-primary btn-sm">
-                        <i class="bi bi-funnel me-1"></i>Filtrar
+                    <button type="submit" class="btn btn-success btn-sm">
+                        <i class="bi bi-funnel me-1" aria-hidden="true"></i>Filtrar
                     </button>
                 </div>
             </form>
@@ -104,10 +104,12 @@
         <div class="col-lg-7">
             <div class="card h-100">
                 <div class="card-header fw-semibold">
-                    <i class="bi bi-bar-chart me-2"></i>Orçado × Realizado por Categoria
+                    <i class="bi bi-bar-chart me-2" aria-hidden="true"></i>Orçado × Realizado por Categoria
                 </div>
                 <div class="card-body">
-                    <canvas id="gastosChart" height="280"></canvas>
+                    <canvas id="gastosChart" th:data-labels="${#strings.listJoin(chartLabels, '|')}"
+                            th:data-realizado="${#strings.listJoin(chartRealizado, ',')}"
+                            th:data-orcado="${#strings.listJoin(chartOrcado, ',')}" role="img" aria-label="Gráfico de gastos por categoria" height="280"></canvas>
                 </div>
             </div>
         </div>
@@ -116,21 +118,21 @@
         <div class="col-lg-5">
             <div class="card h-100">
                 <div class="card-header fw-semibold">
-                    <i class="bi bi-table me-2"></i>Detalhamento
+                    <i class="bi bi-table me-2" aria-hidden="true"></i>Detalhamento
                 </div>
                 <div class="card-body p-0">
                     <div th:if="${#lists.isEmpty(dashboard.porCategoria())}"
                          class="text-center text-muted py-4">
                         Nenhum dado para o período.
                     </div>
-                    <table th:unless="${#lists.isEmpty(dashboard.porCategoria())}"
+                    <div class="table-responsive"><table th:unless="${#lists.isEmpty(dashboard.porCategoria())}"
                            class="table table-hover align-middle mb-0 small">
                         <thead>
                             <tr>
-                                <th class="ps-3">Categoria</th>
-                                <th class="text-end">Realizado</th>
-                                <th class="text-end">Orçado</th>
-                                <th class="text-end pe-3">%</th>
+                                <th scope="col" class="ps-3">Categoria</th>
+                                <th scope="col" class="text-end">Realizado</th>
+                                <th scope="col" class="text-end">Orçado</th>
+                                <th scope="col" class="text-end pe-3">%</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -156,7 +158,7 @@
                                 </td>
                             </tr>
                         </tbody>
-                    </table>
+                    </table></div>
                 </div>
             </div>
         </div>
@@ -165,7 +167,7 @@
     <!-- Orçamento por categoria -->
     <div class="card mt-4">
         <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
-            <span><i class="bi bi-wallet2 me-2"></i>Definir Orçamento por Categoria</span>
+            <span><i class="bi bi-wallet2 me-2" aria-hidden="true"></i>Definir Orçamento por Categoria</span>
             <span class="text-muted small fw-normal">
                 Mês <span th:text="${mesAtual}"></span>/<span th:text="${anoAtual}"></span>
             </span>
@@ -175,8 +177,8 @@
                 <input type="hidden" name="referenciaMes" th:value="${mesAtual}">
                 <input type="hidden" name="referenciaAno" th:value="${anoAtual}">
                 <div class="col-sm-4">
-                    <label class="form-label small fw-semibold mb-1">Categoria</label>
-                    <select name="categoria" class="form-select form-select-sm" required>
+                    <label class="form-label small fw-semibold mb-1" for="categoria">Categoria</label>
+                    <select name="categoria" id="categoria" class="form-select form-select-sm" required>
                         <option value="">Selecione...</option>
                         <option th:each="c : ${categorias}"
                                 th:value="${c.name()}"
@@ -184,13 +186,13 @@
                     </select>
                 </div>
                 <div class="col-sm-3">
-                    <label class="form-label small fw-semibold mb-1">Valor Orçado (R$)</label>
-                    <input type="number" step="0.01" min="0" name="valorOrcado"
+                    <label class="form-label small fw-semibold mb-1" for="valorOrcado">Valor Orçado (R$)</label>
+                    <input type="number" step="0.01" min="0" name="valorOrcado" id="valorOrcado"
                            class="form-control form-control-sm" placeholder="0,00" required>
                 </div>
                 <div class="col-auto">
-                    <button type="submit" class="btn btn-primary btn-sm">
-                        <i class="bi bi-save me-1"></i>Salvar Orçamento
+                    <button type="submit" class="btn btn-success btn-sm">
+                        <i class="bi bi-save me-1" aria-hidden="true"></i>Salvar Orçamento
                     </button>
                 </div>
             </form>
@@ -208,62 +210,9 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script th:src="@{/js/gastos-chart.js}"></script>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script th:inline="javascript">
-    /*<![CDATA[*/
-    const chartLabels    = /*[[${chartLabels}]]*/    [];
-    const chartRealizado = /*[[${chartRealizado}]]*/ [];
-    const chartOrcado    = /*[[${chartOrcado}]]*/    [];
-
-    if (chartLabels.length > 0) {
-        const ctx = document.getElementById('gastosChart').getContext('2d');
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: chartLabels,
-                datasets: [
-                    {
-                        label: 'Realizado',
-                        data: chartRealizado,
-                        backgroundColor: 'rgba(220, 53, 69, 0.75)',
-                        borderColor: 'rgba(220, 53, 69, 1)',
-                        borderWidth: 1
-                    },
-                    {
-                        label: 'Orçado',
-                        data: chartOrcado,
-                        backgroundColor: 'rgba(13, 110, 253, 0.35)',
-                        borderColor: 'rgba(13, 110, 253, 0.8)',
-                        borderWidth: 1
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { position: 'top' },
-                    tooltip: {
-                        callbacks: {
-                            label: function(ctx) {
-                                return ' R$ ' + ctx.parsed.y.toLocaleString('pt-BR', {minimumFractionDigits: 2});
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(v) { return 'R$ ' + v.toLocaleString('pt-BR'); }
-                        }
-                    }
-                }
-            }
-        });
-    }
-    /*]]>*/
-</script>
 </body>
 </html>

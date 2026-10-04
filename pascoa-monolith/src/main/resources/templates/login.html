@@ -1,62 +1,56 @@
 <!DOCTYPE html>
-<html lang="pt-BR" th:replace="~{fragments/layout-publico :: layout(~{::title}, ~{::main})}"
+<html lang="pt-BR" th:replace="~{fragments/layout-auth :: layout(~{::title}, ~{::main})}"
       xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Login — Sistema Páscoa</title>
-    <style>
-        .login-container { display: flex; align-items: center; justify-content: center; min-height: 80vh; }
-        .login-card { width: 380px; }
-    </style>
+    <title>Entrar — Páscoa Gestão</title>
 </head>
 <body>
-<main class="login-container">
-    <div class="login-card">
-        <div class="text-center mb-4">
-            <i class="bi bi-egg-fill text-success" style="font-size: 3rem;"></i>
-            <h3 class="fw-bold mt-2 mb-0">Páscoa Gestão</h3>
-            <p class="text-muted small">Sistema de Gestão de Ovos Artesanais</p>
-        </div>
+<main class="auth-shell">
+    <div th:replace="~{fragments/auth-brand :: brand('Gestão de ovos de Páscoa artesanais')}"></div>
 
-        <div class="card">
-            <div class="card-body p-4">
+    <div class="card auth-card">
+        <div class="card-body p-4">
+            <h1 class="h4 fw-bold mb-3">Entrar na sua conta</h1>
 
-                <div th:if="${param.erro}" class="alert alert-danger py-2 small mb-3">
-                    <i class="bi bi-exclamation-triangle-fill me-1"></i>
-                    Usuário ou senha incorretos. Tente novamente.
+            <div th:if="${param.erro}" class="alert alert-danger py-2 small mb-3" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"></i>
+                Usuário ou senha incorretos. Confira os dados e tente de novo, ou use “Esqueceu sua senha?”.
+            </div>
+            <div th:if="${param.logout}" class="alert alert-success py-2 small mb-3" role="status">
+                <i class="bi bi-check-circle-fill me-1" aria-hidden="true"></i>
+                Você saiu do sistema. Até logo!
+            </div>
+
+            <form th:action="@{/login}" method="post" data-loading="Entrando…">
+                <div class="mb-3">
+                    <label for="username" class="form-label fw-semibold">Login</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-person" aria-hidden="true"></i></span>
+                        <input type="text" id="username" name="username"
+                               class="form-control" th:classappend="${param.erro} ? 'is-invalid'"
+                               autofocus autocomplete="username" autocapitalize="none" spellcheck="false" required>
+                    </div>
                 </div>
-                <div th:if="${param.logout}" class="alert alert-success py-2 small mb-3">
-                    <i class="bi bi-check-circle-fill me-1"></i>
-                    Você saiu do sistema. Até logo!
+                <div class="mb-4">
+                    <label for="password" class="form-label fw-semibold">Senha</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-lock" aria-hidden="true"></i></span>
+                        <input type="password" id="password" name="password"
+                               class="form-control" th:classappend="${param.erro} ? 'is-invalid'"
+                               autocomplete="current-password" spellcheck="false" required>
+                        <button class="btn btn-outline-secondary" type="button"
+                                data-toggle-senha="password" aria-label="Mostrar senha" aria-pressed="false">
+                            <i class="bi bi-eye" aria-hidden="true"></i>
+                        </button>
+                    </div>
                 </div>
+                <button type="submit" class="btn btn-success w-100 py-2">
+                    <i class="bi bi-box-arrow-in-right me-2" aria-hidden="true"></i><span class="rotulo">Entrar</span>
+                </button>
+            </form>
 
-                <form th:action="@{/login}" method="post">
-                    <div class="mb-3">
-                        <label for="username" class="form-label fw-semibold">Login</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-person"></i></span>
-                            <input type="text" id="username" name="username"
-                                   class="form-control" autofocus autocomplete="username"
-                                   placeholder="seu.login" required>
-                        </div>
-                    </div>
-                    <div class="mb-4">
-                        <label for="password" class="form-label fw-semibold">Senha</label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                            <input type="password" id="password" name="password"
-                                   class="form-control" autocomplete="current-password"
-                                   placeholder="••••••••" required>
-                        </div>
-                    </div>
-                    <button type="submit" class="btn btn-success w-100 py-2">
-                        <i class="bi bi-box-arrow-in-right me-2"></i>Entrar
-                    </button>
-                    <div class="text-center mt-3">
-                        <a href="/auth/forgot-password" class="text-muted small">
-                            <i class="bi bi-key me-1"></i>Esqueceu sua senha?
-                        </a>
-                    </div>
-                </form>
+            <div class="text-center mt-3">
+                <a th:href="@{/auth/forgot-password}" class="auth-link small">Esqueceu sua senha?</a>
             </div>
         </div>
     </div>

@@ -6,24 +6,24 @@
 <div id="pageContent">
 
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="fw-semibold mb-0"><i class="bi bi-megaphone me-2 text-primary"></i>Campanhas de Notificação</h4>
-        <a href="/crm" class="btn btn-sm btn-outline-secondary">
-            <i class="bi bi-arrow-left me-1"></i>Voltar ao CRM
+        <h2 class="mb-0"><i class="bi bi-megaphone me-2 text-success" aria-hidden="true"></i>Campanhas de Notificação</h2>
+        <a th:href="@{/crm}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Voltar ao CRM
         </a>
     </div>
 
     <!-- Alertas -->
     <div th:if="${sucesso}" class="alert alert-success alert-dismissible fade show" role="alert">
-        <i class="bi bi-check-circle me-1"></i><span th:text="${sucesso}"></span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <i class="bi bi-check-circle me-1" aria-hidden="true"></i><span th:text="${sucesso}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
     </div>
     <div th:if="${aviso}" class="alert alert-warning alert-dismissible fade show" role="alert">
-        <i class="bi bi-exclamation-triangle me-1"></i><span th:text="${aviso}"></span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i><span th:text="${aviso}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
     </div>
     <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert">
-        <i class="bi bi-x-circle me-1"></i><span th:text="${erro}"></span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <i class="bi bi-x-circle me-1" aria-hidden="true"></i><span th:text="${erro}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
     </div>
 
     <div class="row g-4">
@@ -32,10 +32,10 @@
         <div class="col-md-4">
             <div class="card shadow-sm h-100">
                 <div class="card-header fw-semibold">
-                    <i class="bi bi-list-check me-1"></i>Status da Fila
+                    <i class="bi bi-list-check me-1" aria-hidden="true"></i>Status da Fila
                 </div>
                 <div class="card-body">
-                    <dl class="row mb-0 small">
+                    <dl class="row mb-0 small" aria-live="polite">
                         <dt class="col-8 text-muted">Pendentes</dt>
                         <dd class="col-4 fw-bold" th:text="${pendentes}">0</dd>
                         <dt class="col-8 text-muted">Enviados (sessão)</dt>
@@ -44,7 +44,7 @@
                         <dd class="col-4 fw-bold text-danger" th:text="${totalFalhas}">0</dd>
                     </dl>
                     <p class="text-muted small mt-3 mb-0">
-                        <i class="bi bi-info-circle me-1"></i>
+                        <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
                         Worker envia 1 mensagem a cada 6 segundos (máx. 10/min).
                     </p>
                 </div>
@@ -55,7 +55,7 @@
         <div class="col-md-8">
             <div class="card shadow-sm">
                 <div class="card-header fw-semibold">
-                    <i class="bi bi-send me-1"></i>Disparar Nova Campanha
+                    <i class="bi bi-send me-1" aria-hidden="true"></i>Disparar Nova Campanha
                 </div>
                 <div class="card-body">
                     <form th:action="@{/crm/campanhas/disparar}" method="post">
@@ -63,8 +63,8 @@
 
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Segmento</label>
-                                <select name="segmento" class="form-select form-select-sm">
+                                <label class="form-label small fw-semibold" for="segmento">Segmento</label>
+                                <select name="segmento" id="segmento" class="form-select form-select-sm">
                                     <option value="">Todos os clientes</option>
                                     <option th:each="s : ${segmentos}"
                                             th:value="${s}" th:text="${s.name()}"></option>
@@ -72,7 +72,7 @@
                                 <div class="form-text">Filtra apenas clientes com opt-in ativo.</div>
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label small fw-semibold">Canal <span class="text-danger">*</span></label>
+                                <label class="form-label small fw-semibold" for="canalSelect">Canal <span class="text-danger" aria-hidden="true">*</span></label>
                                 <select name="canal" class="form-select form-select-sm" id="canalSelect">
                                     <option th:each="c : ${canais}"
                                             th:value="${c}" th:text="${c.name()}"></option>
@@ -81,40 +81,31 @@
                         </div>
 
                         <div class="mb-3" id="assuntoRow">
-                            <label class="form-label small fw-semibold">Assunto (e-mail)</label>
-                            <input type="text" name="assunto" class="form-control form-control-sm"
+                            <label class="form-label small fw-semibold" for="assunto">Assunto (e-mail)</label>
+                            <input type="text" name="assunto" id="assunto" class="form-control form-control-sm"
                                    placeholder="Assunto do e-mail">
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label small fw-semibold">Mensagem <span class="text-danger">*</span></label>
-                            <textarea name="mensagem" class="form-control form-control-sm" rows="5"
-                                      required placeholder="Texto da mensagem para os clientes..."></textarea>
+                            <label class="form-label small fw-semibold" for="mensagem">Mensagem <span class="text-danger" aria-hidden="true">*</span></label>
+                            <textarea name="mensagem" id="mensagem" class="form-control form-control-sm" rows="5"
+                                      required placeholder="Texto da mensagem para os clientes…"></textarea>
                         </div>
 
-                        <div class="alert alert-warning py-2 small mb-3">
-                            <i class="bi bi-exclamation-triangle me-1"></i>
+                        <div class="alert alert-warning py-2 small mb-3" role="note">
+                            <i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>
                             Apenas clientes com <strong>opt-in ativo</strong> e contato válido no canal selecionado receberão a mensagem.
                         </div>
 
-                        <button type="submit" class="btn btn-primary btn-sm">
-                            <i class="bi bi-send me-1"></i>Enfileirar Campanha
+                        <button type="submit" class="btn btn-success btn-sm">
+                            <i class="bi bi-send me-1" aria-hidden="true"></i>Enfileirar Campanha
                         </button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
+    <script th:src="@{/js/crm-campanha.js}"></script>
 </div>
-
-<script>
-    const canalSelect = document.getElementById('canalSelect');
-    const assuntoRow  = document.getElementById('assuntoRow');
-    function toggleAssunto() {
-        assuntoRow.style.display = canalSelect.value === 'EMAIL' ? '' : 'none';
-    }
-    canalSelect.addEventListener('change', toggleAssunto);
-    toggleAssunto();
-</script>
 </body>
 </html>

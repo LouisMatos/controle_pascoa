@@ -668,10 +668,75 @@ atrás do API Gateway. Sem migration nesta evolução: o schema do sandbox não 
 
 ---
 
+## 25b. Redesign das telas de autenticação
+
+`login`, `2fa/verificar`, `2fa/setup`, `auth/forgot-password` e `auth/reset-password` usam o layout
+`fragments/layout-auth.html` (sem navbar/rodapé, Bootstrap com SRI) e o fragmento
+`fragments/auth-brand.html`. Estilo em `static/css/auth.css`; comportamento (mostrar senha, estado de
+envio, auto-submit do OTP, copiar chave, força/confirmação de senha) em `static/js/auth.js` por
+atributos `data-*`, sem JS inline (CSP). "Cancelar e voltar ao login" agora é POST `/logout` com CSRF.
+`/css/**` e `/js/**` liberados em `SecurityConfig`. `layout-publico` segue só no catálogo e acompanhamento.
+Pendente: conferir visualmente `2fa/*` e `reset-password` (o dev pula 2FA; reset exige token).
+
+### Revisão de design das telas internas (a11y + consistência)
+
+Menus revisados: Cadastros (`clientes`, `produtos`, `materias-primas`, `fornecedores`), Comercial
+(`pedidos/*`, `orcamentos/*`, `crm/*`), Produção (`producao/*`, `qualidade/*`), Estoque (`estoque/*`),
+Financeiro (`financeiro/*`, `gastos/*`, `analytics/dashboard`), Notificações (`notificacoes/*`) e Admin
+(`usuarios/*`, `auditoria/lista`, `lgpd/painel`, `admin/sistema`). Só templates, `static/css/tokens.css`
+e um JS novo; sem controller, migration ou rota nova.
+
+Padrão aplicado em todas:
+- ícone do `<h2>` em `text-success` (marca); `btn-primary` de ação principal virou `btn-success`
+- ícones decorativos `aria-hidden="true"`; botão só-ícone com `aria-label` (nomeando o item na lista)
+- `<label for="campo">` literal nos forms — `th:for="*{campo}"` não renderiza e `#ids.next` gera `campo1`;
+  em loops usar `th:for`/`th:id` com id único (ex.: `url_${canal.id}`)
+- `*` obrigatório em `<span aria-hidden>`, `autocomplete`/`inputmode`/`spellcheck` nos campos de contato
+- `scope="col"` nos `<th>`, `table-responsive` + classe `tabela-cadastro` nas tabelas
+- Thymeleaf restrict mode: nunca duplicar `aria-hidden` no mesmo `<i>` (quebra o parse)
+
+Mudanças fora do padrão:
+- Kanban: `<style>` inline movido para `tokens.css`; colunas `<section>` + cards `<article>`
+- `crm/campanha.html`: script inline (nunca executava: fora do `#pageContent` e bloqueado pelo CSP)
+  virou `static/js/crm-campanha.js`
+- `notificacoes/configuracao.html`: API Key agora `type="password"`
+- `tokens.css`: `.tabela-cadastro`, `.kanban-*`, `.celula-truncada`, `.col-w-*`, `.icone-pequeno`,
+  `.texto-mini`, `.badge-pequeno`, foco visível
+
+Auditoria completa (67 templates, `find templates -name '*.html'`): todas as telas internas e públicas
+passaram pelo padrão acima. Extras da segunda rodada:
+- Shell `fragments/layout.html`: skip-link, `<main id="conteudo">`, `<nav aria-label>`, ícones `aria-hidden`,
+  `<style>` inline migrado para `tokens.css`
+- Telas públicas (`layout-publico`, `catalogo/*`, `acompanhamento/pedido`, `orcamentos/aprovacao`,
+  `manutencao`): estilos em `static/css/publico.css` (antes o `<style>` do `<head>` das páginas que usam
+  `layout-publico` era descartado — só `title` e `main` são injetados), `<h1>` único, `role="progressbar"`
+- `fichas/detalhe`, `dashboard` (home), `fragments/componentes` revisados; wizard com `aria-current="step"`
+- `style=` estático virou classe; restam só `th:style` de largura de barra (valor calculado)
+
+Pendentes (fora do escopo de design):
+- ~~CSP bloqueia scripts inline~~ resolvido: nenhum `<script>` nem `on*=` inline nos templates. JS em
+  `static/js/` (`estoque-{entrada,saida,ajuste}`, `orcamento-{form,detalhe}`, `analytics-chart`,
+  `gastos-chart`, `notificacoes-templates`); dados do servidor chegam por `data-*` (gráficos) ou
+  `<template id="modeloLinha">` (linha nova do orçamento). `app.js` trata `data-autosubmit` e
+  `data-navegar="<base>"` em `<select>`. Regra: script novo vai em arquivo, dentro do `#pageContent`
+  (o que fica fora é descartado pelo layout)
+- 2 testes falham fora de template: `PainelDoDiaTest.entregaVencida_apareceEmAtrasados` ("Data de entrega
+  não pode ser no passado") e `AgingDerivadoTest`
+- `orcamentos/aprovacao` e `manutencao` não renderizados na revisão (token de orçamento agora existe em
+  `infra/seed/seed-cenarios.sql`; modo manutenção afeta todos os usuários)
+
+- `GET /notificacoes/templates/{id}/excluir` apaga por GET — virar POST com CSRF
+- senha de usuário aceita mínimo 4 caracteres (`usuarios/form.html`)
+- Produtos e Matérias-Primas listam sem paginação; Orçamentos e CRM sem busca/filtro
+- `qualidade/inspecao-detalhe` não renderizada (inspeções agora em `seed-cenarios.sql`); conferência visual no navegador
+  pendente em todas
+
+---
+
 ## 26. Próximas Sessões — Prioridade Sugerida
 
 1. **Simulador de cenários financeiros** — "e se aumentar o preço X%? vender Y unidades a mais?" (monólito)
-2. **`estoque/saida.html`** — template de saída manual de matéria-prima ausente (monólito)
+2. **Testes quebrados** — `PainelDoDiaTest` e `AgingDerivadoTest` (ver 25b, pendentes)
 3. **Integração Eureka** — habilitar `EUREKA_ENABLED=true` e testar service discovery entre microsserviços
 4. **Dockerizar microsserviços** — criar Dockerfiles + adicionar serviços no docker-compose.yml
 5. **customer-service com dados reais** — migrar dados de clientes do monólito para pascoa_customers

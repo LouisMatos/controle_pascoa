@@ -26,3 +26,111 @@
 .active-group .dropdown-toggle::after {
   border-top-color: var(--pascoa-brand);
 }
+
+/* Telas de cadastro */
+.tabela-cadastro thead th {
+  font-size: .75rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--pascoa-muted);
+  background: #f9fafb;
+  white-space: nowrap;
+}
+.tabela-cadastro td.text-end,
+.tabela-cadastro th.text-end {
+  font-variant-numeric: tabular-nums;
+}
+.tabela-cadastro td {
+  max-width: 22rem;
+  overflow-wrap: anywhere;
+}
+.tabela-cadastro .btn-sm {
+  min-width: 2rem;
+}
+.form-label .text-danger {
+  margin-left: .1rem;
+}
+.form-control:focus-visible,
+.form-select:focus-visible,
+.btn:focus-visible {
+  outline: 2px solid var(--pascoa-brand);
+  outline-offset: 2px;
+}
+@media (max-width: 575.98px) {
+  main h2 { font-size: 1.25rem; }
+}
+
+/* Produção — Kanban */
+.kanban-board   { display:grid; grid-template-columns: repeat(3,1fr); gap:1rem; align-items:start; }
+.kanban-col     { border-radius:.5rem; padding:.75rem; background:#f8f9fa; min-height:200px; }
+.kanban-col-header { font-weight:700; font-size:.85rem; text-transform:uppercase;
+                     letter-spacing:.5px; margin-bottom:.75rem;
+                     display:flex; align-items:center; gap:.5rem; }
+.kanban-card    { background:#fff; border-radius:.375rem; padding:.75rem;
+                  box-shadow:0 1px 3px rgba(0,0,0,.08); margin-bottom:.6rem;
+                  border-left:4px solid transparent; }
+.kanban-card.pendente    { border-left-color:#6c757d; }
+.kanban-card.em-andamento{ border-left-color:#0d6efd; }
+.kanban-card.concluida   { border-left-color:#198754; opacity:.85; }
+.kanban-card-title  { font-weight:600; font-size:.9rem; }
+.kanban-card-sub { font-size:.78rem; color:var(--pascoa-muted); }
+.kanban-actions     { display:flex; gap:.35rem; flex-wrap:wrap; margin-top:.5rem; }
+.kanban-empty       { text-align:center; color:#adb5bd; font-size:.85rem; padding:1.5rem 0; }
+@media(max-width:768px){ .kanban-board{ grid-template-columns:1fr; } }
+.kanban-col-andamento { background: #e8f0ff; }
+.kanban-col-concluida { background: #e8f5ed; }
+.kanban-col-header { margin-top: 0; }
+.kanban-card:focus-within { outline: 2px solid var(--pascoa-brand); outline-offset: 2px; }
+.icone-pequeno { font-size: .8rem; }
+.celula-truncada { max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tabela-cadastro td.celula-truncada { overflow-wrap: normal; }
+.col-w-80 { width: 80px; } .col-w-120 { width: 120px; } .col-w-130 { width: 130px; }
+.col-w-150 { width: 150px; } .col-w-220 { width: 220px; }
+.badge-pequeno { font-size: .7rem; }
+.texto-mini { font-size: .72rem; }
+
+/* Shell (ex-inline do layout.html) */
+body { font-size: 0.93rem; }
+.navbar-brand { font-weight: 700; letter-spacing: 0.5px; }
+.nav-link { font-weight: 500; }
+.table thead th { background-color: #f8f9fa; font-weight: 600; border-bottom: 2px solid #dee2e6; }
+.badge-TRUFADO    { background-color: #6f42c1; }
+.badge-RECHEADO   { background-color: #fd7e14; }
+.badge-DIET       { background-color: #0dcaf0; color: #000; }
+.badge-VEGANO     { background-color: #198754; }
+.badge-TRADICIONAL{ background-color: #6c757d; }
+.badge-ESPECIAL   { background-color: #d63384; }
+.estoque-critico  { background-color: #fff3cd !important; }
+.card { border: none; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+.alerta-badge { font-size: .65rem; }
+.alerta-menu { width: 320px; max-height: 400px; overflow-y: auto; }
+.skip-link { position: absolute; top: 0; left: 0; z-index: 2000; }
+main:focus { outline: none; }
+.foto-miniatura { object-fit: cover; }
+.col-w-100 { max-width: 100px; }
+.fs-50 { font-size: .5rem; } .fs-75 { font-size: .75rem; } .fs-78 { font-size: .78rem; } .fs-82 { font-size: .82rem; }
+.fs-85 { font-size: .85rem; } .fs-90 { font-size: .9rem; } .fs-icon-3 { font-size: 3rem; } .fs-icon-4 { font-size: 4rem; }
+.col-w-44 { width: 44px; } .col-w-50 { width: 50px; } .col-w-90 { width: 90px; } .col-w-140 { width: 140px; }
+.mw-600 { max-width: 600px; } .mw-700 { max-width: 700px; }
+.cursor-pointer { cursor: pointer; }
+.lista-rolavel { max-height: 360px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: .375rem; }
+.progress-4 { height: 4px; } .progress-8 { height: 8px; } .progress-16 { height: 16px; } .progress-20 { height: 20px; }
+.celula-truncada-300 { max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.borda-laranja { border-color: #fd7e14 !important; } .texto-laranja { color: #fd7e14; }
+
+/* Pedido wizard */
+.step-indicator { display:flex; flex-direction:column; align-items:center; flex:0 0 auto; }
+.step-line { flex:1; height:2px; background:#dee2e6; margin-bottom:22px; }
+.step-circle {
+width:42px; height:42px; border-radius:50%;
+border:2px solid #dee2e6; background:#fff;
+display:flex; align-items:center; justify-content:center;
+font-size:1.1rem; color:#adb5bd; transition:all .2s;
+}
+.step-label { font-size:0.72rem; color:#6c757d; margin-top:4px; font-weight:500; }
+.step-indicator.active .step-circle   { border-color:#198754; background:#198754; color:#fff; }
+.step-indicator.active .step-label    { color:#198754; font-weight:700; }
+.step-indicator.done .step-circle     { border-color:#198754; background:#d1e7dd; color:#198754; }
+.step-indicator.done .step-label      { color:#198754; }
+
+.fs-icon-2 { font-size: 2rem; } .fs-icon-5 { font-size: 5rem; } .mw-900 { max-width: 900px; } .progress-6 { height: 6px; }

@@ -1,0 +1,48 @@
+/* Telas públicas: catálogo, acompanhamento, aprovação de orçamento, manutenção */
+.brand-bar { background: linear-gradient(135deg, var(--pascoa-brand), #20c997); }
+.produto-card { transition: transform .15s, box-shadow .15s; border: none; }
+.produto-card:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,.13) !important; }
+.produto-img { width: 100%; height: 200px; object-fit: cover; }
+.produto-img-placeholder { width: 100%; height: 200px; background: #e9ecef;
+    display: flex; align-items: center; justify-content: center; font-size: 3rem; color: #adb5bd; }
+.filter-btn.active { background-color: var(--pascoa-brand) !important; border-color: var(--pascoa-brand) !important; color: #fff !important; }
+
+.produto-img { width: 100%; max-height: 380px; object-fit: cover; border-radius: 12px; }
+.qr-box { background: #fff; border: 1px solid #dee2e6; border-radius: 10px; padding: 1rem; display: inline-block; }
+.brand-header {
+  background: linear-gradient(135deg, var(--pascoa-brand) 0%, #52b788 100%);
+  color: #fff; padding: 1.5rem 1rem; text-align: center;
+}
+.brand-header h1 { font-size: 1.5rem; font-weight: 700; margin: 0; }
+.brand-header p  { margin: .25rem 0 0; opacity: .85; font-size: .88rem; }
+.status-step {
+  display: flex; flex-direction: column; align-items: center; flex: 1;
+}
+.status-step .circle {
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 2px solid #dee2e6; background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; color: #adb5bd; transition: all .2s;
+}
+.status-step .label  { font-size: .7rem; color: #6c757d; margin-top: 5px; text-align:center; }
+.status-step.done  .circle { background: #198754; border-color: #198754; color: #fff; }
+.status-step.active .circle { background: #0d6efd; border-color: #0d6efd; color: #fff; }
+.status-step.done .label, .status-step.active .label { color: #198754; font-weight: 600; }
+.status-step.active .label { color: #0d6efd; }
+.status-line { flex: 1; height: 2px; background: #dee2e6; margin-bottom: 26px; }
+.status-line.done { background: #198754; }
+.cancelado-banner { background: #f8d7da; border: 1px solid #f5c2c7; border-radius:.5rem; padding:1.5rem; text-align:center; }
+
+.pagina-manutencao { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+.maintenance-card { max-width: 520px; width: 100%; border: none; border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,.12);
+}
+.maintenance-icon { font-size: 4rem; animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse { 0%, 100% { opacity: 1; } 50%       { opacity: .5; }
+}
+.mw-720 { max-width: 720px; } .mw-700 { max-width: 700px; }
+.fs-icon-25 { font-size: 2.5rem; }
+.progress-10 { height: 10px; border-radius: 5px; }
+.card-footer-claro { background: #f8f9fa; }
+@media (prefers-reduced-motion: reduce) { .maintenance-icon { animation: none; } .produto-card { transition: none; } }

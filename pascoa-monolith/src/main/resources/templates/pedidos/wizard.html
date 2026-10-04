@@ -6,9 +6,9 @@
 <div id="pageContent">
 
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="mb-0"><i class="bi bi-cart-plus me-2 text-success"></i>Novo Pedido</h2>
+    <h2 class="mb-0"><i class="bi bi-cart-plus me-2 text-success" aria-hidden="true"></i>Novo Pedido</h2>
     <a th:href="@{/pedidos}" class="btn btn-outline-secondary btn-sm">
-      <i class="bi bi-arrow-left me-1"></i>Voltar
+      <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Voltar
     </a>
   </div>
 
@@ -17,41 +17,25 @@
        ====================================================================== -->
   <div class="d-flex align-items-center mb-4 gap-0" id="progressBar">
     <div class="step-indicator active" data-step="1">
-      <div class="step-circle"><i class="bi bi-person"></i></div>
+      <div class="step-circle"><i class="bi bi-person" aria-hidden="true"></i></div>
       <div class="step-label">1. Cliente</div>
     </div>
     <div class="step-line"></div>
     <div class="step-indicator" data-step="2">
-      <div class="step-circle"><i class="bi bi-box-seam"></i></div>
+      <div class="step-circle"><i class="bi bi-box-seam" aria-hidden="true"></i></div>
       <div class="step-label">2. Produtos</div>
     </div>
     <div class="step-line"></div>
     <div class="step-indicator" data-step="3">
-      <div class="step-circle"><i class="bi bi-calendar-event"></i></div>
+      <div class="step-circle"><i class="bi bi-calendar-event" aria-hidden="true"></i></div>
       <div class="step-label">3. Entrega</div>
     </div>
     <div class="step-line"></div>
     <div class="step-indicator" data-step="4">
-      <div class="step-circle"><i class="bi bi-check-lg"></i></div>
+      <div class="step-circle"><i class="bi bi-check-lg" aria-hidden="true"></i></div>
       <div class="step-label">4. Resumo</div>
     </div>
   </div>
-
-  <style>
-    .step-indicator { display:flex; flex-direction:column; align-items:center; flex:0 0 auto; }
-    .step-line { flex:1; height:2px; background:#dee2e6; margin-bottom:22px; }
-    .step-circle {
-      width:42px; height:42px; border-radius:50%;
-      border:2px solid #dee2e6; background:#fff;
-      display:flex; align-items:center; justify-content:center;
-      font-size:1.1rem; color:#adb5bd; transition:all .2s;
-    }
-    .step-label { font-size:0.72rem; color:#6c757d; margin-top:4px; font-weight:500; }
-    .step-indicator.active .step-circle   { border-color:#198754; background:#198754; color:#fff; }
-    .step-indicator.active .step-label    { color:#198754; font-weight:700; }
-    .step-indicator.done .step-circle     { border-color:#198754; background:#d1e7dd; color:#198754; }
-    .step-indicator.done .step-label      { color:#198754; }
-  </style>
 
   <!-- ======================================================================
        FORMULÁRIO ÚNICO — POST ao finalizar
@@ -71,26 +55,26 @@
     <div class="wizard-step" id="step1">
       <div class="card">
         <div class="card-header bg-success text-white fw-semibold">
-          <i class="bi bi-person me-2"></i>Passo 1 — Selecionar Cliente
+          <i class="bi bi-person me-2" aria-hidden="true"></i>Passo 1 — Selecionar Cliente
         </div>
         <div class="card-body">
 
           <!-- Busca rápida -->
           <div class="mb-3">
-            <label class="form-label fw-semibold">Buscar cliente</label>
-            <input type="text" id="buscaCliente" class="form-control" placeholder="Digite o nome, telefone ou e-mail..."/>
+            <label class="form-label fw-semibold" for="buscaCliente">Buscar cliente</label>
+            <input type="text" id="buscaCliente" class="form-control" placeholder="Digite o nome, telefone ou e-mail…"/>
           </div>
 
           <!-- Lista de clientes -->
-          <div style="max-height:360px; overflow-y:auto; border:1px solid #dee2e6; border-radius:.375rem;">
-            <table class="table table-hover mb-0 align-middle small">
+          <div class="lista-rolavel">
+            <div class="table-responsive"><table class="table table-hover mb-0 align-middle small">
               <thead class="table-light sticky-top">
                 <tr>
-                  <th style="width:44px"></th>
-                  <th>Nome</th>
-                  <th>Telefone</th>
-                  <th>E-mail</th>
-                  <th class="text-center">WhatsApp</th>
+                  <th class="col-w-44" scope="col"></th>
+                  <th scope="col">Nome</th>
+                  <th scope="col">Telefone</th>
+                  <th scope="col">E-mail</th>
+                  <th scope="col" class="text-center">WhatsApp</th>
                 </tr>
               </thead>
               <tbody id="tabelaClientes">
@@ -101,42 +85,42 @@
                     th:data-email="${c.email ?: ''}"
                     th:data-optin="${c.optIn}"
                     th:data-canal="${c.preferenciaCanal}"
-                    class="cliente-row" style="cursor:pointer;">
+                    class="cliente-row cursor-pointer">
                   <td class="text-center">
                     <div class="form-check mb-0">
                       <input class="form-check-input cliente-radio" type="radio" name="clienteRadio"
-                             th:value="${c.id}"/>
+                             th:value="${c.id}" th:aria-label="|Selecionar ${c.nome}|"/>
                     </div>
                   </td>
                   <td th:text="${c.nome}" class="fw-semibold"></td>
                   <td th:text="${c.telefone ?: '—'}"></td>
                   <td th:text="${c.email ?: '—'}"></td>
                   <td class="text-center">
-                    <span th:if="${c.optIn}" class="badge bg-success"><i class="bi bi-whatsapp"></i></span>
+                    <span th:if="${c.optIn}" class="badge bg-success"><i class="bi bi-whatsapp" aria-hidden="true"></i></span>
                     <span th:unless="${c.optIn}" class="badge bg-secondary">Não</span>
                   </td>
                 </tr>
               </tbody>
-            </table>
+            </table></div>
           </div>
 
           <!-- Card do cliente selecionado -->
           <div id="clienteSelecionado" class="alert alert-success mt-3 d-none">
-            <i class="bi bi-person-check-fill me-2"></i>
+            <i class="bi bi-person-check-fill me-2" aria-hidden="true"></i>
             <strong id="csNome"></strong> &nbsp;|&nbsp;
-            <i class="bi bi-telephone me-1"></i><span id="csTelefone"></span>&nbsp;
+            <i class="bi bi-telephone me-1" aria-hidden="true"></i><span id="csTelefone"></span>&nbsp;
             <span id="csEmail" class="text-muted small ms-2"></span>
           </div>
           <div id="clienteErro" class="alert alert-danger mt-2 d-none">
-            <i class="bi bi-exclamation-triangle me-1"></i>Selecione um cliente para continuar.
+            <i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>Selecione um cliente para continuar.
           </div>
 
           <div class="d-flex justify-content-between mt-3">
             <a th:href="@{/clientes/novo}" target="_blank" class="btn btn-outline-secondary btn-sm">
-              <i class="bi bi-person-plus me-1"></i>Cadastrar novo cliente
+              <i class="bi bi-person-plus me-1" aria-hidden="true"></i>Cadastrar novo cliente
             </a>
             <button type="button" class="btn btn-success px-4" data-goto="2">
-              Próximo <i class="bi bi-arrow-right ms-1"></i>
+              Próximo <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
             </button>
           </div>
         </div>
@@ -149,14 +133,14 @@
     <div class="wizard-step d-none" id="step2">
       <div class="card">
         <div class="card-header bg-success text-white fw-semibold">
-          <i class="bi bi-box-seam me-2"></i>Passo 2 — Adicionar Produtos
+          <i class="bi bi-box-seam me-2" aria-hidden="true"></i>Passo 2 — Adicionar Produtos
         </div>
         <div class="card-body">
 
           <!-- Seletor de produto + quantidade -->
           <div class="row g-2 align-items-end mb-3">
             <div class="col-sm-7">
-              <label class="form-label fw-semibold small mb-1">Produto</label>
+              <label class="form-label fw-semibold small mb-1" for="selProduto">Produto</label>
               <select id="selProduto" class="form-select form-select-sm">
                 <option value="">Selecione um produto...</option>
                 <option th:each="p : ${produtos}"
@@ -169,13 +153,13 @@
               </select>
             </div>
             <div class="col-sm-2">
-              <label class="form-label fw-semibold small mb-1">Qtd</label>
+              <label class="form-label fw-semibold small mb-1" for="inpQtd">Qtd</label>
               <input type="number" id="inpQtd" class="form-control form-control-sm"
                      min="1" max="999" value="1"/>
             </div>
             <div class="col-sm-3">
               <button type="button" class="btn btn-success btn-sm w-100" data-add-item>
-                <i class="bi bi-plus-circle me-1"></i>Adicionar
+                <i class="bi bi-plus-circle me-1" aria-hidden="true"></i>Adicionar
               </button>
             </div>
           </div>
@@ -185,17 +169,17 @@
             <table class="table table-sm align-middle mb-2" id="tabelaItens">
               <thead class="table-light">
                 <tr>
-                  <th>Produto</th>
-                  <th class="text-center">Qtd</th>
-                  <th class="text-end">Preço Unit.</th>
-                  <th class="text-end">Subtotal</th>
-                  <th></th>
+                  <th scope="col">Produto</th>
+                  <th scope="col" class="text-center">Qtd</th>
+                  <th scope="col" class="text-end">Preço Unit.</th>
+                  <th scope="col" class="text-end">Subtotal</th>
+                  <th scope="col"></th>
                 </tr>
               </thead>
               <tbody id="corpoItens">
                 <tr id="linhaVazia">
                   <td colspan="5" class="text-center text-muted py-3 small">
-                    <i class="bi bi-inbox me-1"></i>Nenhum produto adicionado ainda.
+                    <i class="bi bi-inbox me-1" aria-hidden="true"></i>Nenhum produto adicionado ainda.
                   </td>
                 </tr>
               </tbody>
@@ -210,15 +194,15 @@
           </div>
 
           <div id="itensErro" class="alert alert-danger d-none small">
-            <i class="bi bi-exclamation-triangle me-1"></i>Adicione pelo menos um produto para continuar.
+            <i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>Adicione pelo menos um produto para continuar.
           </div>
 
           <div class="d-flex justify-content-between mt-3">
             <button type="button" class="btn btn-outline-secondary" data-goto="1">
-              <i class="bi bi-arrow-left me-1"></i>Anterior
+              <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Anterior
             </button>
             <button type="button" class="btn btn-success px-4" data-goto="3">
-              Próximo <i class="bi bi-arrow-right ms-1"></i>
+              Próximo <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
             </button>
           </div>
         </div>
@@ -231,33 +215,33 @@
     <div class="wizard-step d-none" id="step3">
       <div class="card">
         <div class="card-header bg-success text-white fw-semibold">
-          <i class="bi bi-calendar-event me-2"></i>Passo 3 — Dados de Entrega
+          <i class="bi bi-calendar-event me-2" aria-hidden="true"></i>Passo 3 — Dados de Entrega
         </div>
-        <div class="card-body" style="max-width:600px;">
+        <div class="card-body mw-600">
 
           <div class="row g-3">
             <div class="col-md-6">
-              <label class="form-label fw-semibold">Data de Entrega</label>
+              <label class="form-label fw-semibold" for="inpDataEntrega">Data de Entrega</label>
               <input type="date" id="inpDataEntrega" class="form-control"/>
               <div class="form-text">Deixe em branco se ainda não definida.</div>
             </div>
             <div class="col-md-4">
-              <label class="form-label fw-semibold">Horário <span class="text-muted small">(opcional)</span></label>
+              <label class="form-label fw-semibold" for="inpSlotEntrega">Horário <span class="text-muted small">(opcional)</span></label>
               <input type="time" id="inpSlotEntrega" class="form-control"/>
             </div>
             <div class="col-12">
-              <label class="form-label fw-semibold">Observações</label>
+              <label class="form-label fw-semibold" for="inpObservacoes">Observações</label>
               <textarea id="inpObservacoes" class="form-control" rows="3"
-                        placeholder="Sabores especiais, embalagem, endereço de entrega..."></textarea>
+                        placeholder="Sabores especiais, embalagem, endereço de entrega…"></textarea>
             </div>
           </div>
 
           <div class="d-flex justify-content-between mt-4">
             <button type="button" class="btn btn-outline-secondary" data-goto="2">
-              <i class="bi bi-arrow-left me-1"></i>Anterior
+              <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Anterior
             </button>
             <button type="button" class="btn btn-success px-4" data-goto="4">
-              Revisar Pedido <i class="bi bi-arrow-right ms-1"></i>
+              Revisar Pedido <i class="bi bi-arrow-right ms-1" aria-hidden="true"></i>
             </button>
           </div>
         </div>
@@ -270,7 +254,7 @@
     <div class="wizard-step d-none" id="step4">
       <div class="card">
         <div class="card-header bg-success text-white fw-semibold">
-          <i class="bi bi-check-lg me-2"></i>Passo 4 — Revisão e Confirmação
+          <i class="bi bi-check-lg me-2" aria-hidden="true"></i>Passo 4 — Revisão e Confirmação
         </div>
         <div class="card-body">
 
@@ -281,7 +265,7 @@
               <div class="card border-0 bg-light">
                 <div class="card-body py-3">
                   <div class="text-muted small fw-semibold text-uppercase mb-2">
-                    <i class="bi bi-person me-1"></i>Cliente
+                    <i class="bi bi-person me-1" aria-hidden="true"></i>Cliente
                   </div>
                   <div class="fw-bold fs-6" id="sumNome">—</div>
                   <div class="small text-muted" id="sumContato">—</div>
@@ -294,7 +278,7 @@
               <div class="card border-0 bg-light">
                 <div class="card-body py-3">
                   <div class="text-muted small fw-semibold text-uppercase mb-2">
-                    <i class="bi bi-calendar-event me-1"></i>Entrega
+                    <i class="bi bi-calendar-event me-1" aria-hidden="true"></i>Entrega
                   </div>
                   <div class="fw-bold" id="sumEntrega">—</div>
                   <div class="small text-muted" id="sumObservacoes"></div>
@@ -305,15 +289,15 @@
             <!-- Itens -->
             <div class="col-12">
               <div class="text-muted small fw-semibold text-uppercase mb-2">
-                <i class="bi bi-box-seam me-1"></i>Itens do Pedido
+                <i class="bi bi-box-seam me-1" aria-hidden="true"></i>Itens do Pedido
               </div>
-              <table class="table table-sm table-bordered align-middle mb-0">
+              <div class="table-responsive"><table class="table table-sm table-bordered align-middle mb-0">
                 <thead class="table-light">
                   <tr>
-                    <th>Produto</th>
-                    <th class="text-center">Qtd</th>
-                    <th class="text-end">Preço Unit.</th>
-                    <th class="text-end">Subtotal</th>
+                    <th scope="col">Produto</th>
+                    <th scope="col" class="text-center">Qtd</th>
+                    <th scope="col" class="text-end">Preço Unit.</th>
+                    <th scope="col" class="text-end">Subtotal</th>
                   </tr>
                 </thead>
                 <tbody id="sumItens"></tbody>
@@ -323,17 +307,17 @@
                     <td class="text-end" id="sumTotal">R$ 0,00</td>
                   </tr>
                 </tfoot>
-              </table>
+              </table></div>
             </div>
 
           </div>
 
           <div class="d-flex justify-content-between mt-4">
             <button type="button" class="btn btn-outline-secondary" data-goto="3">
-              <i class="bi bi-arrow-left me-1"></i>Anterior
+              <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Anterior
             </button>
             <button type="submit" class="btn btn-success btn-lg px-5" id="btnConfirmar">
-              <i class="bi bi-check-lg me-2"></i>Confirmar Pedido
+              <i class="bi bi-check-lg me-2" aria-hidden="true"></i>Confirmar Pedido
             </button>
           </div>
 

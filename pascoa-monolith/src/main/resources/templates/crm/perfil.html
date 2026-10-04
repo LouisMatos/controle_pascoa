@@ -9,8 +9,8 @@
 
     <!-- Cabeçalho -->
     <div class="d-flex align-items-center mb-4 gap-3">
-        <a th:href="@{/crm}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left"></i>
+        <a th:href="@{/crm}" class="btn btn-outline-secondary btn-sm" title="Voltar ao CRM" aria-label="Voltar ao CRM">
+            <i class="bi bi-arrow-left" aria-hidden="true"></i>
         </a>
         <div class="flex-grow-1">
             <h2 class="mb-0" th:text="${cliente.nome}"></h2>
@@ -18,7 +18,7 @@
                   class="badge mt-1" th:text="${perfil.segmento().descricao}"></span>
         </div>
         <a th:href="@{/clientes/{id}/editar(id=${cliente.id})}" class="btn btn-sm btn-outline-warning">
-            <i class="bi bi-pencil me-1"></i>Editar dados
+            <i class="bi bi-pencil me-1" aria-hidden="true"></i>Editar dados
         </a>
     </div>
 
@@ -70,7 +70,7 @@
 
             <!-- Dados de contato -->
             <div class="card mb-4">
-                <div class="card-header fw-semibold"><i class="bi bi-person me-2"></i>Contato</div>
+                <div class="card-header fw-semibold"><i class="bi bi-person me-2" aria-hidden="true"></i>Contato</div>
                 <div class="card-body">
                     <dl class="row mb-0 small">
                         <dt class="col-4 text-muted">Telefone</dt>
@@ -92,31 +92,31 @@
 
             <!-- Lançar pontos -->
             <div class="card mb-4">
-                <div class="card-header fw-semibold"><i class="bi bi-award me-2"></i>Lançar Pontos</div>
+                <div class="card-header fw-semibold"><i class="bi bi-award me-2" aria-hidden="true"></i>Lançar Pontos</div>
                 <div class="card-body">
                     <form th:action="@{/crm/clientes/{id}/pontos(id=${cliente.id})}" method="post">
                         <div class="row g-2">
                             <div class="col-6">
-                                <label class="form-label small fw-semibold">Tipo</label>
-                                <select name="tipo" class="form-select form-select-sm">
+                                <label class="form-label small fw-semibold" for="tipo">Tipo</label>
+                                <select name="tipo" id="tipo" class="form-select form-select-sm">
                                     <option th:each="t : ${tiposPonto}"
                                             th:value="${t.name()}"
                                             th:text="${t.descricao}"></option>
                                 </select>
                             </div>
                             <div class="col-6">
-                                <label class="form-label small fw-semibold">Pontos</label>
-                                <input type="number" name="pontos" min="1" value="10"
+                                <label class="form-label small fw-semibold" for="pontos">Pontos</label>
+                                <input type="number" name="pontos" id="pontos" min="1" value="10"
                                        class="form-control form-control-sm">
                             </div>
                             <div class="col-12">
-                                <label class="form-label small fw-semibold">Descrição</label>
-                                <input type="text" name="descricao" class="form-control form-control-sm"
+                                <label class="form-label small fw-semibold" for="descricao">Descrição</label>
+                                <input type="text" name="descricao" id="descricao" class="form-control form-control-sm"
                                        placeholder="Ex.: Compra pedido #42">
                             </div>
                             <div class="col-12">
                                 <button type="submit" class="btn btn-sm btn-success w-100">
-                                    <i class="bi bi-plus-circle me-1"></i>Registrar
+                                    <i class="bi bi-plus-circle me-1" aria-hidden="true"></i>Registrar
                                 </button>
                             </div>
                         </div>
@@ -126,12 +126,13 @@
 
             <!-- Histórico de pontos -->
             <div class="card">
-                <div class="card-header fw-semibold"><i class="bi bi-clock-history me-2"></i>Histórico de Pontos</div>
+                <div class="card-header fw-semibold"><i class="bi bi-clock-history me-2" aria-hidden="true"></i>Histórico de Pontos</div>
                 <div class="card-body p-0">
                     <div th:if="${#lists.isEmpty(pontos)}" class="text-center text-muted py-3 small">
                         Nenhum ponto registrado.
                     </div>
-                    <table th:unless="${#lists.isEmpty(pontos)}" class="table table-sm mb-0">
+                    <div class="table-responsive" th:unless="${#lists.isEmpty(pontos)}">
+                    <table class="table table-sm mb-0">
                         <tbody>
                             <tr th:each="p : ${pontos}">
                                 <td class="ps-3">
@@ -148,6 +149,7 @@
                             </tr>
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -157,15 +159,15 @@
 
             <!-- Notas internas -->
             <div class="card mb-4">
-                <div class="card-header fw-semibold"><i class="bi bi-sticky me-2"></i>Notas Internas</div>
+                <div class="card-header fw-semibold"><i class="bi bi-sticky me-2" aria-hidden="true"></i>Notas Internas</div>
                 <div class="card-body">
                     <!-- Formulário de nova nota -->
                     <form th:action="@{/crm/clientes/{id}/notas(id=${cliente.id})}" method="post" class="mb-3">
                         <div class="input-group">
-                            <textarea name="texto" class="form-control form-control-sm" rows="2"
-                                      placeholder="Nova nota sobre o cliente..." required></textarea>
-                            <button type="submit" class="btn btn-sm btn-success">
-                                <i class="bi bi-plus-lg"></i>
+                            <textarea name="texto" class="form-control form-control-sm" rows="2" aria-label="Nova nota"
+                                      placeholder="Nova nota sobre o cliente…" required></textarea>
+                            <button type="submit" class="btn btn-sm btn-success" title="Adicionar nota" aria-label="Adicionar nota">
+                                <i class="bi bi-plus-lg" aria-hidden="true"></i>
                             </button>
                         </div>
                     </form>
@@ -178,13 +180,13 @@
                             <p class="mb-1 small" th:text="${nota.texto}"></p>
                             <form th:action="@{/crm/clientes/{id}/notas/{nid}/excluir(id=${cliente.id},nid=${nota.id})}"
                                   method="post" class="ms-2">
-                                <button type="submit" class="btn btn-xs btn-outline-danger py-0 px-1" data-confirm="Remover nota?">
-                                    <i class="bi bi-trash" style="font-size:.7rem;"></i>
+                                <button type="submit" class="btn btn-xs btn-outline-danger py-0 px-1" data-confirm="Remover nota?" title="Remover nota" aria-label="Remover nota">
+                                    <i class="bi bi-trash icone-pequeno" aria-hidden="true"></i>
                                 </button>
                             </form>
                         </div>
-                        <div class="text-muted" style="font-size:0.72rem;">
-                            <i class="bi bi-person me-1"></i><span th:text="${nota.criadoPor}"></span>
+                        <div class="text-muted texto-mini">
+                            <i class="bi bi-person me-1" aria-hidden="true"></i><span th:text="${nota.criadoPor}"></span>
                             · <span th:text="${#temporals.format(nota.criadoEm, 'dd/MM/yyyy HH:mm')}"></span>
                         </div>
                     </div>
@@ -194,20 +196,21 @@
             <!-- Últimos pedidos -->
             <div class="card">
                 <div class="card-header fw-semibold d-flex justify-content-between align-items-center">
-                    <span><i class="bi bi-cart3 me-2"></i>Últimos Pedidos</span>
+                    <span><i class="bi bi-cart3 me-2" aria-hidden="true"></i>Últimos Pedidos</span>
                     <a th:href="@{/pedidos}" class="btn btn-sm btn-outline-secondary">Ver todos</a>
                 </div>
                 <div class="card-body p-0">
                     <div th:if="${#lists.isEmpty(ultimosPedidos)}" class="text-center text-muted py-3 small">
                         Nenhum pedido registrado.
                     </div>
-                    <table th:unless="${#lists.isEmpty(ultimosPedidos)}" class="table table-sm align-middle mb-0">
+                    <div class="table-responsive" th:unless="${#lists.isEmpty(ultimosPedidos)}">
+                    <table class="table table-sm align-middle mb-0 tabela-cadastro">
                         <thead>
                             <tr>
-                                <th class="ps-3">#</th>
-                                <th>Data</th>
-                                <th class="text-center">Status</th>
-                                <th class="text-end pe-3">Total</th>
+                                <th scope="col" class="ps-3">#</th>
+                                <th scope="col">Data</th>
+                                <th scope="col" class="text-center">Status</th>
+                                <th scope="col" class="text-end pe-3">Total</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -229,6 +232,7 @@
                             </tr>
                         </tbody>
                     </table>
+                    </div>
                 </div>
             </div>
         </div>

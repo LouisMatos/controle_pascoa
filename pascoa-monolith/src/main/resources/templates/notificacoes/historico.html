@@ -6,25 +6,25 @@
 <div id="pageContent">
 
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="mb-0"><i class="bi bi-clock-history me-2 text-info"></i>Histórico de Notificações</h2>
+    <h2 class="mb-0"><i class="bi bi-clock-history me-2 text-success" aria-hidden="true"></i>Histórico de Notificações</h2>
     <a th:href="@{/notificacoes/templates}" class="btn btn-outline-secondary btn-sm">
-      <i class="bi bi-arrow-left me-1"></i>Voltar aos Templates
+      <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Voltar aos Templates
     </a>
   </div>
 
   <div class="card">
     <div class="card-body p-0">
-      <table class="table table-hover mb-0 align-middle small">
+      <div class="table-responsive"><table class="table table-hover mb-0 align-middle small tabela-cadastro">
         <thead class="table-light">
           <tr>
-            <th>Data/Hora</th>
-            <th>Evento</th>
-            <th>Contexto</th>
-            <th>Cliente</th>
-            <th>Canal</th>
-            <th>Destinatário</th>
-            <th class="text-center">Status</th>
-            <th>Erro</th>
+            <th scope="col">Data/Hora</th>
+            <th scope="col">Evento</th>
+            <th scope="col">Contexto</th>
+            <th scope="col">Cliente</th>
+            <th scope="col">Canal</th>
+            <th scope="col">Destinatário</th>
+            <th scope="col" class="text-center">Status</th>
+            <th scope="col">Erro</th>
           </tr>
         </thead>
         <tbody>
@@ -63,13 +63,13 @@
             <td>
               <span th:switch="${e.canal.name()}">
                 <span th:case="'WHATSAPP'" class="badge bg-success">
-                  <i class="bi bi-whatsapp me-1"></i>WhatsApp
+                  <i class="bi bi-whatsapp me-1" aria-hidden="true"></i>WhatsApp
                 </span>
                 <span th:case="'EMAIL'" class="badge bg-primary">
-                  <i class="bi bi-envelope me-1"></i>E-mail
+                  <i class="bi bi-envelope me-1" aria-hidden="true"></i>E-mail
                 </span>
                 <span th:case="'SMS'" class="badge bg-warning text-dark">
-                  <i class="bi bi-phone me-1"></i>SMS
+                  <i class="bi bi-phone me-1" aria-hidden="true"></i>SMS
                 </span>
                 <span th:case="*" class="badge bg-secondary" th:text="${e.canal.name()}"></span>
               </span>
@@ -84,7 +84,7 @@
             <td class="text-danger small" th:text="${e.mensagemErro ?: ''}"></td>
           </tr>
         </tbody>
-      </table>
+      </table></div>
     </div>
   </div>
 

@@ -7,10 +7,10 @@
 
     <div class="d-flex align-items-center mb-4 gap-3">
         <a th:href="@{/producao/{id}(id=${ordem.id})}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left"></i>
+            <i class="bi bi-arrow-left" aria-hidden="true"></i>
         </a>
         <h2 class="mb-0">
-            <i class="bi bi-clipboard2-check me-2 text-info"></i>Inspeção de Qualidade
+            <i class="bi bi-clipboard2-check me-2 text-success" aria-hidden="true"></i>Inspeção de Qualidade
         </h2>
     </div>
 
@@ -42,7 +42,7 @@
             <div class="col-lg-7">
                 <div class="card h-100">
                     <div class="card-header fw-semibold">
-                        <i class="bi bi-list-check me-2"></i>
+                        <i class="bi bi-list-check me-2" aria-hidden="true"></i>
                         Itens de Verificação
                         <span th:if="${#lists.isEmpty(checklistItens)}" class="badge bg-secondary ms-2">Sem checklist</span>
                         <span th:unless="${#lists.isEmpty(checklistItens)}"
@@ -51,11 +51,11 @@
                     </div>
                     <div class="card-body">
                         <div th:if="${#lists.isEmpty(checklistItens)}" class="text-muted small text-center py-3">
-                            <i class="bi bi-clipboard2 d-block fs-3 mb-2 opacity-40"></i>
+                            <i class="bi bi-clipboard2 d-block fs-3 mb-2 opacity-40" aria-hidden="true"></i>
                             Nenhum item de checklist definido para este produto.<br>
                             <a th:href="@{/qualidade/checklist/{id}(id=${ordem.produto.id})}"
                                class="btn btn-sm btn-outline-info mt-2" target="_blank">
-                                <i class="bi bi-plus me-1"></i>Definir Checklist
+                                <i class="bi bi-plus me-1" aria-hidden="true"></i>Definir Checklist
                             </a>
                         </div>
                         <div th:each="item, i : ${checklistItens}" class="form-check mb-3">
@@ -77,44 +77,44 @@
             <div class="col-lg-5">
                 <div class="card">
                     <div class="card-header fw-semibold">
-                        <i class="bi bi-person-check me-2"></i>Dados do Inspetor
+                        <i class="bi bi-person-check me-2" aria-hidden="true"></i>Dados do Inspetor
                     </div>
                     <div class="card-body">
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Inspetor <span class="text-danger">*</span></label>
-                            <input type="text" name="inspetor" class="form-control"
+                            <label class="form-label fw-semibold" for="inspetor">Inspetor <span class="text-danger" aria-hidden="true">*</span></label>
+                            <input type="text" name="inspetor" id="inspetor" class="form-control"
                                    placeholder="Nome do responsável pela inspeção" required>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Resultado <span class="text-danger">*</span></label>
+                            <label class="form-label fw-semibold">Resultado <span class="text-danger" aria-hidden="true">*</span></label>
                             <div class="d-flex gap-3">
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="aprovado"
                                            value="true" id="aprovado" checked>
                                     <label class="form-check-label text-success fw-semibold" for="aprovado">
-                                        <i class="bi bi-check-circle me-1"></i>Aprovado
+                                        <i class="bi bi-check-circle me-1" aria-hidden="true"></i>Aprovado
                                     </label>
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input" type="radio" name="aprovado"
                                            value="false" id="reprovado">
                                     <label class="form-check-label text-danger fw-semibold" for="reprovado">
-                                        <i class="bi bi-x-circle me-1"></i>Reprovado
+                                        <i class="bi bi-x-circle me-1" aria-hidden="true"></i>Reprovado
                                     </label>
                                 </div>
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Observações</label>
-                            <textarea name="observacoes" class="form-control" rows="4"
-                                      placeholder="Descreva não conformidades, pontos de atenção..."></textarea>
+                            <label class="form-label fw-semibold" for="observacoes">Observações</label>
+                            <textarea name="observacoes" id="observacoes" class="form-control" rows="4"
+                                      placeholder="Descreva não conformidades, pontos de atenção…"></textarea>
                         </div>
 
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-info text-white">
-                                <i class="bi bi-clipboard2-check me-2"></i>Registrar Inspeção
+                                <i class="bi bi-clipboard2-check me-2" aria-hidden="true"></i>Registrar Inspeção
                             </button>
                             <a th:href="@{/producao/{id}(id=${ordem.id})}"
                                class="btn btn-outline-secondary">Cancelar</a>

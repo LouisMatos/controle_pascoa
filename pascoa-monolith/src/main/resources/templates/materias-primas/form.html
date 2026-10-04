@@ -9,11 +9,11 @@
 
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="mb-0">
-            <i class="bi bi-stack me-2 text-secondary"></i>
+            <i class="bi bi-stack me-2 text-success" aria-hidden="true"></i>
             <span th:text="${materiaPrima.id == null ? 'Nova Matéria-Prima' : 'Editar Matéria-Prima'}"></span>
         </h2>
         <a th:href="@{/materias-primas}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-1"></i>Voltar
+            <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Voltar
         </a>
     </div>
 
@@ -24,20 +24,20 @@
 
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold">Nome *</label>
+                        <label class="form-label fw-semibold" for="nome">Nome <span class="text-danger" aria-hidden="true">*</span></label>
                         <input type="text" class="form-control"
-                               th:field="*{nome}"
+                               th:field="*{nome}" required autocomplete="off"
                                th:classappend="${#fields.hasErrors('nome')} ? 'is-invalid'"
-                               placeholder="Ex: Chocolate ao Leite, Manteiga...">
+                               placeholder="Ex: Chocolate ao Leite, Manteiga…">
                         <div class="invalid-feedback" th:errors="*{nome}"></div>
                     </div>
 
                     <div class="col-md-3">
-                        <label class="form-label fw-semibold">Unidade *</label>
+                        <label class="form-label fw-semibold" for="unidade">Unidade *</label>
                         <select class="form-select"
                                 th:field="*{unidade}"
                                 th:classappend="${#fields.hasErrors('unidade')} ? 'is-invalid'">
-                            <option value="">Selecione...</option>
+                            <option value="">Selecione…</option>
                             <option th:each="un : ${unidades}"
                                     th:value="${un.name()}"
                                     th:text="${un.name()} + ' (' + ${un.simbolo} + ')'"></option>
@@ -46,29 +46,29 @@
                     </div>
 
                     <div class="col-md-3">
-                        <label class="form-label fw-semibold">Custo Unitário (R$) *</label>
+                        <label class="form-label fw-semibold" for="custoUnitario">Custo Unitário (R$) *</label>
                         <input type="number" class="form-control"
                                th:field="*{custoUnitario}"
-                               th:classappend="${#fields.hasErrors('custoUnitario')} ? 'is-invalid'"
+                               th:classappend="${#fields.hasErrors('custoUnitario')} ? 'is-invalid'" inputmode="decimal"
                                min="0" step="0.0001" placeholder="0,0000">
                         <div class="invalid-feedback" th:errors="*{custoUnitario}"></div>
                         <div class="form-text">Custo por unidade cadastrada acima.</div>
                     </div>
 
                     <div class="col-md-3">
-                        <label class="form-label fw-semibold">Quantidade em Estoque *</label>
+                        <label class="form-label fw-semibold" for="quantidadeAtual">Quantidade em Estoque *</label>
                         <input type="number" class="form-control"
                                th:field="*{quantidadeAtual}"
-                               th:classappend="${#fields.hasErrors('quantidadeAtual')} ? 'is-invalid'"
+                               th:classappend="${#fields.hasErrors('quantidadeAtual')} ? 'is-invalid'" inputmode="decimal"
                                min="0" step="0.001" placeholder="0,000">
                         <div class="invalid-feedback" th:errors="*{quantidadeAtual}"></div>
                     </div>
 
                     <div class="col-md-3">
-                        <label class="form-label fw-semibold">Quantidade Mínima *</label>
+                        <label class="form-label fw-semibold" for="quantidadeMinima">Quantidade Mínima *</label>
                         <input type="number" class="form-control"
                                th:field="*{quantidadeMinima}"
-                               th:classappend="${#fields.hasErrors('quantidadeMinima')} ? 'is-invalid'"
+                               th:classappend="${#fields.hasErrors('quantidadeMinima')} ? 'is-invalid'" inputmode="decimal"
                                min="0" step="0.001" placeholder="0,000">
                         <div class="invalid-feedback" th:errors="*{quantidadeMinima}"></div>
                         <div class="form-text">Alerta é disparado abaixo deste valor.</div>
@@ -79,7 +79,7 @@
 
                 <div class="d-flex gap-2">
                     <button type="submit" class="btn btn-success px-4">
-                        <i class="bi bi-check-lg me-1"></i>Salvar
+                        <i class="bi bi-check-lg me-1" aria-hidden="true"></i>Salvar
                     </button>
                     <a th:href="@{/materias-primas}" class="btn btn-outline-secondary">Cancelar</a>
                 </div>

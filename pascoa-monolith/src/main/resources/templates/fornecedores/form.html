@@ -9,11 +9,11 @@
 
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="mb-0">
-            <i class="bi bi-truck me-2 text-dark"></i>
+            <i class="bi bi-truck me-2 text-success" aria-hidden="true"></i>
             <span th:text="${fornecedor.id == null ? 'Novo Fornecedor' : 'Editar Fornecedor'}"></span>
         </h2>
         <a th:href="@{/fornecedores}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-1"></i>Voltar
+            <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Voltar
         </a>
     </div>
 
@@ -24,43 +24,43 @@
 
                 <div class="row g-3">
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold">Nome *</label>
+                        <label class="form-label fw-semibold" for="nome">Nome <span class="text-danger" aria-hidden="true">*</span></label>
                         <input type="text" class="form-control"
-                               th:field="*{nome}"
+                               th:field="*{nome}" required autocomplete="off"
                                th:classappend="${#fields.hasErrors('nome')} ? 'is-invalid'"
                                placeholder="Razão social ou nome fantasia">
                         <div class="invalid-feedback" th:errors="*{nome}"></div>
                     </div>
 
                     <div class="col-md-3">
-                        <label class="form-label fw-semibold">CNPJ</label>
+                        <label class="form-label fw-semibold" for="cnpj">CNPJ</label>
                         <input type="text" class="form-control"
-                               th:field="*{cnpj}"
+                               th:field="*{cnpj}" autocomplete="off" inputmode="numeric"
                                placeholder="00.000.000/0000-00"
                                maxlength="18">
                     </div>
 
                     <div class="col-md-3">
-                        <label class="form-label fw-semibold">Telefone</label>
+                        <label class="form-label fw-semibold" for="telefone">Telefone</label>
                         <input type="text" class="form-control"
-                               th:field="*{telefone}"
+                               th:field="*{telefone}" autocomplete="tel" inputmode="tel"
                                placeholder="(00) 00000-0000"
                                maxlength="20">
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold">E-mail</label>
+                        <label class="form-label fw-semibold" for="email">E-mail</label>
                         <input type="email" class="form-control"
-                               th:field="*{email}"
+                               th:field="*{email}" autocomplete="email" spellcheck="false" inputmode="email"
                                th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'"
                                placeholder="contato@fornecedor.com">
                         <div class="invalid-feedback" th:errors="*{email}"></div>
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold">Observações</label>
+                        <label class="form-label fw-semibold" for="observacoes">Observações</label>
                         <textarea class="form-control" th:field="*{observacoes}"
-                                  rows="2" placeholder="Condições de pagamento, prazo de entrega..."></textarea>
+                                  rows="2" placeholder="Condições de pagamento, prazo de entrega…"></textarea>
                     </div>
                 </div>
 
@@ -68,7 +68,7 @@
 
                 <div class="d-flex gap-2">
                     <button type="submit" class="btn btn-success px-4">
-                        <i class="bi bi-check-lg me-1"></i>Salvar
+                        <i class="bi bi-check-lg me-1" aria-hidden="true"></i>Salvar
                     </button>
                     <a th:href="@{/fornecedores}" class="btn btn-outline-secondary">Cancelar</a>
                 </div>

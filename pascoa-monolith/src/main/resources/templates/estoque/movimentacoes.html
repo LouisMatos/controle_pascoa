@@ -8,13 +8,13 @@
 <div id="pageContent">
 
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-        <h2 class="mb-0"><i class="bi bi-clipboard-data me-2 text-secondary"></i>Movimentações de Estoque</h2>
+        <h2 class="mb-0"><i class="bi bi-clipboard-data me-2 text-success" aria-hidden="true"></i>Movimentações de Estoque</h2>
         <div class="d-flex gap-2">
             <a th:href="@{/estoque/entrada}" class="btn btn-success btn-sm">
-                <i class="bi bi-box-arrow-in-down me-1"></i>Registrar Entrada
+                <i class="bi bi-box-arrow-in-down me-1" aria-hidden="true"></i>Registrar Entrada
             </a>
             <a th:href="@{/estoque/ajuste}" class="btn btn-outline-warning btn-sm">
-                <i class="bi bi-pencil-square me-1"></i>Ajuste de Inventário
+                <i class="bi bi-pencil-square me-1" aria-hidden="true"></i>Ajuste de Inventário
             </a>
         </div>
     </div>
@@ -22,11 +22,11 @@
     <!-- Filtros -->
     <div class="card mb-3">
         <div class="card-body py-2">
-            <form th:action="@{/estoque/movimentacoes}" method="get"
+            <form role="search" th:action="@{/estoque/movimentacoes}" method="get"
                   class="d-flex flex-wrap gap-2 align-items-end">
                 <div>
-                    <label class="form-label small mb-1 fw-semibold">Matéria-Prima</label>
-                    <select name="mpId" class="form-select form-select-sm" style="min-width:200px">
+                    <label class="form-label small mb-1 fw-semibold" for="mpId">Matéria-Prima</label>
+                    <select name="mpId" id="mpId" class="form-select form-select-sm">
                         <option value="">Todas</option>
                         <option th:each="mp : ${materiasPrimas}"
                                 th:value="${mp.id}"
@@ -35,8 +35,8 @@
                     </select>
                 </div>
                 <div>
-                    <label class="form-label small mb-1 fw-semibold">Tipo</label>
-                    <select name="tipo" class="form-select form-select-sm">
+                    <label class="form-label small mb-1 fw-semibold" for="tipo">Tipo</label>
+                    <select name="tipo" id="tipo" class="form-select form-select-sm">
                         <option value="">Todos</option>
                         <option th:each="t : ${tipos}"
                                 th:value="${t.name()}"
@@ -46,11 +46,11 @@
                 </div>
                 <div class="d-flex gap-2 align-self-end">
                     <button type="submit" class="btn btn-outline-secondary btn-sm">
-                        <i class="bi bi-search me-1"></i>Filtrar
+                        <i class="bi bi-search me-1" aria-hidden="true"></i>Filtrar
                     </button>
-                    <a th:href="@{/estoque/movimentacoes}" class="btn btn-outline-danger btn-sm"
+                    <a th:href="@{/estoque/movimentacoes}" class="btn btn-outline-danger btn-sm" title="Limpar filtros" aria-label="Limpar filtros"
                        th:if="${mpIdFiltro != null or tipoFiltro != null}">
-                        <i class="bi bi-x-lg"></i>
+                        <i class="bi bi-x-lg" aria-hidden="true"></i>
                     </a>
                 </div>
             </form>
@@ -59,16 +59,17 @@
 
     <div class="card">
         <div class="card-body p-0">
-            <table class="table table-hover align-middle mb-0" style="font-size:0.9rem">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 tabela-cadastro">
                 <thead>
                     <tr>
-                        <th class="ps-3">Data/Hora</th>
-                        <th>Matéria-Prima</th>
-                        <th class="text-center">Tipo</th>
-                        <th class="text-end">Quantidade</th>
-                        <th class="text-end">Saldo Após</th>
-                        <th class="text-end">Custo Unit.</th>
-                        <th>Motivo</th>
+                        <th scope="col" class="ps-3">Data/Hora</th>
+                        <th scope="col">Matéria-Prima</th>
+                        <th scope="col" class="text-center">Tipo</th>
+                        <th scope="col" class="text-end">Quantidade</th>
+                        <th scope="col" class="text-end">Saldo Após</th>
+                        <th scope="col" class="text-end">Custo Unit.</th>
+                        <th scope="col">Motivo</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -97,17 +98,17 @@
                             </span>
                             <span th:if="${m.custoUnitario == null}">—</span>
                         </td>
-                        <td class="text-muted small" style="max-width:250px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
-                            th:text="${m.motivo}"></td>
+                        <td class="text-muted small celula-truncada" th:title="${m.motivo}" th:text="${m.motivo}"></td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(movimentacoes)}">
                         <td colspan="7" class="text-center text-muted py-5">
-                            <i class="bi bi-clipboard-x fs-3 d-block mb-2 opacity-50"></i>
+                            <i class="bi bi-clipboard-x fs-3 d-block mb-2 opacity-50" aria-hidden="true"></i>
                             Nenhuma movimentação encontrada.
                         </td>
                     </tr>
                 </tbody>
             </table>
+          </div>
         </div>
         <div class="card-footer d-flex justify-content-between align-items-center"
              th:if="${!#lists.isEmpty(movimentacoes)}">
@@ -117,12 +118,12 @@
                 <a th:if="${pagina > 0}"
                    th:href="@{/estoque/movimentacoes(mpId=${mpIdFiltro},tipo=${tipoFiltro},pagina=${pagina - 1})}"
                    class="btn btn-sm btn-outline-secondary">
-                    <i class="bi bi-chevron-left"></i>
+                    <i class="bi bi-chevron-left" aria-hidden="true"></i><span class="visually-hidden">Página anterior</span>
                 </a>
                 <a th:if="${pagina < page.totalPages - 1}"
                    th:href="@{/estoque/movimentacoes(mpId=${mpIdFiltro},tipo=${tipoFiltro},pagina=${pagina + 1})}"
                    class="btn btn-sm btn-outline-secondary">
-                    <i class="bi bi-chevron-right"></i>
+                    <i class="bi bi-chevron-right" aria-hidden="true"></i><span class="visually-hidden">Próxima página</span>
                 </a>
             </div>
         </div>

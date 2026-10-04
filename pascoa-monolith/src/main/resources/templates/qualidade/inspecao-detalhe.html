@@ -9,17 +9,17 @@
 
     <div class="d-flex align-items-center mb-4 gap-3">
         <a th:href="@{/qualidade}" class="btn btn-outline-secondary btn-sm">
-            <i class="bi bi-arrow-left"></i>
+            <i class="bi bi-arrow-left" aria-hidden="true"></i>
         </a>
         <h2 class="mb-0">
-            <i class="bi bi-clipboard2-check me-2 text-info"></i>
+            <i class="bi bi-clipboard2-check me-2 text-success" aria-hidden="true"></i>
             Inspeção <span th:text="'#' + ${inspecao.id}"></span>
         </h2>
         <span th:if="${inspecao.aprovado}" class="badge bg-success fs-6">
-            <i class="bi bi-check-circle me-1"></i>Aprovado
+            <i class="bi bi-check-circle me-1" aria-hidden="true"></i>Aprovado
         </span>
         <span th:unless="${inspecao.aprovado}" class="badge bg-danger fs-6">
-            <i class="bi bi-x-circle me-1"></i>Reprovado
+            <i class="bi bi-x-circle me-1" aria-hidden="true"></i>Reprovado
         </span>
     </div>
 
@@ -30,7 +30,7 @@
 
             <!-- Dados da inspeção -->
             <div class="card mb-4">
-                <div class="card-header fw-semibold"><i class="bi bi-info-circle me-2"></i>Dados</div>
+                <div class="card-header fw-semibold"><i class="bi bi-info-circle me-2" aria-hidden="true"></i>Dados</div>
                 <div class="card-body">
                     <dl class="row mb-0">
                         <dt class="col-4 text-muted">Produto</dt>
@@ -52,7 +52,7 @@
                         <dt class="col-4 text-muted">Data</dt>
                         <dd class="col-8" th:text="${#temporals.format(inspecao.dataInspecao, 'dd/MM/yyyy HH:mm')}"></dd>
 
-                        <th:block th:if="${inspecao.observacoes != null and !inspecao.observacoes.isEmpty()}">
+                        <th scope="col":block th:if="${inspecao.observacoes != null and !inspecao.observacoes.isEmpty()}">
                             <dt class="col-4 text-muted">Observações</dt>
                             <dd class="col-8" th:text="${inspecao.observacoes}"></dd>
                         </th:block>
@@ -63,7 +63,7 @@
             <!-- Checklist verificado -->
             <div class="card">
                 <div class="card-header fw-semibold d-flex justify-content-between">
-                    <span><i class="bi bi-list-check me-2"></i>Itens Verificados</span>
+                    <span><i class="bi bi-list-check me-2" aria-hidden="true"></i>Itens Verificados</span>
                     <span th:if="${inspecao.totalItens() > 0}"
                           class="text-muted small">
                         <span th:text="${inspecao.totalVerificados()}"></span>/<span th:text="${inspecao.totalItens()}"></span> concluídos
@@ -76,15 +76,16 @@
                     </div>
                     <div th:each="item, i : ${inspecao.itensVerificados}"
                          class="d-flex align-items-center gap-3 px-3 py-2 border-bottom">
-                        <i th:if="${item.verificado}" class="bi bi-check-circle-fill text-success fs-5"></i>
-                        <i th:unless="${item.verificado}" class="bi bi-circle text-muted fs-5"></i>
+                        <i th:if="${item.verificado}" class="bi bi-check-circle-fill text-success fs-5" aria-hidden="true"></i>
+                        <i th:unless="${item.verificado}" class="bi bi-circle text-muted fs-5" aria-hidden="true"></i>
+                        <span class="visually-hidden" th:text="${item.verificado} ? 'Verificado:' : 'Não verificado:'"></span>
                         <span th:text="${item.descricao}"
                               th:classappend="${!item.verificado} ? 'text-muted'"></span>
                     </div>
 
                     <!-- Barra de progresso -->
                     <div th:if="${inspecao.totalItens() > 0}" class="px-3 py-2">
-                        <div class="progress" style="height:8px;">
+                        <div class="progress progress-8" role="progressbar" aria-label="Itens verificados">
                             <div class="progress-bar bg-success"
                                  th:style="'width:' + ${inspecao.totalItens() > 0 ? (inspecao.totalVerificados() * 100 / inspecao.totalItens()) : 0} + '%'"></div>
                         </div>
@@ -97,7 +98,7 @@
         <div class="col-lg-5">
             <div th:if="${inspecao.aprovado}" class="card border-success">
                 <div class="card-body text-center py-4">
-                    <i class="bi bi-check-circle-fill text-success" style="font-size:4rem;"></i>
+                    <i class="bi bi-check-circle-fill text-success fs-icon-4" aria-hidden="true"></i>
                     <h4 class="mt-3 text-success">Lote Aprovado</h4>
                     <p class="text-muted small">
                         O lote de <strong th:text="${inspecao.ordemProducao.quantidade}"></strong>
@@ -108,7 +109,7 @@
             </div>
             <div th:unless="${inspecao.aprovado}" class="card border-danger">
                 <div class="card-body text-center py-4">
-                    <i class="bi bi-x-circle-fill text-danger" style="font-size:4rem;"></i>
+                    <i class="bi bi-x-circle-fill text-danger fs-icon-4" aria-hidden="true"></i>
                     <h4 class="mt-3 text-danger">Lote Reprovado</h4>
                     <p class="text-muted small">
                         O lote de <strong th:text="${inspecao.ordemProducao.quantidade}"></strong>
@@ -117,7 +118,7 @@
                     </p>
                     <div th:if="${inspecao.observacoes != null and !inspecao.observacoes.isEmpty()}"
                          class="alert alert-danger text-start small mt-2">
-                        <i class="bi bi-exclamation-triangle me-1"></i>
+                        <i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>
                         <strong>Não conformidades:</strong><br>
                         <span th:text="${inspecao.observacoes}"></span>
                     </div>

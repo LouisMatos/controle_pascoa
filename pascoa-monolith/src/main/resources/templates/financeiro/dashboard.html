@@ -9,10 +9,10 @@
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="mb-0">
-            <i class="bi bi-graph-up me-2 text-success"></i>Dashboard Financeiro
+            <i class="bi bi-graph-up me-2 text-success" aria-hidden="true"></i>Dashboard Financeiro
         </h2>
         <span class="text-muted small">
-            <i class="bi bi-clock me-1"></i>Dados em tempo real
+            <i class="bi bi-clock me-1" aria-hidden="true"></i>Dados em tempo real
         </span>
     </div>
 
@@ -31,7 +31,7 @@
                                 <span th:text="${relatorio.pedidosEntregues}"></span> pedido(s) entregue(s)
                             </div>
                         </div>
-                        <i class="bi bi-cash-coin fs-1 text-success opacity-25"></i>
+                        <i class="bi bi-cash-coin fs-1 text-success opacity-25" aria-hidden="true"></i>
                     </div>
                 </div>
             </div>
@@ -48,7 +48,7 @@
                             </div>
                             <div class="text-muted small mt-1">Pagamentos registrados</div>
                         </div>
-                        <i class="bi bi-wallet2 fs-1 text-primary opacity-25"></i>
+                        <i class="bi bi-wallet2 fs-1 text-primary opacity-25" aria-hidden="true"></i>
                     </div>
                 </div>
             </div>
@@ -65,7 +65,7 @@
                             </div>
                             <div class="text-muted small mt-1">Confirmados + Em produção + Prontos</div>
                         </div>
-                        <i class="bi bi-hourglass-split fs-1 text-warning opacity-25"></i>
+                        <i class="bi bi-hourglass-split fs-1 text-warning opacity-25" aria-hidden="true"></i>
                     </div>
                 </div>
             </div>
@@ -82,7 +82,7 @@
                                 <span th:text="${relatorio.pedidosCancelados}"></span> cancelado(s)
                             </div>
                         </div>
-                        <i class="bi bi-cart3 fs-1 text-secondary opacity-25"></i>
+                        <i class="bi bi-cart3 fs-1 text-secondary opacity-25" aria-hidden="true"></i>
                     </div>
                 </div>
             </div>
@@ -104,7 +104,7 @@
                                 <a th:href="@{/gastos}" class="text-decoration-none text-muted">Ver lançamentos →</a>
                             </div>
                         </div>
-                        <i class="bi bi-receipt fs-1 text-danger opacity-25"></i>
+                        <i class="bi bi-receipt fs-1 text-danger opacity-25" aria-hidden="true"></i>
                     </div>
                 </div>
             </div>
@@ -120,7 +120,7 @@
                             </div>
                             <div class="text-muted small mt-1">Custo fixo estrutural</div>
                         </div>
-                        <i class="bi bi-building fs-1 text-secondary opacity-25"></i>
+                        <i class="bi bi-building fs-1 text-secondary opacity-25" aria-hidden="true"></i>
                     </div>
                 </div>
             </div>
@@ -136,7 +136,7 @@
                             </div>
                             <div class="text-muted small mt-1">Gastos + Despesas fixas</div>
                         </div>
-                        <i class="bi bi-calculator fs-1 text-dark opacity-25"></i>
+                        <i class="bi bi-calculator fs-1 text-dark opacity-25" aria-hidden="true"></i>
                     </div>
                 </div>
             </div>
@@ -146,7 +146,7 @@
                 <div class="card-body text-center">
                     <div class="text-muted small fw-semibold text-uppercase mb-1">Ponto de Equilíbrio</div>
                     <a th:href="@{/financeiro/breakeven}" class="btn btn-sm btn-outline-warning mt-1">
-                        <i class="bi bi-bullseye me-1"></i>Ver análise
+                        <i class="bi bi-bullseye me-1" aria-hidden="true"></i>Ver análise
                     </a>
                 </div>
             </div>
@@ -160,7 +160,7 @@
         <div class="col-lg-7">
             <div class="card h-100">
                 <div class="card-header fw-semibold">
-                    <i class="bi bi-pie-chart me-2"></i>Pedidos por Status
+                    <i class="bi bi-pie-chart me-2" aria-hidden="true"></i>Pedidos por Status
                 </div>
                 <div class="card-body">
                     <div class="row g-3 text-center">
@@ -210,7 +210,7 @@
 
                     <!-- Barra de progresso visual -->
                     <div th:if="${relatorio.totalPedidos > 0}" class="mt-3">
-                        <div class="progress" style="height: 8px; border-radius: 4px;">
+                        <div class="progress progress-8 rounded">
                             <div class="progress-bar bg-primary"
                                  th:style="'width:' + ${(relatorio.pedidosNovos * 100 / relatorio.totalPedidos)} + '%'"></div>
                             <div class="progress-bar bg-info"
@@ -236,7 +236,7 @@
                 <div class="card-header fw-semibold"
                      th:classappend="${!#lists.isEmpty(relatorio.materiaPrimasCriticas)} ? 'bg-danger-subtle text-danger-emphasis' : 'bg-success-subtle text-success-emphasis'">
                     <i class="bi me-2"
-                       th:classappend="${!#lists.isEmpty(relatorio.materiaPrimasCriticas)} ? 'bi-exclamation-triangle-fill' : 'bi-check-circle-fill'"></i>
+                       th:classappend="${!#lists.isEmpty(relatorio.materiaPrimasCriticas)} ? 'bi-exclamation-triangle-fill' : 'bi-check-circle-fill'" aria-hidden="true"></i>
                     Alertas de Estoque
                     <span th:if="${!#lists.isEmpty(relatorio.materiaPrimasCriticas)}"
                           class="badge bg-danger ms-1"
@@ -245,7 +245,7 @@
                 <div class="card-body p-0">
                     <div th:if="${#lists.isEmpty(relatorio.materiaPrimasCriticas)}"
                          class="text-center text-success py-4">
-                        <i class="bi bi-check-circle-fill fs-3 d-block mb-2"></i>
+                        <i class="bi bi-check-circle-fill fs-3 d-block mb-2" aria-hidden="true"></i>
                         Todos os estoques estão em dia!
                     </div>
                     <ul th:unless="${#lists.isEmpty(relatorio.materiaPrimasCriticas)}"
@@ -255,7 +255,7 @@
                             <div>
                                 <span class="fw-semibold" th:text="${mp.nome}"></span>
                                 <div class="text-danger small">
-                                    <i class="bi bi-arrow-down me-1"></i>
+                                    <i class="bi bi-arrow-down me-1" aria-hidden="true"></i>
                                     Atual:
                                     <strong th:text="${#numbers.formatDecimal(mp.quantidadeAtual, 1, 'POINT', 3, 'COMMA')}"></strong>
                                     <span th:text="${mp.unidade.simbolo}"></span>
@@ -266,7 +266,7 @@
                             </div>
                             <a th:href="@{/estoque/entrada(mpId=${mp.id})}"
                                class="btn btn-sm btn-outline-danger">
-                                <i class="bi bi-box-arrow-in-down"></i>
+                                <i class="bi bi-box-arrow-in-down" aria-hidden="true"></i>
                             </a>
                         </li>
                     </ul>
@@ -282,22 +282,22 @@
         <div class="col-lg-5">
             <div class="card">
                 <div class="card-header fw-semibold">
-                    <i class="bi bi-trophy me-2 text-warning"></i>Top 5 Produtos Vendidos
+                    <i class="bi bi-trophy me-2 text-warning" aria-hidden="true"></i>Top 5 Produtos Vendidos
                 </div>
                 <div class="card-body p-0">
                     <div th:if="${#lists.isEmpty(relatorio.topProdutos)}"
                          class="text-center text-muted py-4">
-                        <i class="bi bi-box fs-3 d-block mb-2 opacity-50"></i>
+                        <i class="bi bi-box fs-3 d-block mb-2 opacity-50" aria-hidden="true"></i>
                         Nenhum produto vendido ainda.
                     </div>
-                    <table th:unless="${#lists.isEmpty(relatorio.topProdutos)}"
+                    <div class="table-responsive"><table th:unless="${#lists.isEmpty(relatorio.topProdutos)}"
                            class="table table-hover align-middle mb-0">
                         <thead>
                             <tr>
-                                <th class="ps-3">#</th>
-                                <th>Produto</th>
-                                <th class="text-center">Unid.</th>
-                                <th class="text-end pe-3">Faturamento</th>
+                                <th scope="col" class="ps-3">#</th>
+                                <th scope="col">Produto</th>
+                                <th scope="col" class="text-center">Unid.</th>
+                                <th scope="col" class="text-end pe-3">Faturamento</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -313,7 +313,7 @@
                                 </td>
                             </tr>
                         </tbody>
-                    </table>
+                    </table></div>
                 </div>
             </div>
         </div>
@@ -322,28 +322,28 @@
         <div class="col-lg-7">
             <div class="card">
                 <div class="card-header fw-semibold">
-                    <i class="bi bi-percent me-2 text-primary"></i>Margem por Produto
+                    <i class="bi bi-percent me-2 text-primary" aria-hidden="true"></i>Margem por Produto
                     <span class="text-muted small fw-normal ms-2">baseada na ficha técnica atual</span>
                 </div>
                 <div class="card-body p-0">
                     <div th:if="${#lists.isEmpty(relatorio.margens)}"
                          class="text-center text-muted py-4">
-                        <i class="bi bi-file-earmark-text fs-3 d-block mb-2 opacity-50"></i>
+                        <i class="bi bi-file-earmark-text fs-3 d-block mb-2 opacity-50" aria-hidden="true"></i>
                         Nenhum produto com ficha técnica cadastrada.
                         <div class="mt-2">
                             <a th:href="@{/produtos}" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-box-seam me-1"></i>Ir para Produtos
+                                <i class="bi bi-box-seam me-1" aria-hidden="true"></i>Ir para Produtos
                             </a>
                         </div>
                     </div>
-                    <table th:unless="${#lists.isEmpty(relatorio.margens)}"
-                           class="table table-hover align-middle mb-0" style="font-size:0.9rem">
+                    <div class="table-responsive"><table th:unless="${#lists.isEmpty(relatorio.margens)}"
+                           class="table table-hover align-middle mb-0 fs-90">
                         <thead>
                             <tr>
-                                <th class="ps-3">Produto</th>
-                                <th class="text-end">Preço Venda</th>
-                                <th class="text-end">Custo Unit.</th>
-                                <th class="text-end pe-3">Margem</th>
+                                <th scope="col" class="ps-3">Produto</th>
+                                <th scope="col" class="text-end">Preço Venda</th>
+                                <th scope="col" class="text-end">Custo Unit.</th>
+                                <th scope="col" class="text-end pe-3">Margem</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -361,7 +361,7 @@
                                 </td>
                             </tr>
                         </tbody>
-                    </table>
+                    </table></div>
                 </div>
                 <div class="card-footer text-muted small" th:unless="${#lists.isEmpty(relatorio.margens)}">
                     <span class="text-success fw-semibold">■</span> ≥ 40% &nbsp;

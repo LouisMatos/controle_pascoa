@@ -6,7 +6,7 @@
 <div id="pageContent">
 
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2 class="mb-0"><i class="bi bi-clock-history me-2 text-info"></i>Aging de Recebíveis</h2>
+    <h2 class="mb-0"><i class="bi bi-clock-history me-2 text-success" aria-hidden="true"></i>Aging de Recebíveis</h2>
     <span class="text-muted small">Contas a receber abertas por faixa de atraso</span>
   </div>
 
@@ -31,10 +31,10 @@
       </div>
     </div>
     <div class="col-sm-6 col-xl">
-      <div class="card border-orange" style="border-color:#fd7e14!important">
+      <div class="card border-orange borda-laranja">
         <div class="card-body text-center">
           <div class="text-muted small fw-semibold text-uppercase">31–60 dias</div>
-          <div class="fs-5 fw-bold mt-1" style="color:#fd7e14">R$ <span th:text="${#numbers.formatDecimal(aging.total31a60,1,'POINT',2,'COMMA')}"></span></div>
+          <div class="fs-5 fw-bold mt-1 texto-laranja">R$ <span th:text="${#numbers.formatDecimal(aging.total31a60,1,'POINT',2,'COMMA')}"></span></div>
           <div class="text-muted small" th:text="${#lists.size(aging.atraso31a60)} + ' pedido(s)'"></div>
         </div>
       </div>
@@ -76,9 +76,9 @@
         <span th:text="${#lists.size(lista)} + ' pedido(s)'"></span>
       </div>
       <div class="card-body p-0">
-        <table class="table table-sm table-hover mb-0">
+        <div class="table-responsive"><table class="table table-sm table-hover mb-0">
           <thead class="table-light">
-            <tr><th>Cliente</th><th>Pedido</th><th>Vencimento</th><th class="text-center">Atraso</th><th class="text-end">Saldo</th></tr>
+            <tr><th scope="col">Cliente</th><th scope="col">Pedido</th><th scope="col">Vencimento</th><th scope="col" class="text-center">Atraso</th><th scope="col" class="text-end">Saldo</th></tr>
           </thead>
           <tbody>
             <tr th:each="l : ${lista}">
@@ -92,7 +92,7 @@
               <td class="text-end fw-semibold">R$ <span th:text="${#numbers.formatDecimal(l.saldo,1,'POINT',2,'COMMA')}"></span></td>
             </tr>
           </tbody>
-        </table>
+        </table></div>
       </div>
     </div>
   </div>
@@ -104,7 +104,7 @@
   <div th:replace="~{::tabelaFaixa(${aging.atrasoAcima90},'>90 dias',  'bg-dark')}"></div>
 
   <div th:if="${aging.totalGeral.compareTo(T(java.math.BigDecimal).ZERO) == 0}" class="alert alert-success">
-    <i class="bi bi-check-circle me-1"></i>Nenhuma conta em aberto.
+    <i class="bi bi-check-circle me-1" aria-hidden="true"></i>Nenhuma conta em aberto.
   </div>
 
 </div>

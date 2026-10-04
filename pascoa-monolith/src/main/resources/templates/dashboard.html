@@ -8,7 +8,7 @@
 <div id="pageContent">
 
     <div class="d-flex align-items-center mb-4">
-        <i class="bi bi-egg-fill text-success me-2 fs-3"></i>
+        <i class="bi bi-egg-fill text-success me-2 fs-3" aria-hidden="true"></i>
         <h2 class="mb-0">Dashboard</h2>
     </div>
 
@@ -16,7 +16,7 @@
         <div class="col-lg-4">
             <div class="card h-100 border-danger border-2">
                 <div class="card-header bg-white fw-semibold d-flex justify-content-between align-items-center">
-                    <span><i class="bi bi-exclamation-triangle text-danger me-2"></i>Atrasados</span>
+                    <span><i class="bi bi-exclamation-triangle text-danger me-2" aria-hidden="true"></i>Atrasados</span>
                     <span class="badge bg-danger" th:text="${totalAtrasados}">0</span>
                 </div>
                 <div class="card-body p-0">
@@ -44,7 +44,7 @@
         <div class="col-lg-4">
             <div class="card h-100 border-primary border-2">
                 <div class="card-header bg-white fw-semibold d-flex justify-content-between align-items-center">
-                    <span><i class="bi bi-truck text-primary me-2"></i>Entregar hoje</span>
+                    <span><i class="bi bi-truck text-primary me-2" aria-hidden="true"></i>Entregar hoje</span>
                     <span class="badge bg-primary" th:text="${totalEntregarHoje}">0</span>
                 </div>
                 <div class="card-body p-0">
@@ -72,7 +72,7 @@
         <div class="col-lg-4">
             <div class="card h-100 border-warning border-2">
                 <div class="card-header bg-white fw-semibold d-flex justify-content-between align-items-center">
-                    <span><i class="bi bi-clipboard2-check text-warning me-2"></i>Produzir</span>
+                    <span><i class="bi bi-clipboard2-check text-warning me-2" aria-hidden="true"></i>Produzir</span>
                     <span class="badge bg-warning text-dark" th:text="${totalProduzir}">0</span>
                 </div>
                 <div class="card-body p-0">
@@ -149,7 +149,7 @@
             <div class="card h-100">
                 <div class="card-body d-flex align-items-center gap-3">
                     <div class="rounded-3 bg-primary bg-opacity-10 p-3">
-                        <i class="bi bi-people-fill fs-3 text-primary"></i>
+                        <i class="bi bi-people-fill fs-3 text-primary" aria-hidden="true"></i>
                     </div>
                     <div>
                         <div class="fs-4 fw-bold" th:text="${totalClientes}">0</div>
@@ -162,7 +162,7 @@
             <div class="card h-100">
                 <div class="card-body d-flex align-items-center gap-3">
                     <div class="rounded-3 bg-success bg-opacity-10 p-3">
-                        <i class="bi bi-box-seam-fill fs-3 text-success"></i>
+                        <i class="bi bi-box-seam-fill fs-3 text-success" aria-hidden="true"></i>
                     </div>
                     <div>
                         <div class="fs-4 fw-bold" th:text="${totalProdutos}">0</div>
@@ -175,7 +175,7 @@
             <div class="card h-100">
                 <div class="card-body d-flex align-items-center gap-3">
                     <div class="rounded-3 bg-warning bg-opacity-10 p-3">
-                        <i class="bi bi-cart3 fs-3 text-warning"></i>
+                        <i class="bi bi-cart3 fs-3 text-warning" aria-hidden="true"></i>
                     </div>
                     <div>
                         <div class="fs-4 fw-bold" th:text="${pedidosAbertos}">0</div>
@@ -188,7 +188,7 @@
             <div class="card h-100">
                 <div class="card-body d-flex align-items-center gap-3">
                     <div class="rounded-3 bg-info bg-opacity-10 p-3">
-                        <i class="bi bi-clipboard2-check fs-3 text-info"></i>
+                        <i class="bi bi-clipboard2-check fs-3 text-info" aria-hidden="true"></i>
                     </div>
                     <div>
                         <div class="fs-4 fw-bold" th:text="${inspeccoesPendentes}">0</div>
@@ -206,7 +206,7 @@
             <div class="card h-100">
                 <div class="card-body">
                     <div class="d-flex align-items-center gap-2 mb-2">
-                        <i class="bi bi-hourglass-split text-warning fs-5"></i>
+                        <i class="bi bi-hourglass-split text-warning fs-5" aria-hidden="true"></i>
                         <span class="text-muted small fw-semibold text-uppercase">Em Aberto</span>
                     </div>
                     <div class="fs-5 fw-bold">
@@ -220,13 +220,13 @@
             <div class="card h-100">
                 <div class="card-body">
                     <div class="d-flex align-items-center gap-2 mb-2">
-                        <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                        <i class="bi bi-check-circle-fill text-success fs-5" aria-hidden="true"></i>
                         <span class="text-muted small fw-semibold text-uppercase">Total Recebido</span>
                     </div>
                     <div class="fs-5 fw-bold text-success">
                         R$ <span th:text="${#numbers.formatDecimal(totalRecebido,1,'POINT',2,'COMMA')}">0,00</span>
                     </div>
-                    <div th:if="${pctMeta != null}" class="text-muted" style="font-size:.75rem; margin-top:.5rem;">
+                    <div th:if="${pctMeta != null}" class="text-muted fs-75 mt-2">
                         <span th:text="${pctMeta}">0</span>% da meta
                     </div>
                 </div>
@@ -237,7 +237,7 @@
             <div class="card h-100">
                 <div class="card-body">
                     <div class="d-flex align-items-center gap-2 mb-2">
-                        <i class="bi bi-graph-down text-danger fs-5"></i>
+                        <i class="bi bi-graph-down text-danger fs-5" aria-hidden="true"></i>
                         <span class="text-muted small fw-semibold text-uppercase">Gastos do Mês</span>
                     </div>
                     <div class="fs-5 fw-bold">
@@ -251,14 +251,14 @@
             <div class="card h-100">
                 <div class="card-body">
                     <div class="d-flex align-items-center gap-2 mb-2">
-                        <i class="bi bi-bullseye text-info fs-5"></i>
+                        <i class="bi bi-bullseye text-info fs-5" aria-hidden="true"></i>
                         <span class="text-muted small fw-semibold text-uppercase">Meta Mensal</span>
                     </div>
                     <div class="fs-5 fw-bold" th:if="${metaDefinida}">
                         R$ <span th:text="${#numbers.formatDecimal(metaMensal,1,'POINT',2,'COMMA')}">0,00</span>
                     </div>
                     <div class="fs-5 fw-bold text-muted" th:unless="${metaDefinida}">
-                        <a th:href="@{/financeiro/dashboard}" class="text-decoration-none text-muted" style="font-size:.85rem;">Definir meta</a>
+                        <a th:href="@{/financeiro/dashboard}" class="text-decoration-none text-muted fs-85">Definir meta</a>
                     </div>
                 </div>
             </div>
@@ -270,11 +270,11 @@
         <div class="col-lg-6">
             <div class="card h-100">
                 <div class="card-header bg-white fw-semibold">
-                    <i class="bi bi-exclamation-triangle text-warning me-2"></i>Estoque Crítico
+                    <i class="bi bi-exclamation-triangle text-warning me-2" aria-hidden="true"></i>Estoque Crítico
                 </div>
                 <div class="card-body p-0">
                     <div th:if="${#lists.isEmpty(mpsCriticas)}" class="text-center text-muted py-4">
-                        <i class="bi bi-check-circle text-success fs-4 d-block mb-1"></i>
+                        <i class="bi bi-check-circle text-success fs-4 d-block mb-1" aria-hidden="true"></i>
                         Nenhuma matéria-prima abaixo do mínimo.
                     </div>
                     <ul class="list-group list-group-flush" th:unless="${#lists.isEmpty(mpsCriticas)}">
@@ -295,21 +295,21 @@
         <div class="col-lg-6">
             <div class="card h-100">
                 <div class="card-header bg-white fw-semibold">
-                    <i class="bi bi-lightning-charge me-2 text-primary"></i>Acesso Rápido
+                    <i class="bi bi-lightning-charge me-2 text-primary" aria-hidden="true"></i>Acesso Rápido
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
                         <a th:href="@{/pedidos/wizard}" class="btn btn-outline-success">
-                            <i class="bi bi-magic me-2"></i>Novo Pedido (Wizard)
+                            <i class="bi bi-magic me-2" aria-hidden="true"></i>Novo Pedido (Wizard)
                         </a>
                         <a th:href="@{/clientes/novo}" class="btn btn-outline-primary">
-                            <i class="bi bi-person-plus me-2"></i>Novo Cliente
+                            <i class="bi bi-person-plus me-2" aria-hidden="true"></i>Novo Cliente
                         </a>
                         <a th:href="@{/producao/kanban}" class="btn btn-outline-warning">
-                            <i class="bi bi-kanban me-2"></i>Kanban de Produção
+                            <i class="bi bi-kanban me-2" aria-hidden="true"></i>Kanban de Produção
                         </a>
                         <a th:href="@{/estoque/entrada}" class="btn btn-outline-secondary">
-                            <i class="bi bi-box-arrow-in-down me-2"></i>Entrada de Matéria-Prima
+                            <i class="bi bi-box-arrow-in-down me-2" aria-hidden="true"></i>Entrada de Matéria-Prima
                         </a>
                     </div>
                 </div>

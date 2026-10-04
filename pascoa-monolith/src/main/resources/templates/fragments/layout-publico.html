@@ -14,30 +14,21 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <!-- Design tokens -->
     <link rel="stylesheet" th:href="@{/css/tokens.css}">
-    <style>
-        body { font-size: 0.93rem; }
-        .navbar-brand { font-weight: 700; letter-spacing: 0.5px; }
-        .badge-TRUFADO    { background-color: #6f42c1; }
-        .badge-RECHEADO   { background-color: #fd7e14; }
-        .badge-DIET       { background-color: #0dcaf0; color: #000; }
-        .badge-VEGANO     { background-color: #198754; }
-        .badge-TRADICIONAL{ background-color: #6c757d; }
-        .badge-ESPECIAL   { background-color: #d63384; }
-        .estoque-critico  { background-color: #fff3cd !important; }
-        .card { border: none; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
-    </style>
+    <link rel="stylesheet" th:href="@{/css/publico.css}">
 </head>
 <body class="bg-light">
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-success py-2">
+<a class="visually-hidden-focusable skip-link bg-white p-2 m-2 rounded" href="#conteudo">Ir para o conteúdo</a>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-success py-2" aria-label="Principal">
     <div class="container-fluid px-3">
         <a class="navbar-brand" th:href="@{/dashboard}">
-            <i class="bi bi-egg-fill me-1"></i>Páscoa Gestão
+            <i class="bi bi-egg-fill me-1" aria-hidden="true"></i>Páscoa Gestão
         </a>
     </div>
 </nav>
 
-<div class="container-fluid">
+<div class="container-fluid" aria-live="polite">
     <div th:if="${sucesso}" class="alert alert-success alert-dismissible fade show mt-3" role="alert">
         <strong>Sucesso!</strong> <span th:text="${sucesso}"></span>
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
@@ -52,7 +43,7 @@
 
 <footer class="bg-light border-top py-4 mt-5">
     <div class="container-fluid px-3 text-center text-muted small">
-        <p>&copy; 2024 Páscoa Gestão. Todos os direitos reservados.</p>
+        <p>&copy; <span th:text="${#temporals.year(#temporals.createNow())}">2025</span> Páscoa Gestão. Todos os direitos reservados.</p>
     </div>
 </footer>
 

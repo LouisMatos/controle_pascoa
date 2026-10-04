@@ -9,21 +9,21 @@
 
     <div class="d-flex align-items-center mb-4">
         <a th:href="@{/gastos}" class="btn btn-outline-secondary btn-sm me-3">
-            <i class="bi bi-arrow-left"></i>
+            <i class="bi bi-arrow-left" aria-hidden="true"></i>
         </a>
         <h2 class="mb-0">
-            <i class="bi bi-upload me-2 text-secondary"></i>Importar Gastos via CSV
+            <i class="bi bi-upload me-2 text-success" aria-hidden="true"></i>Importar Gastos via CSV
         </h2>
     </div>
 
     <!-- Alertas -->
     <div th:if="${sucesso}" class="alert alert-success alert-dismissible fade show">
-        <i class="bi bi-check-circle me-2"></i><span th:text="${sucesso}"></span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <i class="bi bi-check-circle me-2" aria-hidden="true"></i><span th:text="${sucesso}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
     </div>
     <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show">
-        <i class="bi bi-exclamation-triangle me-2"></i><span th:text="${erro}"></span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <i class="bi bi-exclamation-triangle me-2" aria-hidden="true"></i><span th:text="${erro}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
     </div>
 
     <div class="row g-4">
@@ -32,20 +32,20 @@
         <div class="col-lg-5">
             <div class="card">
                 <div class="card-header fw-semibold">
-                    <i class="bi bi-file-earmark-csv me-2"></i>Selecionar Arquivo
+                    <i class="bi bi-file-earmark-csv me-2" aria-hidden="true"></i>Selecionar Arquivo
                 </div>
                 <div class="card-body">
                     <form th:action="@{/gastos/importar}" method="post"
                           enctype="multipart/form-data">
                         <div class="mb-4">
-                            <label class="form-label fw-semibold">Arquivo CSV <span class="text-danger">*</span></label>
-                            <input type="file" name="arquivo" accept=".csv"
+                            <label class="form-label fw-semibold" for="arquivo">Arquivo CSV <span class="text-danger" aria-hidden="true">*</span></label>
+                            <input type="file" name="arquivo" id="arquivo" accept=".csv"
                                    class="form-control" required>
                             <div class="form-text">Tamanho máximo: 5 MB</div>
                         </div>
                         <div class="d-grid">
                             <button type="submit" class="btn btn-success">
-                                <i class="bi bi-upload me-1"></i>Importar Gastos
+                                <i class="bi bi-upload me-1" aria-hidden="true"></i>Importar Gastos
                             </button>
                         </div>
                     </form>
@@ -57,12 +57,12 @@
         <div class="col-lg-7">
             <div class="card">
                 <div class="card-header fw-semibold">
-                    <i class="bi bi-info-circle me-2 text-info"></i>Formato do Arquivo CSV
+                    <i class="bi bi-info-circle me-2 text-info" aria-hidden="true"></i>Formato do Arquivo CSV
                 </div>
                 <div class="card-body">
                     <p class="text-muted">O arquivo deve ter a primeira linha como cabeçalho e seguir o formato abaixo:</p>
 
-                    <div class="bg-dark text-light rounded p-3 mb-3" style="font-size:0.82rem; font-family:monospace">
+                    <div class="bg-dark text-light rounded p-3 mb-3 fs-82 font-monospace">
                         descricao,valor,data_lancamento,categoria,observacoes<br>
                         Sacolas plásticas,45.90,2026-04-10,EMBALAGEM,Lote de 500 unidades<br>
                         Frete fornecedor,120.00,2026-04-12,TRANSPORTE,<br>
@@ -70,12 +70,12 @@
                     </div>
 
                     <h6 class="fw-semibold mt-3">Colunas obrigatórias:</h6>
-                    <table class="table table-sm table-bordered small">
+                    <div class="table-responsive"><table class="table table-sm table-bordered small">
                         <thead>
                             <tr class="table-light">
-                                <th>Coluna</th>
-                                <th>Tipo</th>
-                                <th>Exemplo</th>
+                                <th scope="col">Coluna</th>
+                                <th scope="col">Tipo</th>
+                                <th scope="col">Exemplo</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -105,7 +105,7 @@
                                 <td>Lote de 500 un.</td>
                             </tr>
                         </tbody>
-                    </table>
+                    </table></div>
 
                     <h6 class="fw-semibold mt-3">Categorias válidas:</h6>
                     <div class="d-flex flex-wrap gap-2">
@@ -119,7 +119,7 @@
                     </div>
 
                     <div class="alert alert-info mt-3 mb-0 small">
-                        <i class="bi bi-lightbulb me-1"></i>
+                        <i class="bi bi-lightbulb me-1" aria-hidden="true"></i>
                         Linhas com formato inválido são ignoradas silenciosamente — as demais são importadas normalmente.
                     </div>
                 </div>

@@ -9,11 +9,11 @@
 
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="mb-0">
-            <i class="bi bi-person-gear me-2 text-primary"></i>
+            <i class="bi bi-person-gear me-2 text-success" aria-hidden="true"></i>
             <span th:text="${form.id == null} ? 'Novo Usuário' : 'Editar Usuário'"></span>
         </h2>
         <a th:href="@{/usuarios}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-1"></i>Voltar
+            <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Voltar
         </a>
     </div>
 
@@ -26,7 +26,7 @@
                         <input type="hidden" th:field="*{ativo}">
 
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Nome completo *</label>
+                            <label class="form-label fw-semibold" for="nome">Nome completo <span class="text-danger" aria-hidden="true">*</span></label>
                             <input type="text" class="form-control"
                                    th:field="*{nome}"
                                    th:classappend="${#fields.hasErrors('nome')} ? 'is-invalid'"
@@ -35,9 +35,9 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Login *</label>
+                            <label class="form-label fw-semibold" for="login">Login <span class="text-danger" aria-hidden="true">*</span></label>
                             <input type="text" class="form-control"
-                                   th:field="*{login}"
+                                   th:field="*{login}" required autocapitalize="none" spellcheck="false"
                                    th:classappend="${#fields.hasErrors('login')} ? 'is-invalid'"
                                    placeholder="Ex: maria.confeiteira"
                                    autocomplete="off">
@@ -45,9 +45,9 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">E-mail</label>
+                            <label class="form-label fw-semibold" for="email">E-mail</label>
                             <input type="email" class="form-control"
-                                   th:field="*{email}"
+                                   th:field="*{email}" autocomplete="off" spellcheck="false" inputmode="email"
                                    th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'"
                                    placeholder="usuario@exemplo.com">
                             <div class="invalid-feedback" th:errors="*{email}"></div>
@@ -55,9 +55,9 @@
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">
+                            <label class="form-label fw-semibold" for="senha">
                                 Senha
-                                <span th:if="${form.id == null}" class="text-danger">*</span>
+                                <span th:if="${form.id == null}" class="text-danger" aria-hidden="true">*</span>
                                 <span th:if="${form.id != null}" class="text-muted fw-normal small">
                                     — deixe em branco para manter a atual
                                 </span>
@@ -71,11 +71,11 @@
                         </div>
 
                         <div class="mb-4">
-                            <label class="form-label fw-semibold">Perfil de Acesso *</label>
+                            <label class="form-label fw-semibold" for="role">Perfil de Acesso <span class="text-danger" aria-hidden="true">*</span></label>
                             <select class="form-select"
                                     th:field="*{role}"
                                     th:classappend="${#fields.hasErrors('role')} ? 'is-invalid'">
-                                <option value="">Selecione...</option>
+                                <option value="">Selecione…</option>
                                 <option th:each="r : ${roles}"
                                         th:value="${r.name()}"
                                         th:text="${r.descricao}"></option>
@@ -85,8 +85,8 @@
 
                         <hr>
                         <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-primary px-4">
-                                <i class="bi bi-check-lg me-1"></i>Salvar
+                            <button type="submit" class="btn btn-success px-4">
+                                <i class="bi bi-check-lg me-1" aria-hidden="true"></i>Salvar
                             </button>
                             <a th:href="@{/usuarios}" class="btn btn-outline-secondary">Cancelar</a>
                         </div>
@@ -98,7 +98,7 @@
         <div class="col-lg-6">
             <div class="card border-info-subtle">
                 <div class="card-header bg-info-subtle fw-semibold text-info-emphasis">
-                    <i class="bi bi-shield-check me-2"></i>Perfis de Acesso
+                    <i class="bi bi-shield-check me-2" aria-hidden="true"></i>Perfis de Acesso
                 </div>
                 <div class="card-body">
                     <ul class="list-unstyled mb-0">
