@@ -720,8 +720,8 @@ Pendentes (fora do escopo de design):
   `<template id="modeloLinha">` (linha nova do orçamento). `app.js` trata `data-autosubmit` e
   `data-navegar="<base>"` em `<select>`. Regra: script novo vai em arquivo, dentro do `#pageContent`
   (o que fica fora é descartado pelo layout)
-- 2 testes falham fora de template: `PainelDoDiaTest.entregaVencida_apareceEmAtrasados` ("Data de entrega
-  não pode ser no passado") e `AgingDerivadoTest`
+- `PainelDoDiaTest` e `AgingDerivadoTest` corrigidos: criam o pedido com entrega futura e recuam
+  `dataEntrega` na entidade (o serviço recusa entrega no passado). Suíte do monólito: 103 testes, 0 erros
 - `orcamentos/aprovacao` e `manutencao` não renderizados na revisão (token de orçamento agora existe em
   `infra/seed/seed-cenarios.sql`; modo manutenção afeta todos os usuários)
 

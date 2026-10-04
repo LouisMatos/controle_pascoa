@@ -7,6 +7,7 @@ import br.com.seuprojeto.pascoa.cadastro.entity.Produto;
 import br.com.seuprojeto.pascoa.cadastro.repository.ClienteRepository;
 import br.com.seuprojeto.pascoa.cadastro.repository.ProdutoRepository;
 import br.com.seuprojeto.pascoa.pedido.entity.Pedido;
+import br.com.seuprojeto.pascoa.pedido.repository.PedidoRepository;
 import br.com.seuprojeto.pascoa.pedido.service.PedidoService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -35,6 +36,7 @@ class PainelDoDiaTest {
 
     @Autowired private MockMvc mockMvc;
     @Autowired private PedidoService pedidoService;
+    @Autowired private PedidoRepository pedidoRepository;
     @Autowired private ClienteRepository clienteRepository;
     @Autowired private ProdutoRepository produtoRepository;
 
@@ -57,9 +59,17 @@ class PainelDoDiaTest {
     }
 
     private Pedido pedidoConfirmado(LocalDate dataEntrega) {
+        // o serviço recusa entrega no passado; pedido atrasado é criado no futuro e recuado direto na entidade
+        LocalDate entregaValida = dataEntrega.isBefore(LocalDate.now()) ? LocalDate.now().plusDays(1) : dataEntrega;
         Pedido pedido = pedidoService.criarComItens(
-                cliente.getId(), dataEntrega, null, null, List.of(produto.getId()), List.of(1));
-        return pedidoService.confirmar(pedido.getId());
+                cliente.getId(), entregaValida, null, null, List.of(produto.getId()), List.of(1));
+        Pedido confirmado = pedidoService.confirmar(pedido.getId());
+        if (!entregaValida.equals(dataEntrega)) {
+            Pedido atrasado = pedidoRepository.findById(confirmado.getId()).orElseThrow();
+            atrasado.setDataEntrega(dataEntrega);
+            return pedidoRepository.save(atrasado);
+        }
+        return confirmado;
     }
 
     @Test
