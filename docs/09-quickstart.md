@@ -136,6 +136,36 @@ Usuários criados (senha igual à do `admin`): `financeiro`, `atendente`, `confe
 `qualidade`, `analista`, `admin2`, `admin2fa` (com 2FA), `bloqueada`, `inativo`, `semmail`.
 Achados de performance/bug com essa massa estão em `EVOLUCAO_FLUXO_PASCOA.md`.
 
+### Massa de cenários (≥10 casos por fluxo)
+
+Aditiva e idempotente (não apaga nada). Rodar depois do `seed-massa-teste.sql` ou direto num banco vazio
+(após o Flyway criar o schema e o admin):
+
+```bash
+docker compose exec -T postgres psql -U postgres -d pascoa_monolith < infra/seed/seed-cenarios.sql
+```
+
+Cobre usuários/2FA/reset de senha, cadastros, estoque, fichas, pedidos, pagamentos, orçamentos, produção,
+qualidade, financeiro, gastos, CRM, notificações, alertas e auditoria. Registros levam `[CEN-<FLUXO>-NN]`
+no nome/descrição; usuários têm login `cen_*` (senha do `admin`; TOTP `JBSWY3DPEHPK3PXP` em `cen_admin2fa`,
+`cen_admin_bloqueado` com 5 falhas, `cen_admin2fa_setup` sem 2FA configurado). Ao final o script imprime uma
+conferência de contagens (`ok = t`) e invariantes (todas devem ser 0).
+
+Tokens públicos fixos (NN com 12 dígitos, ex. `00000ce0-0001-4000-8000-000000000010`):
+
+- `/acompanhamento/00000ce0-0001-4000-8000-0000000000NN`: NN 01–25 roteirizados (01 NOVO sem itens … 10–15
+  ENTREGUE com saldo/aging, 16–17 CANCELADO, 18 sem data de entrega); 101–155 CONFIRMADO, 201–212 CANCELADO,
+  301–352 EM_PRODUCAO, 401–460 ENTREGUE (paginação >50 e kanban)
+- `/orcamento-publico/00000ce0-0002-4000-8000-0000000000NN`: 01 PENDENTE, 02 vence em 2 dias, 03 vencido,
+  04 APROVADO, 05 APROVADO vencido, 06 convertido, 07 RECUSADO, 08 EXPIRADO, 09 sem itens, 10 com 8 itens,
+  11 vence amanhã, 12 vence hoje; 101–155 PENDENTE
+- reset de senha `00000ce0-0003-4000-8000-0000000000NN`: 01–03 válidos, 04–06 expirados, 07–08 usados,
+  09 usuário sem e-mail, 10 usuário inativo
+
+`configuracao_canal` (ativo/test_mode) não é alterado: ligue os canais em `/notificacoes` para testar envio.
+`campanha_reengajamento` não tem entidade nem tela (campanha é fila em memória) e não é populada. Com o seed
+pesado já aplicado, o `orcamentos_gasto` do mês corrente dele prevalece sobre o do cenário.
+
 ## 9. Referências cruzadas
 
 - [docs/01-infraestrutura.md](01-infraestrutura.md) — detalhes de stack, bancos, portas.
