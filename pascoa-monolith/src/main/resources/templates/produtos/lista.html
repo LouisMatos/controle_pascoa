@@ -77,8 +77,7 @@
                                 </button>
                             </form>
                             <form th:action="@{/produtos/{id}/excluir(id=${p.id})}" method="post"
-                                  class="d-inline"
-                                  onsubmit="return confirm('Confirma a exclusão deste produto?')">
+                                  class="d-inline" data-confirm="Confirma a exclusão deste produto?">
                                 <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir">
                                     <i class="bi bi-trash"></i>
                                 </button>

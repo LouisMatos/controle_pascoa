@@ -63,7 +63,7 @@ public class SecurityConfig {
         "style-src 'self' 'unsafe-inline' cdn.jsdelivr.net; " +
         "font-src 'self' cdn.jsdelivr.net; " +
         "img-src 'self' data:; " +
-        "connect-src 'self'; " +
+        "connect-src 'self' cdn.jsdelivr.net; " +
         "frame-ancestors 'none'";
 
     @Bean

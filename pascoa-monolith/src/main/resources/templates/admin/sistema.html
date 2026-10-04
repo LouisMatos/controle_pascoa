@@ -50,9 +50,9 @@
                                 th:class="${config.modoManutencao}
                                     ? 'btn btn-success w-100'
                                     : 'btn btn-warning w-100'"
-                                th:onclick="${config.modoManutencao}
-                                    ? 'return confirm(\'Desativar o modo manutenção?\')'
-                                    : 'return confirm(\'Ativar o modo manutenção? Usuários não-ADMIN serão bloqueados.\')'"
+                                th:data-confirm="${config.modoManutencao}
+                                    ? 'Desativar o modo manutenção?'
+                                    : 'Ativar o modo manutenção? Usuários não-ADMIN serão bloqueados.'"
                                 >
                             <i th:class="${config.modoManutencao}
                                 ? 'bi bi-play-circle me-2'

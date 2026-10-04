@@ -176,8 +176,7 @@
                     <!-- Cancelar -->
                     <form th:if="${ordem.status.podeCancelar()}"
                           th:action="@{/producao/{id}/cancelar(id=${ordem.id})}" method="post">
-                        <button type="submit" class="btn btn-outline-danger w-100"
-                                onclick="return confirm('Cancelar esta ordem de produção?')">
+                        <button type="submit" class="btn btn-outline-danger w-100" data-confirm="Cancelar esta ordem de produção?">
                             <i class="bi bi-x-circle me-2"></i>Cancelar Ordem
                         </button>
                     </form>

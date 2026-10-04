@@ -17,8 +17,7 @@
                     <i class="bi bi-check2-all me-1"></i>Marcar todos lidos
                 </button>
             </form>
-            <form th:action="@{/alertas/excluir-lidos}" method="post"
-                  onsubmit="return confirm('Excluir todos os alertas lidos?')">
+            <form th:action="@{/alertas/excluir-lidos}" method="post" data-confirm="Excluir todos os alertas lidos?">
                 <button type="submit" class="btn btn-sm btn-outline-danger">
                     <i class="bi bi-trash me-1"></i>Limpar lidos
                 </button>
@@ -101,8 +100,7 @@
                         </button>
                     </form>
                     <!-- Excluir -->
-                    <form th:action="@{/alertas/{id}/excluir(id=${a.id})}" method="post"
-                          onsubmit="return confirm('Excluir este alerta?')">
+                    <form th:action="@{/alertas/{id}/excluir(id=${a.id})}" method="post" data-confirm="Excluir este alerta?">
                         <input type="hidden" name="filtro" th:value="${filtro}">
                         <button type="submit" class="btn btn-sm btn-outline-danger"
                                 title="Excluir alerta">

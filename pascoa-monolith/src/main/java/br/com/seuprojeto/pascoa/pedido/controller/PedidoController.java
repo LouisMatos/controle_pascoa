@@ -115,6 +115,10 @@ public class PedidoController {
     @PostMapping("/salvar")
     public String salvar(@Valid @ModelAttribute("form") PedidoForm form,
                          BindingResult result, Model model, RedirectAttributes ra) {
+        if (form.getId() == null && form.getDataEntrega() != null
+                && form.getDataEntrega().isBefore(LocalDate.now())) {
+            result.rejectValue("dataEntrega", "passado", "Data de entrega não pode ser no passado");
+        }
         if (result.hasErrors()) {
             model.addAttribute("clientes", clienteService.listarTodos());
             return "pedidos/form";
@@ -125,9 +129,10 @@ public class PedidoController {
                 : pedidoService.atualizar(form.getId(), form);
             ra.addFlashAttribute("sucesso", "Pedido salvo! Agora adicione os produtos.");
             return "redirect:/pedidos/" + pedido.getId();
-        } catch (IllegalStateException e) {
-            ra.addFlashAttribute("erro", e.getMessage());
-            return "redirect:/pedidos";
+        } catch (RuntimeException e) {
+            model.addAttribute("clientes", clienteService.listarTodos());
+            model.addAttribute("erro", e.getMessage());
+            return "pedidos/form";
         }
     }
 
@@ -195,8 +200,12 @@ public class PedidoController {
     @PostMapping("/{id}/confirmar")
     public String confirmar(@PathVariable Long id, RedirectAttributes ra) {
         try {
+            List<String> avisos = pedidoService.avisosProducao(id);
             pedidoService.confirmar(id);
             ra.addFlashAttribute("sucesso", "Pedido confirmado!");
+            if (!avisos.isEmpty()) {
+                ra.addFlashAttribute("aviso", "Atenção na produção — " + String.join("; ", avisos));
+            }
         } catch (Exception e) {
             ra.addFlashAttribute("erro", e.getMessage());
         }

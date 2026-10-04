@@ -28,6 +28,9 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
            countQuery = "SELECT count(p) FROM Pedido p WHERE p.status = :status")
     Page<Pedido> findByStatusComCliente(@Param("status") StatusPedido status, Pageable pageable);
 
+    @Query("SELECT p FROM Pedido p LEFT JOIN FETCH p.cliente WHERE p.status = :status ORDER BY p.dataPedido DESC")
+    List<Pedido> findByStatusComCliente(@Param("status") StatusPedido status);
+
     @Query("SELECT DISTINCT p FROM Pedido p " +
            "LEFT JOIN FETCH p.itens i " +
            "LEFT JOIN FETCH i.produto " +

@@ -159,8 +159,7 @@
         <!-- Converter em Pedido (apenas APROVADO e sem pedido) -->
         <form th:if="${orc.isAprovado() and orc.pedido == null}"
               th:action="@{/orcamentos/{id}/converter(id=${orc.id})}" method="post">
-            <button type="submit" class="btn btn-success"
-                    onclick="return confirm('Converter este orçamento em pedido?')">
+            <button type="submit" class="btn btn-success" data-confirm="Converter este orçamento em pedido?">
                 <i class="bi bi-cart-plus me-1"></i>Converter em Pedido
             </button>
         </form>
@@ -168,8 +167,7 @@
         <!-- Excluir (apenas PENDENTE) -->
         <form th:if="${orc.isPendente()}"
               th:action="@{/orcamentos/{id}/excluir(id=${orc.id})}" method="post">
-            <button type="submit" class="btn btn-outline-danger"
-                    onclick="return confirm('Excluir este orçamento?')">
+            <button type="submit" class="btn btn-outline-danger" data-confirm="Excluir este orçamento?">
                 <i class="bi bi-trash me-1"></i>Excluir
             </button>
         </form>

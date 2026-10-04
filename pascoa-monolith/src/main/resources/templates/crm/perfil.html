@@ -178,8 +178,7 @@
                             <p class="mb-1 small" th:text="${nota.texto}"></p>
                             <form th:action="@{/crm/clientes/{id}/notas/{nid}/excluir(id=${cliente.id},nid=${nota.id})}"
                                   method="post" class="ms-2">
-                                <button type="submit" class="btn btn-xs btn-outline-danger py-0 px-1"
-                                        onclick="return confirm('Remover nota?')">
+                                <button type="submit" class="btn btn-xs btn-outline-danger py-0 px-1" data-confirm="Remover nota?">
                                     <i class="bi bi-trash" style="font-size:.7rem;"></i>
                                 </button>
                             </form>

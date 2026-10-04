@@ -7,6 +7,7 @@ import br.com.seuprojeto.pascoa.notificacao.repository.NotificacaoEnviadaReposit
 import br.com.seuprojeto.pascoa.notificacao.repository.TemplateNotificacaoRepository;
 import br.com.seuprojeto.pascoa.orcamento.entity.Orcamento;
 import br.com.seuprojeto.pascoa.pedido.entity.Pedido;
+import br.com.seuprojeto.pascoa.pedido.repository.PedidoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,6 +46,7 @@ public class NotificacaoService {
     private final WhatsAppService               whatsAppService;
     private final EmailService                  emailService;
     private final SmsService                    smsService;
+    private final PedidoRepository              pedidoRepository;
 
     @Value("${app.base-url:http://localhost:8080}")
     private String baseUrl;
@@ -59,7 +61,8 @@ public class NotificacaoService {
      * Processa evento de status de pedido — para todos os canais configurados.
      */
     @Transactional
-    public void processar(Pedido pedido, EventoNotificacao evento) {
+    public void processar(Pedido pedidoEvento, EventoNotificacao evento) {
+        Pedido pedido = pedidoRepository.findByIdComItens(pedidoEvento.getId()).orElse(pedidoEvento);
         Cliente cliente = pedido.getCliente();
         Map<String, String> vars = variaveisPedido(pedido);
         for (CanalNotificacao canal : CanalNotificacao.values()) {

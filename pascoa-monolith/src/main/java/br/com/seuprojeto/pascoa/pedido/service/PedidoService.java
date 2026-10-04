@@ -109,6 +109,9 @@ public class PedidoService {
         if (produtoIds == null || produtoIds.isEmpty()) {
             throw new IllegalArgumentException("O pedido precisa ter pelo menos um produto.");
         }
+        if (dataEntrega != null && dataEntrega.isBefore(LocalDate.now())) {
+            throw new IllegalArgumentException("Data de entrega não pode ser no passado.");
+        }
         Cliente cliente = clienteRepository.findVigenteById(clienteId)
             .orElseThrow(() -> new RecursoNaoEncontradoException("Cliente não encontrado"));
 
@@ -147,6 +150,9 @@ public class PedidoService {
                 .precoUnitario(produto.getPrecoVenda())
                 .build());
             total = total.add(produto.getPrecoVenda().multiply(BigDecimal.valueOf(qtd)));
+        }
+        if (itens.isEmpty()) {
+            throw new IllegalArgumentException("Informe pelo menos um produto com quantidade maior que zero.");
         }
         itemRepository.saveAll(itens);
 
@@ -235,6 +241,33 @@ public class PedidoService {
         producaoService.gerarOrdens(pedido);   // usa pedido (com itens carregados via findByIdComItens)
         eventPublisher.publishEvent(new PedidoStatusEvent(pedido, EventoNotificacao.PEDIDO_CONFIRMADO));
         return pedido;
+    }
+
+    @Transactional(readOnly = true)
+    public List<String> avisosProducao(Long pedidoId) {
+        Pedido pedido = buscarPorId(pedidoId);
+        List<Long> produtoIds = pedido.getItens().stream().map(i -> i.getProduto().getId()).distinct().toList();
+        Map<Long, FichaTecnica> fichas = fichaTecnicaService.buscarPorProdutoIds(produtoIds).stream()
+            .collect(Collectors.toMap(f -> f.getProduto().getId(), f -> f));
+        List<String> avisos = new ArrayList<>();
+        for (ItemPedido item : pedido.getItens()) {
+            String nome = item.getProduto().getNome();
+            FichaTecnica ficha = fichas.get(item.getProduto().getId());
+            if (ficha == null || ficha.getItens().isEmpty()
+                    || ficha.getRendimento() == null || ficha.getRendimento().signum() <= 0) {
+                avisos.add(nome + ": sem ficha técnica válida");
+                continue;
+            }
+            BigDecimal qtd = BigDecimal.valueOf(item.getQuantidade());
+            for (var fi : ficha.getItens()) {
+                BigDecimal necessario = fi.getQuantidade().multiply(qtd)
+                    .divide(ficha.getRendimento(), 4, java.math.RoundingMode.HALF_UP);
+                if (fi.getMateriaPrima().getQuantidadeAtual().compareTo(necessario) < 0) {
+                    avisos.add(nome + ": estoque insuficiente de " + fi.getMateriaPrima().getNome());
+                }
+            }
+        }
+        return avisos;
     }
 
     @Auditavel(acao = "CANCELAR_PEDIDO", entidade = "Pedido")

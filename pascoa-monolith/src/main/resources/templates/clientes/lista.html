@@ -58,8 +58,7 @@
                             </a>
                             <form th:action="@{/clientes/{id}/excluir(id=${c.id})}" method="post"
                                   class="d-inline"
-                                  onsubmit="return confirm('Confirma a exclusão de ' + this.dataset.nome + '?')"
-                                  th:data-nome="${c.nome}">
+                                  th:data-confirm="'Confirma a exclusão de ' + ${c.nome} + '?'">
                                 <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir">
                                     <i class="bi bi-trash"></i>
                                 </button>

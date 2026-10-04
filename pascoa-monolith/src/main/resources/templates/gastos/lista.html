@@ -138,8 +138,7 @@
                                 <i class="bi bi-pencil"></i>
                             </a>
                             <form th:action="@{/gastos/{id}/excluir(id=${g.id})}"
-                                  method="post" class="d-inline"
-                                  onsubmit="return confirm('Excluir este gasto?')">
+                                  method="post" class="d-inline" data-confirm="Excluir este gasto?">
                                 <button type="submit" class="btn btn-sm btn-outline-danger">
                                     <i class="bi bi-trash"></i>
                                 </button>

@@ -52,8 +52,7 @@
             </a>
             <form th:if="${pedido.status.podeConfirmar()}"
                   th:action="@{/pedidos/{id}/confirmar(id=${pedido.id})}" method="post" class="d-inline">
-                <button type="submit" class="btn btn-success btn-sm"
-                        onclick="return confirm('Confirmar o pedido? Isso gerará as ordens de produção.')">
+                <button type="submit" class="btn btn-success btn-sm" data-confirm="Confirmar o pedido? Isso gerará as ordens de produção.">
                     <i class="bi bi-check2-circle me-1"></i>Confirmar Pedido
                 </button>
             </form>
@@ -65,15 +64,13 @@
             </form>
             <form th:if="${pedido.status.podeEntregar()}"
                   th:action="@{/pedidos/{id}/entrega(id=${pedido.id})}" method="post" class="d-inline">
-                <button type="submit" class="btn btn-dark btn-sm"
-                        onclick="return confirm('Confirmar a entrega do pedido?')">
+                <button type="submit" class="btn btn-dark btn-sm" data-confirm="Confirmar a entrega do pedido?">
                     <i class="bi bi-truck me-1"></i>Registrar Entrega
                 </button>
             </form>
             <form th:if="${pedido.status.podeCancelar()}"
                   th:action="@{/pedidos/{id}/cancelar(id=${pedido.id})}" method="post" class="d-inline">
-                <button type="submit" class="btn btn-outline-danger btn-sm"
-                        onclick="return confirm('Tem certeza que deseja cancelar este pedido?')">
+                <button type="submit" class="btn btn-outline-danger btn-sm" data-confirm="Tem certeza que deseja cancelar este pedido?">
                     <i class="bi bi-x-circle me-1"></i>Cancelar
                 </button>
             </form>
@@ -184,8 +181,7 @@
                                 </td>
                                 <td th:if="${pedido.status.podeAdicionarItens()}" class="text-center pe-3">
                                     <form th:action="@{/pedidos/{pid}/item/{iid}/excluir(pid=${pedido.id}, iid=${item.id})}"
-                                          method="post"
-                                          onsubmit="return confirm('Remover este item?')">
+                                          method="post" data-confirm="Remover este item?">
                                         <button type="submit" class="btn btn-sm btn-outline-danger">
                                             <i class="bi bi-trash"></i>
                                         </button>
