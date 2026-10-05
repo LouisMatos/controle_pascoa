@@ -5,6 +5,9 @@ import br.com.seuprojeto.pascoa.producao.entity.OrdemProducao;
 import br.com.seuprojeto.pascoa.shared.pdf.PdfKit;
 import com.lowagie.text.DocumentException;
 import com.lowagie.text.Element;
+import com.lowagie.text.Phrase;
+import com.lowagie.text.Rectangle;
+import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import org.springframework.stereotype.Service;
 
@@ -60,25 +63,33 @@ public class ProducaoPdfService {
                     pdf.addTd(tbl, l.custoUnitario() == null ? "-" : PdfKit.brl(l.custoUnitario()), Element.ALIGN_RIGHT);
                     pdf.addTd(tbl, PdfKit.brl(l.custo()), Element.ALIGN_RIGHT);
                 }
-                pdf.addTd(tbl, "CUSTO TOTAL", Element.ALIGN_LEFT);
-                pdf.addTd(tbl, "", Element.ALIGN_RIGHT);
-                pdf.addTd(tbl, "", Element.ALIGN_RIGHT);
-                pdf.addTd(tbl, "", Element.ALIGN_RIGHT);
-                pdf.addTd(tbl, PdfKit.brl(receita.custoTotal()), Element.ALIGN_RIGHT);
-                pdf.addTd(tbl, "Custo por unidade", Element.ALIGN_LEFT);
-                pdf.addTd(tbl, "", Element.ALIGN_RIGHT);
-                pdf.addTd(tbl, "", Element.ALIGN_RIGHT);
-                pdf.addTd(tbl, "", Element.ALIGN_RIGHT);
-                pdf.addTd(tbl, PdfKit.brl(receita.custoPorUnidade()), Element.ALIGN_RIGHT);
+                totalRow(pdf, tbl, "CUSTO TOTAL", PdfKit.brl(receita.custoTotal()));
+                totalRow(pdf, tbl, "Custo por unidade", PdfKit.brl(receita.custoPorUnidade()));
                 pdf.add(tbl);
             }
 
             pdf.observacoes(ordem.getObservacoes());
-            pdf.rodape();
+            pdf.rodape("Ordem de producao - uso interno. Pascoa Artesanal.");
             return pdf.finalizar();
         } catch (DocumentException | IOException e) {
             throw new RuntimeException("Erro ao gerar PDF da ordem de producao #" + ordem.getId(), e);
         }
+    }
+
+    private static void totalRow(PdfKit pdf, PdfPTable tbl, String rotulo, String valor) {
+        tbl.addCell(boldCell(pdf, rotulo, Element.ALIGN_LEFT));
+        for (int i = 0; i < 3; i++) {
+            tbl.addCell(boldCell(pdf, "", Element.ALIGN_RIGHT));
+        }
+        tbl.addCell(boldCell(pdf, valor, Element.ALIGN_RIGHT));
+    }
+
+    private static PdfPCell boldCell(PdfKit pdf, String texto, int align) {
+        PdfPCell c = new PdfPCell(new Phrase(texto, pdf.fNegrito));
+        c.setHorizontalAlignment(align);
+        c.setPadding(5f);
+        c.setBorder(Rectangle.BOTTOM);
+        return c;
     }
 
     private static String qtd(BigDecimal v) {

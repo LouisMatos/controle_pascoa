@@ -171,6 +171,10 @@ public class PdfKit implements AutoCloseable {
     }
 
     public void rodape() throws DocumentException {
+        rodape("Obrigado pela preferencia! Pascoa Artesanal.");
+    }
+
+    public void rodape(String mensagem) throws DocumentException {
         PdfPTable sep = new PdfPTable(1);
         sep.setWidthPercentage(100f);
         PdfPCell cell = new PdfPCell(new Phrase(" "));
@@ -180,7 +184,7 @@ public class PdfKit implements AutoCloseable {
         cell.setPaddingBottom(4f);
         sep.addCell(cell);
         doc.add(sep);
-        doc.add(centralizado("Obrigado pela preferencia! Pascoa Artesanal.", fPeq));
+        doc.add(centralizado(mensagem, fPeq));
     }
 
     public byte[] finalizar() {
