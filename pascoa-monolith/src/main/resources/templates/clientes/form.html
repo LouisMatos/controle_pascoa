@@ -36,16 +36,20 @@
                         <label class="form-label fw-semibold" for="cpf">CPF</label>
                         <input type="text" class="form-control"
                                th:field="*{cpf}" autocomplete="off" inputmode="numeric"
+                               th:classappend="${#fields.hasErrors('cpf')} ? 'is-invalid'"
                                placeholder="000.000.000-00"
                                maxlength="14">
+                        <div class="invalid-feedback" th:errors="*{cpf}"></div>
                     </div>
 
                     <div class="col-md-3">
                         <label class="form-label fw-semibold" for="telefone">Telefone</label>
                         <input type="text" class="form-control"
                                th:field="*{telefone}" autocomplete="tel" inputmode="tel"
+                               th:classappend="${#fields.hasErrors('telefone')} ? 'is-invalid'"
                                placeholder="(00) 00000-0000"
                                maxlength="20">
+                        <div class="invalid-feedback" th:errors="*{telefone}"></div>
                     </div>
 
                     <div class="col-md-5">

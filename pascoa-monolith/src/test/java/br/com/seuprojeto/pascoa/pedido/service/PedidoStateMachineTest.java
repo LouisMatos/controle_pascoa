@@ -12,6 +12,7 @@ import br.com.seuprojeto.pascoa.gastos.repository.GastoVariavelRepository;
 import br.com.seuprojeto.pascoa.notificacao.repository.AlertaInternoRepository;
 import br.com.seuprojeto.pascoa.pedido.dto.PagamentoForm;
 import br.com.seuprojeto.pascoa.pedido.entity.Pedido;
+import br.com.seuprojeto.pascoa.producao.entity.StatusOrdem;
 import br.com.seuprojeto.pascoa.pedido.entity.TipoPagamento;
 import br.com.seuprojeto.pascoa.pedido.entity.StatusPedido;
 import br.com.seuprojeto.pascoa.pedido.repository.PedidoRepository;
@@ -94,6 +95,27 @@ class PedidoStateMachineTest {
         return pedido;
     }
 
+    private void concluirOrdens(Long pedidoId) {
+        em.createQuery("update OrdemProducao o set o.status = :s where o.pedido.id = :p")
+                .setParameter("s", StatusOrdem.CONCLUIDA)
+                .setParameter("p", pedidoId)
+                .executeUpdate();
+        em.clear();
+    }
+
+    @Test
+    @DisplayName("CONFIRMADO com OP aberta → marcarPronto lança IllegalStateException")
+    @WithMockUser(roles = "ADMIN")
+    void marcarPronto_comOrdemAberta_lancaExcecao() {
+        Pedido pedido = pedidoNovo();
+        pedidoService.confirmar(pedido.getId());
+        em.flush();
+        em.clear();
+
+        assertThatThrownBy(() -> pedidoService.marcarPronto(pedido.getId()))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
     // ══════════════════════════════════════════════════════════════════════════
     // Transições válidas
     // ══════════════════════════════════════════════════════════════════════════
@@ -141,7 +163,7 @@ class PedidoStateMachineTest {
         Pedido pedido = pedidoNovo();
         pedidoService.confirmar(pedido.getId());
         em.flush();
-        em.clear();
+        concluirOrdens(pedido.getId());
 
         Pedido pronto = pedidoService.marcarPronto(pedido.getId());
 
@@ -154,7 +176,8 @@ class PedidoStateMachineTest {
     void entregar_dePronto_ficaEntregue() {
         Pedido pedido = pedidoNovo();
         pedidoService.confirmar(pedido.getId());
-        em.flush(); em.clear();
+        em.flush();
+        concluirOrdens(pedido.getId());
         pedidoService.marcarPronto(pedido.getId());
         em.flush(); em.clear();
 
@@ -202,7 +225,8 @@ class PedidoStateMachineTest {
     void cancelar_entregue_lancaExcecao() {
         Pedido pedido = pedidoNovo();
         pedidoService.confirmar(pedido.getId());
-        em.flush(); em.clear();
+        em.flush();
+        concluirOrdens(pedido.getId());
         pedidoService.marcarPronto(pedido.getId());
         em.flush(); em.clear();
         pedidoService.registrarEntrega(pedido.getId());

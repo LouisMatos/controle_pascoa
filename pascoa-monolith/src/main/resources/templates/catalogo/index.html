@@ -44,7 +44,7 @@
          class="row row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4 g-4">
         <div th:each="p : ${produtos}" class="col">
             <div class="card h-100 produto-card shadow-sm">
-                <a th:href="@{/catalogo/{id}(id=${p.id})}">
+                <a th:href="@{/catalogo/{id}(id=${p.id})}" th:aria-label="${p.nome}">
                     <img th:if="${p.foto != null and !p.foto.isEmpty()}"
                          th:src="@{/media/{f}(f=${p.foto})}"
                          th:alt="${p.nome}" class="produto-img card-img-top">

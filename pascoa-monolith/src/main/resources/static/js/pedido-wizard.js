@@ -11,6 +11,10 @@
     }
   });
 
+const hoje = new Date();
+document.getElementById('inpDataEntrega').min =
+  hoje.getFullYear() + '-' + String(hoje.getMonth() + 1).padStart(2, '0') + '-' + String(hoje.getDate()).padStart(2, '0');
+
 // ============================================================
 // Estado do wizard
 // ============================================================
@@ -135,7 +139,15 @@ function irPara(passo) {
     document.getElementById('itensErro').classList.remove('d-none');
     irParaStep(2); return;
   }
-  if (passo === 4) construirResumo();
+  if (passo === 4) {
+    const inpData = document.getElementById('inpDataEntrega');
+    if (inpData.value && inpData.value < inpData.min) {
+      inpData.classList.add('is-invalid');
+      irParaStep(3); return;
+    }
+    inpData.classList.remove('is-invalid');
+    construirResumo();
+  }
   irParaStep(passo);
 }
 

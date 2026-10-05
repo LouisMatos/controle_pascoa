@@ -733,6 +733,17 @@ Pendentes (fora do escopo de design):
 
 ---
 
+## 25c. Correções da varredura com agent-browser (2026-10-04)
+
+- `PedidoService.marcarPronto` bloqueia enquanto houver OP PENDENTE/EM_ANDAMENTO (pedido não pula mais a produção).
+- Cliente: `@CPF`, `@Pattern` no telefone, e-mail duplicado rejeitado (`ClienteService.emailDuplicado`); erros exibidos em `clientes/form.html`.
+- Wizard de pedido: `min` na data de entrega (validado no passo 3) e `invalid-feedback` nos campos do passo 2.
+- Importação de gastos retorna `ResultadoImportacao` e informa as linhas ignoradas.
+- `/actuator/health` sem health do mail (SMTP externo não derruba o probe); `/error` público + `templates/error.html` (sem Whitelabel).
+- Acessibilidade: `aria-label` em botões/links só com ícone; `.table-responsive{position:relative}` corrige scroll horizontal mobile.
+
+---
+
 ## 26. Próximas Sessões — Prioridade Sugerida
 
 1. **Simulador de cenários financeiros** — "e se aumentar o preço X%? vender Y unidades a mais?" (monólito)

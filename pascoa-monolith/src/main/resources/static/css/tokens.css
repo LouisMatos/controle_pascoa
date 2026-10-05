@@ -134,3 +134,6 @@ font-size:1.1rem; color:#adb5bd; transition:all .2s;
 .step-indicator.done .step-label      { color:#198754; }
 
 .fs-icon-2 { font-size: 2rem; } .fs-icon-5 { font-size: 5rem; } .mw-900 { max-width: 900px; } .progress-6 { height: 6px; }
+
+/* Evita que .visually-hidden dentro de tabelas estenda o scroll da página no mobile */
+.table-responsive { position: relative; }

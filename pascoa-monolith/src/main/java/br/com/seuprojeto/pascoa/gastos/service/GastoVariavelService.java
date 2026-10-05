@@ -86,8 +86,10 @@ public class GastoVariavelService {
 
     @PreAuthorize("hasAnyRole('ADMIN', 'FINANCEIRO')")
     @Transactional
-    public int importarCSV(MultipartFile file, String usuario) throws Exception {
+    public ResultadoImportacao importarCSV(MultipartFile file, String usuario) throws Exception {
         int importados = 0;
+        List<String> erros = new ArrayList<>();
+        int numeroLinha = 0;
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         try (BufferedReader reader = new BufferedReader(
@@ -97,12 +99,16 @@ public class GastoVariavelService {
             boolean primeiraLinha = true;
 
             while ((linha = reader.readLine()) != null) {
+                numeroLinha++;
                 linha = linha.trim();
                 if (linha.isEmpty()) { continue; }
                 if (primeiraLinha) { primeiraLinha = false; continue; }
 
                 String[] campos = parseCsvLine(linha);
-                if (campos.length < 4) { continue; }
+                if (campos.length < 4) {
+                    erros.add("Linha " + numeroLinha + ": esperado descricao,valor,data,categoria");
+                    continue;
+                }
 
                 try {
                     String descricao = campos[0].trim();
@@ -123,13 +129,16 @@ public class GastoVariavelService {
                             .build();
                     gastoRepo.save(gasto);
                     importados++;
-                } catch (Exception ignored) {
-                    // Linha inválida: pula sem interromper o lote
+                } catch (Exception e) {
+                    // Linha inválida: registra e segue o lote
+                    erros.add("Linha " + numeroLinha + ": valor, data (yyyy-MM-dd) ou categoria inválidos");
                 }
             }
         }
-        return importados;
+        return new ResultadoImportacao(importados, erros);
     }
+
+    public record ResultadoImportacao(int importados, List<String> erros) { }
 
     private String[] parseCsvLine(String linha) {
         List<String> campos = new ArrayList<>();

@@ -310,6 +310,9 @@ public class PedidoService {
         if (!pedido.getStatus().podePronto()) {
             throw new IllegalStateException("Pedido deve estar CONFIRMADO ou EM_PRODUCAO.");
         }
+        if (producaoService.existeOrdem(id, StatusOrdem.PENDENTE, StatusOrdem.EM_ANDAMENTO)) {
+            throw new IllegalStateException("Há ordens de produção em aberto. Conclua a produção antes de marcar como PRONTO.");
+        }
         return aplicarStatus(pedido, StatusPedido.PRONTO, EventoNotificacao.PEDIDO_PRONTO);
     }
 

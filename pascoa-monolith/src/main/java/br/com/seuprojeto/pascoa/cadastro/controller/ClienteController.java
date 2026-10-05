@@ -49,6 +49,9 @@ public class ClienteController {
     @PostMapping("/salvar")
     public String salvar(@Valid @ModelAttribute("cliente") Cliente clienteForm,
                          BindingResult result, RedirectAttributes ra) {
+        if (service.emailDuplicado(clienteForm.getEmail(), clienteForm.getId())) {
+            result.rejectValue("email", "duplicado", "E-mail já cadastrado");
+        }
         if (result.hasErrors()) {
             return "clientes/form";
         }

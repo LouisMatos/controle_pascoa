@@ -151,11 +151,13 @@
                         th:text="${p.nome} + ' — R$ ' + ${#numbers.formatDecimal(p.precoVenda,1,'POINT',2,'COMMA')}">
                 </option>
               </select>
+              <div class="invalid-feedback">Selecione um produto.</div>
             </div>
             <div class="col-sm-2">
               <label class="form-label fw-semibold small mb-1" for="inpQtd">Qtd</label>
               <input type="number" id="inpQtd" class="form-control form-control-sm"
                      min="1" max="999" value="1"/>
+              <div class="invalid-feedback">Mín. 1.</div>
             </div>
             <div class="col-sm-3">
               <button type="button" class="btn btn-success btn-sm w-100" data-add-item>
@@ -223,6 +225,7 @@
             <div class="col-md-6">
               <label class="form-label fw-semibold" for="inpDataEntrega">Data de Entrega</label>
               <input type="date" id="inpDataEntrega" class="form-control"/>
+              <div class="invalid-feedback">A data de entrega não pode ser no passado.</div>
               <div class="form-text">Deixe em branco se ainda não definida.</div>
             </div>
             <div class="col-md-4">

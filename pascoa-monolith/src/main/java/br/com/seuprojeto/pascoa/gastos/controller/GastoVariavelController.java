@@ -199,9 +199,16 @@ public class GastoVariavelController {
             return "redirect:/gastos/importar";
         }
         try {
-            int total = service.importarCSV(arquivo, usuario.getUsername());
-            redirectAttributes.addFlashAttribute("sucesso",
-                    total + " gasto(s) importado(s) com sucesso.");
+            var resultado = service.importarCSV(arquivo, usuario.getUsername());
+            if (!resultado.erros().isEmpty()) {
+                redirectAttributes.addFlashAttribute("erro", resultado.importados()
+                        + " importado(s); " + resultado.erros().size() + " linha(s) ignorada(s): "
+                        + String.join(" | ", resultado.erros().stream().limit(5).toList()));
+            }
+            if (resultado.importados() > 0) {
+                redirectAttributes.addFlashAttribute("sucesso",
+                        resultado.importados() + " gasto(s) importado(s) com sucesso.");
+            }
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("erro",
                     "Erro ao processar o arquivo: " + e.getMessage());

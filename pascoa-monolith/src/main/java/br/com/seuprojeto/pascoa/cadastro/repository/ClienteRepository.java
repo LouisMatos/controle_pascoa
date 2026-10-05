@@ -48,4 +48,8 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
 
     @Query("SELECT c FROM Cliente c WHERE c.excluidoEm IS NULL AND c.id = :id")
     java.util.Optional<Cliente> findVigenteById(@Param("id") Long id);
+
+    boolean existsByEmailIgnoreCase(String email);
+
+    boolean existsByEmailIgnoreCaseAndIdNot(String email, Long id);
 }

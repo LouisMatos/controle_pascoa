@@ -94,6 +94,7 @@ public class SecurityConfig {
                 .requestMatchers("/catalogo/**").permitAll()
                 .requestMatchers("/uploads/**").permitAll()  // legado — mantido por compatibilidade
                 .requestMatchers("/media/**").permitAll()
+                .requestMatchers("/error").permitAll()
                 // PWA
                 .requestMatchers("/manifest.json", "/sw.js", "/icons/**", "/css/**", "/js/**").permitAll()
                 // Apenas ADMIN

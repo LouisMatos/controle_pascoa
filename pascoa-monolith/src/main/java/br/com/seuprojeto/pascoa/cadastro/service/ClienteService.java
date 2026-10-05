@@ -46,6 +46,16 @@ public class ClienteService {
         return repository.save(cliente);
     }
 
+    @Transactional(readOnly = true)
+    public boolean emailDuplicado(String email, Long id) {
+        if (email == null || email.isBlank()) {
+            return false;
+        }
+        return id == null
+            ? repository.existsByEmailIgnoreCase(email)
+            : repository.existsByEmailIgnoreCaseAndIdNot(email, id);
+    }
+
     @Transactional
     public void excluir(Long id) {
         Cliente cliente = buscarPorId(id);
