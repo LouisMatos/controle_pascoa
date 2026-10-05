@@ -16,15 +16,80 @@
   --pascoa-border: #e5e7eb;
 }
 
-/* Indicação de item ativo no navbar */
-.active-group .nav-link {
-  font-weight: 600;
-  border-bottom: 3px solid var(--pascoa-brand);
-  padding-bottom: calc(0.5rem - 3px);
+/* Topmenu: claro, translúcido, itens em pílula */
+.topmenu {
+  background: rgba(255, 255, 255, .88);
+  backdrop-filter: saturate(180%) blur(12px);
+  border: 1px solid rgba(229, 231, 235, .8);
+  border-radius: 1rem;
+  box-shadow: 0 8px 24px rgba(17, 24, 39, .08), 0 1px 3px rgba(17, 24, 39, .06);
+  margin: .75rem .75rem 0;
+  top: .75rem;
+  padding-inline: .5rem;
+  --bs-navbar-color: var(--pascoa-muted);
+  --bs-navbar-hover-color: var(--pascoa-ink);
+  --bs-navbar-active-color: var(--pascoa-brand-dark);
+  --bs-navbar-brand-color: var(--pascoa-brand-dark);
+  --bs-navbar-brand-hover-color: var(--pascoa-brand);
+  --bs-navbar-toggler-border-color: var(--pascoa-border);
+}
+.topmenu .navbar-brand { color: var(--pascoa-brand-dark); font-size: 1.05rem; }
+.topmenu .nav-link {
+  border-radius: .5rem;
+  padding: .4rem .75rem;
+  transition: background-color .15s ease, color .15s ease;
+}
+@media (min-width: 992px) {
+  .topmenu .navbar-nav { gap: .15rem; margin-left: 1rem; }
+}
+.topmenu .nav-link:hover,
+.topmenu .nav-link.show {
+  background: #f3f4f6;
+  color: var(--pascoa-ink);
+}
+.topmenu .dropdown-menu {
+  border: 1px solid var(--pascoa-border);
+  border-radius: .75rem;
+  box-shadow: 0 10px 30px rgba(17, 24, 39, .1);
+  padding: .4rem;
+  margin-top: .4rem;
+  animation: topmenu-in .14s ease-out;
+}
+.topmenu .dropdown-item {
+  border-radius: .45rem;
+  padding: .4rem .7rem;
+  font-size: .9rem;
+}
+.topmenu .dropdown-item:hover,
+.topmenu .dropdown-item:focus {
+  background: var(--pascoa-brand-light);
+  color: var(--pascoa-brand-dark);
+}
+.topmenu .dropdown-header {
+  font-size: .68rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--pascoa-muted);
+  padding: .4rem .7rem .2rem;
+}
+.topmenu .dropdown-divider { margin: .35rem .3rem; border-color: var(--pascoa-border); }
+.topmenu-user { color: var(--pascoa-muted); }
+.topmenu-sair { border: 1px solid var(--pascoa-border); background: #fff; color: var(--pascoa-ink); border-radius: .5rem; }
+.topmenu-sair:hover { background: #f3f4f6; }
+@keyframes topmenu-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .topmenu .dropdown-menu { animation: none; }
+  .topmenu .nav-link { transition: none; }
 }
 
-.active-group .dropdown-toggle::after {
-  border-top-color: var(--pascoa-brand);
+/* Indicação de item ativo no navbar */
+.topmenu .active-group > .nav-link {
+  font-weight: 600;
+  background: var(--pascoa-brand-light);
+  color: var(--pascoa-brand-dark);
 }
 
 /* Telas de cadastro */
