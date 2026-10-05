@@ -98,6 +98,12 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     BigDecimal sumTotalPorStatusAndMes(@Param("statuses") List<StatusPedido> statuses,
                                        @Param("mes") int mes, @Param("ano") int ano);
 
+    @Query("SELECT COALESCE(SUM(i.quantidade * i.custoUnitario), 0) FROM ItemPedido i " +
+           "WHERE i.pedido.status IN :statuses " +
+           "AND MONTH(i.pedido.dataPedido) = :mes AND YEAR(i.pedido.dataPedido) = :ano")
+    BigDecimal sumCustoInsumosPorStatusAndMes(@Param("statuses") List<StatusPedido> statuses,
+                                              @Param("mes") int mes, @Param("ano") int ano);
+
     @Query("""
         SELECT p.id, c.nome, p.dataEntrega, p.dataPedido,
                p.totalPedido - COALESCE((SELECT SUM(g.valor) FROM Pagamento g WHERE g.pedido = p), 0)

@@ -11,6 +11,7 @@ import br.com.seuprojeto.pascoa.pedido.repository.PedidoRepository;
 import br.com.seuprojeto.pascoa.producao.entity.StatusOrdem;
 import br.com.seuprojeto.pascoa.producao.repository.OrdemProducaoRepository;
 import br.com.seuprojeto.pascoa.qualidade.repository.InspecaoRepository;
+import br.com.seuprojeto.pascoa.gastos.entity.CategoriaGasto;
 import br.com.seuprojeto.pascoa.gastos.repository.GastoVariavelRepository;
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -82,10 +83,15 @@ public class DashboardController {
         BigDecimal gastosMes = gastoRepository.sumTotal(mesAtual.getYear(), mesAtual.getMonthValue());
         if (gastosMes == null) gastosMes = BigDecimal.ZERO;
 
-        // Margem bruta do mês
+        // Margem bruta do mês: custo dos insumos vem da ficha técnica (ItemPedido.custoUnitario),
+        // então compras de matéria-prima lançadas em gastos ficam de fora para não contar em dobro.
         Integer pctMargemMes = null;
         if (receitaMes.compareTo(BigDecimal.ZERO) > 0) {
-            BigDecimal margem = receitaMes.subtract(gastosMes);
+            BigDecimal custoInsumos = pedidoRepository.sumCustoInsumosPorStatusAndMes(
+                    List.of(StatusPedido.ENTREGUE), mesAtual.getMonthValue(), mesAtual.getYear());
+            BigDecimal gastosSemInsumos = gastoRepository.sumTotalExceto(
+                    mesAtual.getYear(), mesAtual.getMonthValue(), CategoriaGasto.MATERIA_PRIMA);
+            BigDecimal margem = receitaMes.subtract(custoInsumos).subtract(gastosSemInsumos);
             pctMargemMes = margem
                     .divide(receitaMes, 4, RoundingMode.HALF_UP)
                     .multiply(BigDecimal.valueOf(100))

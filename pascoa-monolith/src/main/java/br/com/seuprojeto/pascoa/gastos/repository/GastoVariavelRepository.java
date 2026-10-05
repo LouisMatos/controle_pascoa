@@ -30,6 +30,12 @@ public interface GastoVariavelRepository extends JpaRepository<GastoVariavel, Lo
            "AND g.desconsiderarNoCusto = false")
     BigDecimal sumTotal(@Param("ano") int ano, @Param("mes") int mes);
 
+    @Query("SELECT COALESCE(SUM(g.valor), 0) FROM GastoVariavel g " +
+           "WHERE g.referenciaAno = :ano AND g.referenciaMes = :mes " +
+           "AND g.desconsiderarNoCusto = false AND g.categoria <> :categoria")
+    BigDecimal sumTotalExceto(@Param("ano") int ano, @Param("mes") int mes,
+                              @Param("categoria") CategoriaGasto categoria);
+
     /** Soma de gastos cujo data_lancamento cai dentro do período (para FluxoCaixa). */
     @Query("SELECT COALESCE(SUM(g.valor), 0) FROM GastoVariavel g " +
            "WHERE g.dataLancamento >= :inicio AND g.dataLancamento <= :fim " +
