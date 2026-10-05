@@ -71,6 +71,39 @@ public class ProducaoService {
         return fichaTecnicaRepository.findByProdutoIdComItens(produtoId);
     }
 
+    public record LinhaReceita(String nome, String unidade, BigDecimal qtdReceita, BigDecimal qtdNecessaria,
+                               BigDecimal disponivel, boolean estoqueOk, BigDecimal custoUnitario,
+                               BigDecimal custo) {}
+
+    public record ReceitaCalculada(List<LinhaReceita> linhas, BigDecimal custoTotal, BigDecimal custoPorUnidade,
+                                   long insuficientes, long semCusto) {}
+
+    /** Quantidade e custo por insumo escalados pela ordem: item × qtdOrdem ÷ rendimento. */
+    public ReceitaCalculada calcularReceita(OrdemProducao ordem, FichaTecnica ficha) {
+        BigDecimal qtdOrdem = BigDecimal.valueOf(ordem.getQuantidade());
+        BigDecimal rendimento = ficha.getRendimento();
+        boolean rendimentoValido = rendimento != null && rendimento.compareTo(BigDecimal.ZERO) > 0;
+        List<LinhaReceita> linhas = new ArrayList<>();
+        for (FichaTecnicaItem item : ficha.getItens()) {
+            var mp = item.getMateriaPrima();
+            BigDecimal necessaria = rendimentoValido
+                ? item.getQuantidade().multiply(qtdOrdem).divide(rendimento, 3, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
+            BigDecimal custoUnit = mp.getCustoUnitario();
+            BigDecimal custo = custoUnit == null ? BigDecimal.ZERO
+                : necessaria.multiply(custoUnit).setScale(2, RoundingMode.HALF_UP);
+            linhas.add(new LinhaReceita(mp.getNome(), mp.getUnidade().getSimbolo(), item.getQuantidade(),
+                necessaria, mp.getQuantidadeAtual(), mp.getQuantidadeAtual().compareTo(necessaria) >= 0,
+                custoUnit, custo));
+        }
+        BigDecimal total = linhas.stream().map(LinhaReceita::custo).reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal porUnidade = ordem.getQuantidade() > 0
+            ? total.divide(qtdOrdem, 2, RoundingMode.HALF_UP) : BigDecimal.ZERO;
+        return new ReceitaCalculada(linhas, total, porUnidade,
+            linhas.stream().filter(l -> !l.estoqueOk()).count(),
+            linhas.stream().filter(l -> l.custoUnitario() == null || l.custoUnitario().signum() == 0).count());
+    }
+
     @Transactional(readOnly = true)
     public java.util.Map<StatusOrdem, List<OrdemProducao>> listarKanban() {
         java.util.Map<StatusOrdem, List<OrdemProducao>> mapa = new java.util.LinkedHashMap<>();

@@ -12,9 +12,14 @@
             <i class="bi bi-gear me-2 text-success" aria-hidden="true"></i>
             Ordem #<span th:text="${ordem.id}"></span>
         </h2>
-        <a th:href="@{/producao}" class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Fila de Produção
-        </a>
+        <div class="d-flex gap-2">
+            <a th:href="@{/producao/{id}/pdf(id=${ordem.id})}" target="_blank" rel="noopener" class="btn btn-outline-danger">
+                <i class="bi bi-file-pdf me-1" aria-hidden="true"></i>Exportar PDF
+            </a>
+            <a th:href="@{/producao}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Fila de Produção
+            </a>
+        </div>
     </div>
 
     <div class="row g-3">
@@ -30,7 +35,7 @@
                             <h5 class="mb-1" th:text="${ordem.produto.nome}"></h5>
                             <div class="text-muted small">
                                 <i class="bi bi-layers me-1" aria-hidden="true"></i>
-                                Quantidade:
+                                Quantidade a produzir:
                                 <strong th:text="${ordem.quantidade}"></strong>
                                 unidade(s)
                             </div>
@@ -66,54 +71,66 @@
             <!-- Ingredientes necessários -->
             <div class="card">
                 <div class="card-header fw-semibold">
-                    <i class="bi bi-list-check me-2" aria-hidden="true"></i>Ingredientes Necessários
+                    <i class="bi bi-list-check me-2" aria-hidden="true"></i>Receita e custo dos insumos
                 </div>
                 <div th:if="${ficha != null}" class="card-body p-0">
+                    <div th:if="${receita.insuficientes > 0}" class="alert alert-danger rounded-0 mb-0 py-2 small" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"></i>
+                        Estoque insuficiente para <strong th:text="${receita.insuficientes}"></strong> insumo(s).
+                    </div>
+                    <div th:if="${receita.semCusto > 0}" class="alert alert-warning rounded-0 mb-0 py-2 small" role="alert">
+                        <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
+                        <strong th:text="${receita.semCusto}"></strong> insumo(s) sem custo unitário cadastrado — custo total pode estar subestimado.
+                    </div>
                     <div class="table-responsive"><table class="table table-hover align-middle mb-0">
                         <thead>
                             <tr>
-                                <th scope="col" class="ps-3">Matéria-Prima</th>
-                                <th scope="col" class="text-end">Qtd p/ receita</th>
-                                <th scope="col" class="text-end">Qtd necessária</th>
-                                <th scope="col" class="text-end">Disponível</th>
-                                <th scope="col" class="text-center">OK?</th>
+                                <th scope="col" class="ps-3">Insumo</th>
+                                <th scope="col" class="text-end">Necessário</th>
+                                <th scope="col" class="text-end">Custo unit.</th>
+                                <th scope="col" class="text-end">Custo</th>
+                                <th scope="col" class="text-end">Em estoque</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr th:each="item : ${ficha.itens}">
-                                <td class="ps-3 fw-semibold" th:text="${item.materiaPrima.nome}"></td>
-                                <td class="text-end text-muted small">
-                                    <span th:text="${#numbers.formatDecimal(item.quantidade, 1, 'POINT', 3, 'COMMA')}"></span>
-                                    <span th:text="${item.materiaPrima.unidade.simbolo}"></span>
+                            <tr th:each="l : ${receita.linhas}" th:classappend="${!l.estoqueOk} ? 'table-danger'">
+                                <td class="ps-3">
+                                    <div class="fw-semibold" th:text="${l.nome}"></div>
+                                    <div class="text-muted small">
+                                        Receita: <span th:text="${#numbers.formatDecimal(l.qtdReceita, 1, 'POINT', 3, 'COMMA')} + ' ' + ${l.unidade}"></span>
+                                    </div>
                                 </td>
-                                <td class="text-end fw-semibold">
-                                    <!-- qtdNecessaria = item.quantidade × ordem.quantidade / ficha.rendimento -->
-                                    <span th:with="qtd=${item.quantidade.multiply(T(java.math.BigDecimal).valueOf(ordem.quantidade.longValue())).divide(ficha.rendimento, 3, T(java.math.RoundingMode).HALF_UP)}"
-                                          th:text="${#numbers.formatDecimal(qtd, 1, 'POINT', 3, 'COMMA')}"></span>
-                                    <span th:text="${item.materiaPrima.unidade.simbolo}"></span>
-                                </td>
+                                <td class="text-end fw-semibold"
+                                    th:text="${#numbers.formatDecimal(l.qtdNecessaria, 1, 'POINT', 3, 'COMMA')} + ' ' + ${l.unidade}"></td>
+                                <td class="text-end text-muted"
+                                    th:text="${l.custoUnitario != null} ? ${#numbers.formatDecimal(l.custoUnitario, 1, 'POINT', 2, 'COMMA')} : '—'"></td>
+                                <td class="text-end fw-semibold"
+                                    th:text="'R$ ' + ${#numbers.formatDecimal(l.custo, 1, 'POINT', 2, 'COMMA')}"></td>
                                 <td class="text-end">
-                                    <span th:text="${#numbers.formatDecimal(item.materiaPrima.quantidadeAtual, 1, 'POINT', 3, 'COMMA')}"></span>
-                                    <span th:text="${item.materiaPrima.unidade.simbolo}"></span>
-                                </td>
-                                <td class="text-center">
-                                    <span th:with="qtd=${item.quantidade.multiply(T(java.math.BigDecimal).valueOf(ordem.quantidade.longValue())).divide(ficha.rendimento, 3, T(java.math.RoundingMode).HALF_UP)}">
-                                        <i th:if="${item.materiaPrima.quantidadeAtual.compareTo(qtd) >= 0}"
-                                           class="bi bi-check-circle-fill text-success fs-5" aria-hidden="true"></i>
-                                        <span th:if="${item.materiaPrima.quantidadeAtual.compareTo(qtd) >= 0}" class="visually-hidden">Estoque suficiente</span>
-                                        <i th:if="${item.materiaPrima.quantidadeAtual.compareTo(qtd) < 0}"
-                                           class="bi bi-x-circle-fill text-danger fs-5" aria-hidden="true"></i>
-                                        <span th:if="${item.materiaPrima.quantidadeAtual.compareTo(qtd) < 0}" class="visually-hidden">Estoque insuficiente</span>
-                                    </span>
+                                    <span th:text="${#numbers.formatDecimal(l.disponivel, 1, 'POINT', 3, 'COMMA')} + ' ' + ${l.unidade}"></span>
+                                    <i th:if="${l.estoqueOk}" class="bi bi-check-circle-fill text-success ms-1" aria-hidden="true"></i>
+                                    <span th:if="${l.estoqueOk}" class="visually-hidden">Estoque suficiente</span>
+                                    <i th:unless="${l.estoqueOk}" class="bi bi-x-circle-fill text-danger ms-1" aria-hidden="true"></i>
+                                    <span th:unless="${l.estoqueOk}" class="visually-hidden">Estoque insuficiente</span>
                                 </td>
                             </tr>
                         </tbody>
                         <tfoot>
+                            <tr class="table-light fw-bold">
+                                <td colspan="3" class="ps-3 text-end">Custo total da ordem</td>
+                                <td class="text-end" th:text="'R$ ' + ${#numbers.formatDecimal(receita.custoTotal, 1, 'POINT', 2, 'COMMA')}"></td>
+                                <td></td>
+                            </tr>
+                            <tr class="table-light">
+                                <td colspan="3" class="ps-3 text-end text-muted">Custo por unidade</td>
+                                <td class="text-end" th:text="'R$ ' + ${#numbers.formatDecimal(receita.custoPorUnidade, 1, 'POINT', 2, 'COMMA')}"></td>
+                                <td></td>
+                            </tr>
                             <tr class="table-light">
                                 <td colspan="5" class="ps-3 text-muted small">
-                                    Rendimento da receita: <strong th:text="${ficha.rendimento}"></strong>
+                                    Receita rende <strong th:text="${ficha.rendimento}"></strong>
                                     <span th:text="${ficha.unidadeRendimento.simbolo}"></span>
-                                    — produzindo <strong th:text="${ordem.quantidade}"></strong> unidade(s)
+                                    — quantidades escaladas para <strong th:text="${ordem.quantidade}"></strong> unidade(s)
                                 </td>
                             </tr>
                         </tfoot>

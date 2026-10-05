@@ -182,6 +182,7 @@
 | GET | `/producao/kanban` | 🎂 | Visualização Kanban das ordens |
 | GET | `/producao/fila` | 🎂 | Fila de produção |
 | GET | `/producao/{id}` | 🎂 | Detalhe da ordem de produção |
+| GET | `/producao/{id}/pdf` | 🎂 | PDF da ordem: receita escalada + custo dos insumos |
 | POST | `/producao/{id}/iniciar` | 🎂 | Iniciar ordem (PENDENTE → EM_ANDAMENTO) |
 | POST | `/producao/{id}/concluir` | 🎂 | Concluir ordem (EM_ANDAMENTO → CONCLUIDA) |
 

@@ -1,9 +1,14 @@
 package br.com.seuprojeto.pascoa.producao.controller;
 
+import br.com.seuprojeto.pascoa.fichaTecnica.entity.FichaTecnica;
 import br.com.seuprojeto.pascoa.producao.entity.OrdemProducao;
 import br.com.seuprojeto.pascoa.producao.entity.StatusOrdem;
+import br.com.seuprojeto.pascoa.producao.service.ProducaoPdfService;
 import br.com.seuprojeto.pascoa.producao.service.ProducaoService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,6 +25,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class ProducaoController {
 
     private final ProducaoService producaoService;
+    private final ProducaoPdfService pdfService;
 
     @GetMapping
     public String fila(@RequestParam(required = false) StatusOrdem status,
@@ -79,9 +85,22 @@ public class ProducaoController {
     public String detalhe(@PathVariable Long id, Model model) {
         OrdemProducao ordem = producaoService.buscarPorId(id);
         model.addAttribute("ordem", ordem);
-        producaoService.buscarFicha(ordem.getProduto().getId())
-            .ifPresent(f -> model.addAttribute("ficha", f));
+        producaoService.buscarFicha(ordem.getProduto().getId()).ifPresent(f -> {
+            model.addAttribute("ficha", f);
+            model.addAttribute("receita", producaoService.calcularReceita(ordem, f));
+        });
         return "producao/detalhe";
+    }
+
+    @GetMapping("/{id}/pdf")
+    public ResponseEntity<byte[]> pdf(@PathVariable Long id) {
+        OrdemProducao ordem = producaoService.buscarPorId(id);
+        FichaTecnica ficha = producaoService.buscarFicha(ordem.getProduto().getId()).orElse(null);
+        var receita = ficha == null ? null : producaoService.calcularReceita(ordem, ficha);
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"ordem_producao_" + id + ".pdf\"")
+            .contentType(MediaType.APPLICATION_PDF)
+            .body(pdfService.gerar(ordem, ficha, receita));
     }
 
     @PostMapping("/{id}/iniciar")

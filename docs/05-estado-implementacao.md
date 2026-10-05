@@ -742,6 +742,10 @@ Pendentes (fora do escopo de design):
 - `/actuator/health` sem health do mail (SMTP externo não derruba o probe); `/error` público + `templates/error.html` (sem Whitelabel).
 - Acessibilidade: `aria-label` em botões/links só com ícone; `.table-responsive{position:relative}` corrige scroll horizontal mobile.
 
+### 25c. Detalhe da ordem de produção — custo e PDF
+- `ProducaoService.calcularReceita` (qtd e custo por insumo = item × qtdOrdem ÷ rendimento; custo total e por unidade); `producao/detalhe.html` mostra custo, alertas de estoque/insumo sem custo.
+- `GET /producao/{id}/pdf` via `ProducaoPdfService` + `PdfKit`. Teste: `ProducaoReceitaTest`.
+
 ---
 
 ## 26. Próximas Sessões — Prioridade Sugerida
