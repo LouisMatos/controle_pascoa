@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-BR" th:replace="~{fragments/layout-auth :: layout(~{::title}, ~{::main})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Verificação em duas etapas — Páscoa Gestão</title>
+</head>
+<body>
+<main class="auth-shell">
+    <div th:replace="~{fragments/auth-brand :: brand('Verificação em duas etapas')}"></div>
+
+    <div class="card auth-card">
+        <div class="card-body p-4">
+            <h1 class="h4 fw-bold mb-1">Digite o código</h1>
+            <p class="text-body-secondary small mb-3">
+                Abra o aplicativo autenticador e informe o código de 6 dígitos.
+            </p>
+
+            <div th:if="${erro}" class="alert alert-danger py-2 small" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"></i>
+                <span th:text="${erro}"></span>
+            </div>
+
+            <form th:action="@{/2fa/verificar}" method="post" data-loading="Verificando…">
+                <label for="codigo" class="form-label fw-semibold">Código de verificação</label>
+                <input type="text" id="codigo" name="codigo"
+                       class="form-control form-control-lg text-center auth-otp mb-3"
+                       th:classappend="${erro} ? 'is-invalid'"
+                       maxlength="6" minlength="6" pattern="[0-9]{6}" inputmode="numeric"
+                       autofocus autocomplete="one-time-code" spellcheck="false"
+                       data-auto-submit required>
+                <button type="submit" class="btn btn-success w-100 py-2">
+                    <i class="bi bi-check-circle me-2" aria-hidden="true"></i><span class="rotulo">Verificar</span>
+                </button>
+            </form>
+
+            <form th:action="@{/logout}" method="post" class="text-center mt-3">
+                <button type="submit" class="btn btn-link auth-link small p-0">Cancelar e voltar ao login</button>
+            </form>
+        </div>
+    </div>
+</main>
+</body>
+</html>

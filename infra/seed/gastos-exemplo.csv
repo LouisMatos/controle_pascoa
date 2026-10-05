@@ -1,0 +1,12 @@
+descricao,valor,data,categoria
+Sacolas personalizadas,250.00,2026-09-05,EMBALAGEM
+Combustivel da entrega,120.50,2026-09-06,TRANSPORTE
+Anuncio patrocinado,300.00,2026-09-10,MARKETING
+Chocolate avulso,780.90,2026-09-12,MATERIA_PRIMA
+Batedeira nova,1500.00,2026-09-15,EQUIPAMENTO
+Servico de design,400.00,2026-09-18,SERVICO
+Diversos,35.00,2026-09-20,OUTROS
+Linha com valor invalido,abc,2026-09-21,OUTROS
+Linha com poucas colunas,10.00
+Linha com data invalida,50.00,21/09/2026,OUTROS
+Linha com categoria inexistente,60.00,2026-09-22,INEXISTENTE

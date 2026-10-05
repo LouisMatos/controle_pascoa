@@ -1,0 +1,7 @@
+# Configurações específicas do pascoa-production-service
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:5432/pascoa_productions
+
+server:
+  port: ${SERVER_PORT:8086}

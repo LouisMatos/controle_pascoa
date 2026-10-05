@@ -79,10 +79,18 @@ NOVO ──[confirmar]──► CONFIRMADO ──[iniciar]──► EM_PRODUCAO 
 | Ação | Endpoint |
 |------|---------|
 | Confirmar pedido | `POST /pedidos/{id}/confirmar` |
-| Iniciar produção | `POST /pedidos/{id}/iniciar-producao` |
-| Marcar como pronto | `POST /pedidos/{id}/marcar-pronto` |
-| Registrar entrega | `POST /pedidos/{id}/registrar-entrega` |
+| Iniciar produção | `POST /producao/{ordemId}/iniciar` (pedido vai a EM_PRODUCAO automaticamente) |
+| Marcar como pronto | automático ao concluir a última ordem aberta; manual em `POST /pedidos/{id}/pronto` |
+| Registrar entrega | `POST /pedidos/{id}/entrega` |
 | Cancelar | `POST /pedidos/{id}/cancelar` |
+
+**Transições automáticas (2026-09-26):** iniciar, concluir ou cancelar ordem publica
+`ProducaoAtualizadaEvent`; `PedidoService.sincronizarComProducao` deriva o status do pedido das
+ordens — ordem EM_ANDAMENTO com pedido CONFIRMADO leva a EM_PRODUCAO; nenhuma ordem aberta e ao
+menos uma CONCLUIDA leva a PRONTO.
+
+**Cancelamento com valor recebido:** gera `AlertaInterno` de devolução quando o pedido já tem
+pagamento registrado.
 
 **Efeito colateral do cancelamento (V12):**
 Ao cancelar um pedido, `PedidoService` marca todos os `GastoVariavel` vinculados (`pedido_id = id`) como `desconsiderar_no_custo = true`. Isso garante que gastos específicos daquele pedido não distorçam relatórios de período.

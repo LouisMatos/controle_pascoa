@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head><title>Orçamentos — Sistema Páscoa</title></head>
+<body>
+<div id="pageContent">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0"><i class="bi bi-file-earmark-text me-2 text-success" aria-hidden="true"></i>Orçamentos</h2>
+        <a th:href="@{/orcamentos/novo}" class="btn btn-success btn-sm">
+            <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Novo Orçamento
+        </a>
+    </div>
+
+    <div th:if="${sucesso}" class="alert alert-success alert-dismissible fade show" role="status">
+        <i class="bi bi-check-circle me-2" aria-hidden="true"></i><span th:text="${sucesso}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+    </div>
+    <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="bi bi-exclamation-triangle me-2" aria-hidden="true"></i><span th:text="${erro}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fechar"></button>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+            <div th:if="${#lists.isEmpty(orcamentos)}" class="text-center text-muted py-5">
+                <i class="bi bi-file-earmark-text fs-2 d-block mb-2 opacity-40" aria-hidden="true"></i>
+                Nenhum orçamento cadastrado.
+                <div class="mt-3">
+                    <a th:href="@{/orcamentos/novo}" class="btn btn-sm btn-success">
+                        <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Criar Orçamento
+                    </a>
+                </div>
+            </div>
+            <div class="table-responsive" th:unless="${#lists.isEmpty(orcamentos)}">
+            <table class="table table-hover align-middle mb-0 tabela-cadastro">
+                <thead>
+                    <tr>
+                        <th scope="col" class="ps-3">#</th>
+                        <th scope="col">Cliente</th>
+                        <th scope="col">Criado em</th>
+                        <th scope="col">Validade</th>
+                        <th scope="col" class="text-end">Total</th>
+                        <th scope="col" class="text-center">Status</th>
+                        <th scope="col" class="text-end pe-3">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="o : ${orcamentos}"
+                        th:classappend="${o.isExpirado()} ? 'table-warning'">
+                        <td class="ps-3 text-muted small" th:text="${o.id}"></td>
+                        <td class="fw-semibold" th:text="${o.cliente.nome}"></td>
+                        <td class="text-muted small"
+                            th:text="${#temporals.format(o.dataCriacao, 'dd/MM/yyyy')}"></td>
+                        <td>
+                            <span th:text="${#temporals.format(o.validade, 'dd/MM/yyyy')}"
+                                  th:classappend="${o.isExpirado()} ? 'text-danger fw-semibold'"></span>
+                            <small th:if="${o.isExpirado()}" class="text-danger ms-1">(expirado)</small>
+                        </td>
+                        <td class="text-end fw-semibold">
+                            R$ <span th:text="${#numbers.formatDecimal(o.total, 1, 'POINT', 2, 'COMMA')}"></span>
+                        </td>
+                        <td class="text-center">
+                            <span th:switch="${o.status.name()}">
+                                <span th:case="'PENDENTE'"  class="badge bg-warning text-dark">Pendente</span>
+                                <span th:case="'APROVADO'"  class="badge bg-success">Aprovado</span>
+                                <span th:case="'RECUSADO'"  class="badge bg-danger">Recusado</span>
+                                <span th:case="'EXPIRADO'"  class="badge bg-secondary">Expirado</span>
+                            </span>
+                        </td>
+                        <td class="text-end pe-3">
+                            <a th:href="@{/orcamentos/{id}(id=${o.id})}"
+                               class="btn btn-sm btn-outline-primary me-1" title="Ver detalhes" aria-label="Ver detalhes">
+                                <i class="bi bi-eye" aria-hidden="true"></i>
+                            </a>
+                            <a th:href="@{/orcamentos/{id}/pdf(id=${o.id})}"
+                               class="btn btn-sm btn-outline-secondary" target="_blank" rel="noopener" title="Gerar PDF" aria-label="Gerar PDF (abre em nova aba)">
+                                <i class="bi bi-file-pdf" aria-hidden="true"></i>
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            </div>
+        </div>
+        <div class="card-footer d-flex justify-content-between align-items-center"
+             th:if="${!#lists.isEmpty(orcamentos)}">
+            <span class="text-muted small"
+                  th:text="|Página ${pagina + 1} de ${page.totalPages} — ${page.totalElements} orçamento(s)|"></span>
+            <div class="d-flex gap-1" th:if="${page.totalPages > 1}">
+                <a th:if="${pagina > 0}"
+                   th:href="@{/orcamentos(pagina=${pagina - 1})}"
+                   class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-chevron-left" aria-hidden="true"></i><span class="visually-hidden">Página anterior</span>
+                </a>
+                <a th:if="${pagina < page.totalPages - 1}"
+                   th:href="@{/orcamentos(pagina=${pagina + 1})}"
+                   class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-chevron-right" aria-hidden="true"></i><span class="visually-hidden">Próxima página</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

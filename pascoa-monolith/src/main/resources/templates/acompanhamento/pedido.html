@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-BR" th:replace="~{fragments/layout-publico :: layout(~{::title}, ~{::main})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Acompanhe seu Pedido</title>
+</head>
+<body>
+<main id="conteudo" tabindex="-1">
+
+<!-- Cabeçalho público -->
+<div class="brand-header">
+  <h1><i class="bi bi-egg-fill me-2" aria-hidden="true"></i>Páscoa Artesanal</h1>
+  <p>Acompanhamento de Pedido</p>
+</div>
+
+<div class="container py-4 mw-700" >
+
+  <!-- Token inválido -->
+  <div th:if="${tokenInvalido}" class="text-center py-5">
+    <i class="bi bi-search text-muted fs-icon-3"  aria-hidden="true"></i>
+    <h2 class="h4 mt-3">Link inválido ou expirado</h2>
+    <p class="text-muted">Verifique o link enviado para você ou entre em contato conosco.</p>
+  </div>
+
+  <div th:unless="${tokenInvalido}">
+
+    <!-- Status CANCELADO -->
+    <div th:if="${pedido.status.name() == 'CANCELADO'}" class="cancelado-banner mb-4" role="status">
+      <i class="bi bi-x-circle-fill text-danger fs-icon-25"  aria-hidden="true"></i>
+      <h2 class="h5 mt-2 text-danger fw-bold">Pedido Cancelado</h2>
+      <p class="text-muted mb-0">Este pedido foi cancelado. Entre em contato conosco se tiver dúvidas.</p>
+    </div>
+
+    <!-- Progresso normal -->
+    <div th:unless="${pedido.status.name() == 'CANCELADO'}" class="card mb-3">
+      <div class="card-body">
+        <h6 class="fw-semibold mb-3 text-muted text-uppercase small">
+          <i class="bi bi-pin-map me-1" aria-hidden="true"></i>Status do Pedido
+        </h6>
+
+        <!-- Barra de progresso -->
+        <div class="progress mb-3 progress-10">
+          <div class="progress-bar bg-success" role="progressbar" aria-label="Progresso do pedido" aria-valuemin="0" aria-valuemax="100"
+               th:aria-valuenow="${progresso}" th:style="'width:' + ${progresso} + '%'"></div>
+        </div>
+
+        <!-- Indicadores de passo -->
+        <div class="d-flex align-items-center">
+          <!-- CONFIRMADO -->
+          <div class="status-step"
+               th:classappend="${pedido.status.name() == 'CONFIRMADO'} ? 'active' : (${progresso >= 30} ? 'done' : '')">
+            <div class="circle"><i class="bi bi-check2" aria-hidden="true"></i></div>
+            <div class="label">Confirmado</div>
+          </div>
+          <div class="status-line" th:classappend="${progresso >= 55} ? 'done' : ''"></div>
+          <!-- EM PRODUÇÃO -->
+          <div class="status-step"
+               th:classappend="${pedido.status.name() == 'EM_PRODUCAO'} ? 'active' : (${progresso >= 55} ? 'done' : '')">
+            <div class="circle"><i class="bi bi-gear" aria-hidden="true"></i></div>
+            <div class="label">Em Produção</div>
+          </div>
+          <div class="status-line" th:classappend="${progresso >= 80} ? 'done' : ''"></div>
+          <!-- PRONTO -->
+          <div class="status-step"
+               th:classappend="${pedido.status.name() == 'PRONTO'} ? 'active' : (${progresso >= 80} ? 'done' : '')">
+            <div class="circle"><i class="bi bi-box-seam" aria-hidden="true"></i></div>
+            <div class="label">Pronto</div>
+          </div>
+          <div class="status-line" th:classappend="${progresso >= 100} ? 'done' : ''"></div>
+          <!-- ENTREGUE -->
+          <div class="status-step"
+               th:classappend="${pedido.status.name() == 'ENTREGUE'} ? 'done active' : ''">
+            <div class="circle"><i class="bi bi-house-check" aria-hidden="true"></i></div>
+            <div class="label">Entregue</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Info do pedido -->
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <div class="text-muted small fw-semibold text-uppercase mb-1">Cliente</div>
+            <div class="fw-bold" th:text="${pedido.cliente.nome}"></div>
+          </div>
+          <div class="col-sm-6">
+            <div class="text-muted small fw-semibold text-uppercase mb-1">Data do Pedido</div>
+            <div th:text="${#temporals.format(pedido.dataPedido,'dd/MM/yyyy')}"></div>
+          </div>
+          <div class="col-sm-6" th:if="${pedido.dataEntrega != null}">
+            <div class="text-muted small fw-semibold text-uppercase mb-1">Previsão de Entrega</div>
+            <div class="fw-bold text-success">
+              <i class="bi bi-calendar-check me-1" aria-hidden="true"></i>
+              <span th:text="${#temporals.format(pedido.dataEntrega,'dd/MM/yyyy')}"></span>
+              <span th:if="${pedido.slotEntrega != null}"
+                    th:text="' às ' + ${#temporals.format(pedido.slotEntrega,'HH:mm')}"></span>
+            </div>
+          </div>
+          <div class="col-sm-6" th:if="${pedido.observacoes != null and !#strings.isEmpty(pedido.observacoes)}">
+            <div class="text-muted small fw-semibold text-uppercase mb-1">Observações</div>
+            <div class="small" th:text="${pedido.observacoes}"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Itens do pedido -->
+    <div class="card mb-3">
+      <div class="card-header bg-light fw-semibold small text-uppercase">
+        <i class="bi bi-box-seam me-1" aria-hidden="true"></i>Itens
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive"><table class="table table-sm mb-0">
+          <thead class="table-light">
+            <tr>
+              <th scope="col">Produto</th>
+              <th scope="col" class="text-center">Qtd</th>
+              <th scope="col" class="text-end">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="item : ${pedido.itens}">
+              <td th:text="${item.produto.nome}"></td>
+              <td class="text-center" th:text="${item.quantidade}"></td>
+              <td class="text-end" th:text="'R$ ' + ${#numbers.formatDecimal(item.subtotal,1,'POINT',2,'COMMA')}"></td>
+            </tr>
+          </tbody>
+          <tfoot class="table-light fw-bold">
+            <tr>
+              <td colspan="2" class="text-end">Total</td>
+              <td class="text-end"
+                  th:text="'R$ ' + ${#numbers.formatDecimal(pedido.totalPedido,1,'POINT',2,'COMMA')}"></td>
+            </tr>
+          </tfoot>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- Situação financeira -->
+    <div class="card mb-3">
+      <div class="card-header bg-light fw-semibold small text-uppercase">
+        <i class="bi bi-cash-coin me-1" aria-hidden="true"></i>Situação Financeira
+      </div>
+      <div class="card-body">
+        <div class="row g-2">
+          <div class="col-4 text-center">
+            <div class="text-muted small">Total</div>
+            <div class="fw-bold"
+                 th:text="'R$ ' + ${#numbers.formatDecimal(pedido.totalPedido,1,'POINT',2,'COMMA')}"></div>
+          </div>
+          <div class="col-4 text-center">
+            <div class="text-muted small">Pago</div>
+            <div class="fw-bold text-success"
+                 th:text="'R$ ' + ${#numbers.formatDecimal(totalPago,1,'POINT',2,'COMMA')}"></div>
+          </div>
+          <div class="col-4 text-center">
+            <div class="text-muted small">Saldo</div>
+            <div class="fw-bold"
+                 th:class="${saldoDevedor.signum() > 0} ? 'fw-bold text-danger' : 'fw-bold text-success'"
+                 th:text="'R$ ' + ${#numbers.formatDecimal(saldoDevedor,1,'POINT',2,'COMMA')}"></div>
+          </div>
+        </div>
+        <div class="progress mt-2 progress-6">
+          <div class="progress-bar bg-success" role="progressbar"
+               th:style="'width:' + ${pctPago} + '%'"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ordens de produção (opcional) -->
+    <div class="card mb-3" th:if="${!#lists.isEmpty(ordens)}">
+      <div class="card-header bg-light fw-semibold small text-uppercase">
+        <i class="bi bi-gear me-1" aria-hidden="true"></i>Produção
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive"><table class="table table-sm mb-0">
+          <thead class="table-light">
+            <tr><th scope="col">Produto</th><th scope="col" class="text-center">Qtd</th><th scope="col" class="text-center">Status</th></tr>
+          </thead>
+          <tbody>
+            <tr th:each="o : ${ordens}">
+              <td th:text="${o.produto.nome}"></td>
+              <td class="text-center" th:text="${o.quantidade}"></td>
+              <td class="text-center">
+                <span class="badge" th:classappend="${o.status.badgeCss}"
+                      th:text="${o.status.descricao}"></span>
+              </td>
+            </tr>
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="text-center text-muted small mt-4 pb-3">
+    <i class="bi bi-egg-fill me-1 text-success" aria-hidden="true"></i>
+    Páscoa Artesanal &nbsp;·&nbsp; Feito com amor 🐣
+  </div>
+
+</div>
+
+</main>
+</body>
+</html>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+    <!--
+      Supressões OWASP Dependency Check
+      Adicione aqui falsos positivos confirmados com justificativa.
+
+      Exemplo:
+      <suppress>
+          <notes>CVE-XXXX-YYYY — falso positivo: afeta versão X.Y, usamos X.Z que tem o patch</notes>
+          <cve>CVE-XXXX-YYYY</cve>
+      </suppress>
+    -->
+
+    <!-- Spring Boot DevTools — só presente em runtime de dev, não vai para produção -->
+    <suppress>
+        <notes>DevTools é excluído do build de produção (scope=runtime, optional=true)</notes>
+        <gav regex="true">^org\.springframework\.boot:spring-boot-devtools:.*$</gav>
+        <cvssBelow>10</cvssBelow>
+    </suppress>
+
+</suppressions>

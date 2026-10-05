@@ -1,0 +1,51 @@
+.auth-body {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem 1rem;
+  font-size: 0.93rem;
+  background: linear-gradient(160deg, var(--pascoa-brand-light) 0%, #f8f9fa 55%);
+}
+
+.auth-shell { width: 100%; max-width: 26rem; }
+.auth-shell--wide { max-width: 29rem; }
+
+.auth-card {
+  border: 0;
+  border-radius: 1rem;
+  box-shadow: 0 0.5rem 1.5rem rgba(20, 108, 67, 0.12), 0 0 0 1px var(--pascoa-border);
+}
+
+.auth-brand-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  background: var(--pascoa-brand);
+  color: #fff;
+  font-size: 1.75rem;
+}
+
+.auth-body h1 { text-wrap: balance; }
+
+.auth-link { color: var(--pascoa-brand-dark); }
+.auth-link:hover { color: var(--pascoa-ink); }
+
+.auth-otp {
+  letter-spacing: 0.5em;
+  text-indent: 0.5em;
+  font-variant-numeric: tabular-nums;
+}
+
+.auth-qr { width: 200px; height: 200px; }
+.auth-segredo { word-break: break-all; user-select: all; }
+
+.auth-body :focus-visible {
+  outline: 3px solid rgba(25, 135, 84, 0.5);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-body * { transition: none !important; animation: none !important; }
+}

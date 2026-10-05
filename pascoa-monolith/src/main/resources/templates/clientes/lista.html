@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Clientes — Sistema Páscoa</title>
+</head>
+<body>
+<div id="pageContent">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0"><i class="bi bi-people me-2 text-success" aria-hidden="true"></i>Clientes</h2>
+        <a th:href="@{/clientes/novo}" class="btn btn-success">
+            <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Novo Cliente
+        </a>
+    </div>
+
+    <!-- Busca -->
+    <div class="card mb-3">
+        <div class="card-body py-2">
+            <form th:action="@{/clientes}" method="get" class="d-flex gap-2">
+                <input type="search" name="busca" class="form-control" placeholder="Buscar por nome…" aria-label="Buscar por nome" autocomplete="off" spellcheck="false"
+                       th:value="${busca}">
+                <button type="submit" class="btn btn-outline-secondary" aria-label="Buscar">
+                    <i class="bi bi-search" aria-hidden="true"></i>
+                </button>
+                <a th:href="@{/clientes}" class="btn btn-outline-danger" aria-label="Limpar busca" th:if="${busca != null and !#strings.isEmpty(busca)}">
+                    <i class="bi bi-x-lg" aria-hidden="true"></i>
+                </a>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 tabela-cadastro">
+                <th scope="col"ead>
+                    <tr>
+                        <th scope="col" class="ps-3">Nome</th>
+                        <th scope="col">Telefone</th>
+                        <th scope="col">E-mail</th>
+                        <th scope="col">CPF</th>
+                        <th scope="col">Cadastro</th>
+                        <th scope="col" class="text-center pe-3">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="c : ${clientes}">
+                        <td class="ps-3 fw-semibold" th:text="${c.nome}"></td>
+                        <td th:text="${c.telefone}"></td>
+                        <td th:text="${c.email}"></td>
+                        <td th:text="${c.cpf}"></td>
+                        <td th:text="${#temporals.format(c.criadoEm, 'dd/MM/yyyy')}"></td>
+                        <td class="text-center pe-3">
+                            <a th:href="@{/clientes/{id}/editar(id=${c.id})}"
+                               class="btn btn-sm btn-outline-primary me-1" title="Editar" aria-label="Editar">
+                                <i class="bi bi-pencil" aria-hidden="true"></i>
+                            </a>
+                            <form th:action="@{/clientes/{id}/excluir(id=${c.id})}" method="post"
+                                  class="d-inline"
+                                  th:data-confirm="'Confirma a exclusão de ' + ${c.nome} + '?'">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir" aria-label="Excluir">
+                                    <i class="bi bi-trash" aria-hidden="true"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(clientes)}">
+                        <td colspan="6" class="text-center text-muted py-5">
+                            <i class="bi bi-people fs-3 d-block mb-2 opacity-50" aria-hidden="true"></i>
+                            Nenhum cliente encontrado.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card-footer d-flex justify-content-between align-items-center"
+             th:if="${!#lists.isEmpty(clientes)}">
+            <span class="text-muted small"
+                  th:text="|Página ${pagina + 1} de ${page.totalPages} — ${page.totalElements} cliente(s)|"></span>
+            <div class="d-flex gap-1" th:if="${page.totalPages > 1}">
+                <a th:if="${pagina > 0}"
+                   th:href="@{/clientes(busca=${busca},pagina=${pagina - 1})}"
+                   class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-chevron-left" aria-hidden="true"></i><span class="visually-hidden">Página anterior</span>
+                </a>
+                <a th:if="${pagina < page.totalPages - 1}"
+                   th:href="@{/clientes(busca=${busca},pagina=${pagina + 1})}"
+                   class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-chevron-right" aria-hidden="true"></i><span class="visually-hidden">Próxima página</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

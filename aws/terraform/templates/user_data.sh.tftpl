@@ -1,0 +1,66 @@
+#!/bin/bash
+# Prepara o host: Docker, swap, arquivos de configuração. NÃO sobe a aplicação —
+# a imagem só existe no ECR depois do 02-build-push.sh; quem sobe é o 03-deploy.sh.
+set -euxo pipefail
+exec > >(tee /var/log/pascoa-bootstrap.log) 2>&1
+
+dnf -y update
+dnf -y install docker
+
+install -d /usr/local/lib/docker/cli-plugins
+curl -fsSL "https://github.com/docker/compose/releases/download/v2.29.7/docker-compose-linux-x86_64" \
+  -o /usr/local/lib/docker/cli-plugins/docker-compose
+chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+
+systemctl enable --now docker
+
+# t3.small tem 2 GB; swap evita OOM no startup do Spring Boot junto do Postgres.
+# ponytail: swap resolve o aperto de memória; subir para t3.medium se houver thrashing.
+if [ ! -f /swapfile ]; then
+  fallocate -l 2G /swapfile
+  chmod 600 /swapfile
+  mkswap /swapfile
+  swapon /swapfile
+  echo '/swapfile none swap sw 0 0' >> /etc/fstab
+  sysctl -w vm.swappiness=10
+fi
+
+install -d -m 0755 /opt/pascoa
+# uid/gid 10001 = usuário pascoa dentro da imagem (aws/Dockerfile)
+install -d -m 0755 -o 10001 -g 10001 /opt/pascoa/uploads
+
+cat > /opt/pascoa/postgres.env <<'PGENV'
+POSTGRES_DB=pascoa_monolith
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=${db_password}
+PGENV
+
+cat > /opt/pascoa/app.env <<'APPENV'
+SPRING_PROFILES_ACTIVE=prod
+DB_URL=jdbc:postgresql://postgres:5432/pascoa_monolith
+DB_USERNAME=postgres
+DB_PASSWORD=${db_password}
+APP_BASE_URL=${app_base_url}
+APP_UPLOAD_DIR=/opt/pascoa/uploads
+ADMIN_SENHA_INICIAL=${admin_senha_inicial}
+APP_GATEWAY_SHARED_SECRET=${gateway_shared_secret}
+MAIL_USERNAME=${mail_username}
+MAIL_PASSWORD=${mail_password}
+SECURITY_2FA_ENABLED=false
+APPENV
+
+chmod 600 /opt/pascoa/postgres.env /opt/pascoa/app.env
+
+cat > /opt/pascoa/docker-compose.yml <<'COMPOSE'
+${compose_file}
+COMPOSE
+
+cat > /opt/pascoa/ecr-login.sh <<'LOGIN'
+#!/bin/bash
+set -euo pipefail
+aws ecr get-login-password --region ${region} \
+  | docker login --username AWS --password-stdin ${ecr_registry}
+LOGIN
+chmod +x /opt/pascoa/ecr-login.sh
+
+echo "bootstrap concluido"

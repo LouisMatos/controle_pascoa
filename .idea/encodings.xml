@@ -1,6 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/pascoa-analytics-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/pascoa-analytics-service/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/pascoa-api-gateway/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/pascoa-api-gateway/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/pascoa-auth-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/pascoa-auth-service/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/pascoa-commons/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/pascoa-commons/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/pascoa-config-server/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/pascoa-config-server/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/pascoa-customer-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/pascoa-customer-service/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/pascoa-eureka/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/pascoa-eureka/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/pascoa-financial-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/pascoa-financial-service/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/pascoa-inventory-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/pascoa-inventory-service/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/pascoa-monolith/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/pascoa-monolith/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/pascoa-notification-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/pascoa-notification-service/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/pascoa-order-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/pascoa-order-service/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/pascoa-product-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/pascoa-product-service/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/pascoa-production-service/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/pascoa-production-service/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/src/main/resources" charset="UTF-8" />
   </component>
 </project>

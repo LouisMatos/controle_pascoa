@@ -1,0 +1,48 @@
+server:
+  port: 8888
+
+spring:
+  application:
+    name: pascoa-config-server
+
+  profiles:
+    active: native
+
+  cloud:
+    config:
+      server:
+        native:
+          # Busca configs em classpath:/configs e, se existir, em file:./config-repo
+          search-locations: classpath:/configs,optional:file:./config-repo
+
+  # Basic Auth — protege todos os endpoints de configuração
+  security:
+    user:
+      name: config-admin
+      password: ${CONFIG_SERVER_PASSWORD:config123}
+      roles: CONFIG
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    enabled: ${EUREKA_ENABLED:false}
+    # Não bloqueia a inicialização se Eureka estiver fora
+    fetch-registry: false
+    register-with-eureka: true
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${server.port}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,refresh,env
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    org.springframework.cloud.config: INFO
