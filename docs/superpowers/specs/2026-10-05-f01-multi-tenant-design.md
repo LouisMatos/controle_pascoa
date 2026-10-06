@@ -17,11 +17,11 @@ Várias lojas no mesmo banco e na mesma aplicação, sem enxergar dados umas das
 | Tabelas fora do tenant | `lojas`, `shedlock`, `configuracao_sistema` (modo de manutenção é da plataforma, não da loja) |
 | `usuarios` | Coluna `loja_id` explícita, sem `@TenantId` (é lido no login, antes de existir tenant). `password_reset_token` não ganha coluna: o token aponta para o usuário, que carrega a loja |
 | Config da plataforma | `/admin/sistema` (manutenção) só para ADMIN da loja 1 (`Loja.PLATAFORMA_ID`). Sem isso, o ADMIN de qualquer loja derrubaria o sistema para todas |
-| Queries nativas | `AND loja_id = :lojaId` manual, com um teste de isolamento por query |
+| Queries nativas | `AND loja_id = :#{T(...TenantContext).atual()}` (SpEL do Spring Data, constante `TenantContext.LOJA_ATUAL_SPEL`): sem mudar assinatura nem chamadores. Um teste de isolamento por query |
 | Jobs agendados | `TenantJobRunner.porLoja(Runnable)` itera as lojas, seta o contexto e abre a transação com `TransactionTemplate` (a sessão do Hibernate captura o tenant ao abrir, então `@Transactional` no método agendado seria cedo demais) |
 | Threads `@Async` | `TaskDecorator` copia o `TenantContext` da thread que publicou o evento |
 | Fila de campanha | `CampanhaItem` carrega `lojaId`; o worker executa cada item dentro de `TenantContext.executar` |
-| Endpoints públicos por token | Query nativa resolve o `loja_id` pelo token, seta o contexto e segue com os repositórios normais |
+| Endpoints públicos por token | O próprio `TenantFilter` resolve o `loja_id` pelo token com `JdbcTemplate` e seta o contexto **antes** do Open-Session-In-View abrir a sessão (a sessão fixa o tenant ao abrir, então resolver dentro do controller seria tarde). `/catalogo/**` fica na loja 1 até o F2.3 introduzir vitrine por loja |
 
 ## Componentes
 
@@ -29,11 +29,11 @@ Várias lojas no mesmo banco e na mesma aplicação, sem enxergar dados umas das
 
 1. Cria `lojas(id BIGSERIAL PK, nome VARCHAR(150) NOT NULL, criada_em TIMESTAMP NOT NULL DEFAULT now())`.
 2. Insere a loja 1, "Loja Padrão".
-3. Em cada tabela abaixo, adiciona `loja_id BIGINT NOT NULL DEFAULT 1 REFERENCES lojas(id)`, cria `idx_<tabela>_loja_id` e depois remove o DEFAULT (insert sem tenant passa a falhar em vez de cair na loja 1).
+3. Em cada tabela abaixo, adiciona `loja_id BIGINT NOT NULL DEFAULT 1 REFERENCES lojas(id)` e cria `idx_<tabela>_loja_id`. O DEFAULT 1 fica: o Hibernate sempre grava `loja_id` explicitamente (a guarda `@PrePersist` impede escrita sem tenant), e os seeds SQL em `infra/seed/` continuam funcionando sem mudança.
 4. Os UNIQUE de configuração passam a incluir `loja_id` (abaixo).
 5. Ajusta a sequência de `lojas` após o insert explícito do id 1.
 
-Tabelas com `loja_id` e `@TenantId`: `alertas_internos`, `audit_log`, `campanha_reengajamento`, `checklist_qualidade`, `clientes`, `configuracao_canal`, `configuracao_financeira`, `contas_pagar`, `contas_receber`, `despesas_fixas`, `despesas_variaveis`, `fichas_tecnicas`, `fichas_tecnicas_itens`, `fornecedores`, `gastos_variaveis`, `inspecao_qualidade`, `itens_pedido`, `materias_primas`, `movimentacoes_estoque`, `notas_cliente`, `notificacoes_enviadas`, `orcamento_itens`, `orcamentos`, `orcamentos_gasto`, `ordens_producao`, `pagamentos`, `pedidos`, `pontos_fidelidade`, `produtos`, `templates_notificacao`.
+Tabelas com `loja_id` e `@TenantId` (29): `alertas_internos`, `audit_log`, `checklist_qualidade`, `clientes`, `configuracao_canal`, `configuracao_financeira`, `contas_pagar`, `contas_receber`, `despesas_fixas`, `despesas_variaveis`, `fichas_tecnicas`, `fichas_tecnicas_itens`, `fornecedores`, `gastos_variaveis`, `inspecao_qualidade`, `itens_pedido`, `materias_primas`, `movimentacoes_estoque`, `notas_cliente`, `notificacoes_enviadas`, `orcamento_itens`, `orcamentos`, `orcamentos_gasto`, `ordens_producao`, `pagamentos`, `pedidos`, `pontos_fidelidade`, `produtos`, `templates_notificacao`.
 
 Tabela com `loja_id` explícito, sem `@TenantId`: `usuarios`.
 
@@ -42,7 +42,8 @@ UNIQUE que viram compostos:
 - `orcamentos_gasto (categoria, referencia_mes, referencia_ano)` → inclui `loja_id`
 - `fichas_tecnicas.produto_id` já é único por produto, que pertence a uma loja. Mantém.
 - `token_acompanhamento`, `token_aprovacao` e `password_reset_token.token` (UUID) continuam únicos globalmente.
-- Índices parciais de idempotência de notificação (`uq_notif_*`) incluem `loja_id`.
+- Índices de idempotência de notificação (`uq_notif_*`) não mudam: usam `pedido_id`, `orcamento_id` e `cliente_id`, que já são únicos entre lojas.
+- `campanha_reengajamento` não tem entidade Java e fica fora.
 
 `configuracao_financeira` hoje é linha única (`findAll().findFirst()` cria se faltar). Com o filtro, cada loja passa a ter a sua, criada sob demanda pelo próprio `obter()`. `configuracao_sistema` continua singleton global com id 1.
 
@@ -51,14 +52,14 @@ UNIQUE que viram compostos:
 - `common/tenant/TenantContext`: `ThreadLocal<Long>`, com `set`, `get` (lança se vazio), `limpar` e `executar(lojaId, Runnable)`.
 - `common/tenant/TenantIdentifierResolver implements CurrentTenantIdentifierResolver<Long>`, registrado por um `HibernatePropertiesCustomizer` (`hibernate.tenant_identifier_resolver`).
 - `common/tenant/TenantJobRunner` e `TenantTaskDecorator` (registrado como bean para o executor do `@Async`).
-- `common/entity/TenantEntity` (`@MappedSuperclass`) com `@TenantId @Column(name="loja_id", nullable=false, updatable=false) Long lojaId`. As 31 entidades abaixo herdam dela, direta ou via `BaseEntity`. Entidades que hoje não herdam `BaseEntity` herdam só `TenantEntity`.
+- `common/entity/TenantEntity` (`@MappedSuperclass`) com `@TenantId @Column(name="loja_id", nullable=false, updatable=false) Long lojaId`. As 29 entidades herdam dela, direta ou via `BaseEntity`. Entidades que hoje não herdam `BaseEntity` herdam só `TenantEntity`.
 - `seguranca/entity/Loja` e `LojaRepository`.
 - `seguranca/service/UsuarioPrincipal extends User` com `lojaId`. `UsuarioService.loadUserByUsername` devolve `UsuarioPrincipal`.
 - `config/TenantFilter` (`OncePerRequestFilter`, instanciado dentro do `SecurityConfig` com `new`, para o Boot não registrá-lo uma segunda vez como filtro de servlet), depois da autenticação: lê o `lojaId` do `UsuarioPrincipal` e preenche o `TenantContext`. Limpa em `finally`. Rotas públicas sem token não precisam de tenant (login, estáticos).
 - `TwoFactorAuthenticationSuccessHandler` e qualquer ponto que recria o `Authentication` precisam preservar o `UsuarioPrincipal`.
 - `UsuarioRepository`: `findAllByLojaIdOrderByNomeAsc`. `UsuarioService.listarTodos`/`buscarPorId` filtram por `loja_id` explícito. Cadastro de usuário grava o `loja_id` do ADMIN logado.
 - `DataInitializer`: cria o admin com `loja_id = 1`.
-- Públicos: `AcompanhamentoController` e `OrcamentoService.buscarPorToken` resolvem a loja por query nativa (`SELECT loja_id FROM pedidos WHERE token_acompanhamento = :t`) e executam o restante dentro de `TenantContext.executar`. O mesmo para `PasswordResetService` (o token guarda o `loja_id` do usuário).
+- Públicos: o `TenantFilter` lê o token do caminho (`/acompanhamento/{token}`, `/orcamento-publico/{token}[/...]`) e consulta `loja_id` por `JdbcTemplate` (`pedidos.token_acompanhamento`, `orcamentos.token_aprovacao`). `PasswordResetService` só toca `usuarios` e `password_reset_token`, sem tenant.
 - Jobs (`CrmService.recalcularSegmentos`, `NotificacaoAgendadaService` ×2): o método `@Scheduled` perde o `@Transactional` e delega a `TenantJobRunner.porLoja(this::<logica>)`; a lógica vira método público `@Transactional` para os testes chamarem direto. `CampanhaService.processarProximo` usa o `lojaId` do item. ShedLock fica global, uma execução por job.
 - `NotificacaoEventListener` e `AlertaInternoListener` são `@Async`: o `TenantTaskDecorator` propaga o tenant.
 
@@ -72,7 +73,7 @@ UNIQUE que viram compostos:
 | `NotificacaoEnviadaRepository` | `jaEnviouAniversarioNoAno` |
 | `ClienteRepository` | `findAniversariantesHoje` |
 
-Cada uma ganha `AND loja_id = :lojaId`, e o `lojaId` vem de `TenantContext.get()` no service (não do controller). Em joins nativos, filtrar todas as tabelas envolvidas.
+Cada uma ganha `AND loja_id = <SpEL do tenant atual>`. Em joins nativos (`rankingProdutosPorAno`), filtrar todas as tabelas envolvidas.
 
 ## Fluxo
 
@@ -105,5 +106,6 @@ Cadastro de loja nova e onboarding (F0.2), roles Dono/Equipe (F0.4), uploads por
 
 - **Esquecer uma query nativa nova:** mitigado pelo teste por query e pela regra de revisão "nativeQuery exige `loja_id`". O `V16` não cobre queries futuras.
 - **Threads fora da requisição:** sem propagação, leituras voltam vazias e escritas falham. Seguro, mas pode silenciar notificações. Coberto pelo `TenantTaskDecorator` e por teste do fluxo de notificação.
-- **Sessão serializada com `UsuarioPrincipal`:** sessões abertas antes do deploy trazem o `User` antigo, sem `lojaId`. O `TenantFilter` trata `principal` sem `lojaId` como sessão inválida (invalida e redireciona para `/login`).
+- **Sessões antigas:** a sessão HTTP fica em memória, então o restart do deploy descarta todas. Um principal que não seja `UsuarioPrincipal` (ex.: `@WithMockUser` nos testes) não define tenant; em produção isso não ocorre.
+- **Contador da fila de campanha** (`CampanhaQueue.registrarEnvio/Falha`) segue global. Mostra só totais agregados; separar por loja fica para quando a campanha for revista.
 - **Migration em tabela grande:** `ADD COLUMN ... DEFAULT 1` no Postgres 16 é metadado (rápido). A criação de 31 índices é o trecho lento; aceitável no volume atual (5k pedidos).
