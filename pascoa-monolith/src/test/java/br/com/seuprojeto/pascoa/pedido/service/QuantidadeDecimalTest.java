@@ -92,8 +92,46 @@ class QuantidadeDecimalTest {
         em.flush();
         em.clear();
 
-        BigDecimal somaItens = pedidoService.buscarPorId(pedido.getId()).getItens().stream()
-            .map(i -> i.getSubtotal()).reduce(BigDecimal.ZERO, BigDecimal::add);
-        assertThat(somaItens).isEqualByComparingTo("90.00");
+        assertThat(pedidoService.buscarPorId(pedido.getId()).getTotalPedido()).isEqualByComparingTo("90.00");
+    }
+
+    @Test
+    void arredondamentoHalfUp_totalIgualASomaDosSubtotais() {
+        Produto bolo = produtos.save(Produto.builder().nome("Bolo-" + UUID.randomUUID())
+            .precoVenda(new BigDecimal("40.00")).unidadeVenda(UnidadeVenda.KG).build());
+
+        Pedido pedido = pedidoService.criarComItens(cliente.getId(), LocalDate.now().plusDays(3), null, null,
+            List.of(bolo.getId()), List.of(new BigDecimal("0.333")));
+        em.flush();
+        em.clear();
+
+        Pedido lido = pedidoService.buscarPorId(pedido.getId());
+        assertThat(lido.getItens().get(0).getSubtotal()).isEqualByComparingTo("13.32");
+        assertThat(lido.getTotalPedido()).isEqualByComparingTo("13.32");
+    }
+
+    @Test
+    void removerItem_recalculaTotal_eApagaALinha() {
+        Produto bolo = produtos.save(Produto.builder().nome("Bolo-" + UUID.randomUUID())
+            .precoVenda(new BigDecimal("40.00")).unidadeVenda(UnidadeVenda.KG).build());
+        Produto brigadeiro = produtos.save(Produto.builder().nome("Brigadeiro-" + UUID.randomUUID())
+            .precoVenda(new BigDecimal("30.00")).unidadeVenda(UnidadeVenda.DUZIA).build());
+        Pedido pedido = pedidoService.criarComItens(cliente.getId(), LocalDate.now().plusDays(3), null, null,
+            List.of(bolo.getId(), brigadeiro.getId()), List.of(new BigDecimal("1.5"), new BigDecimal("2")));
+        em.flush();
+        em.clear();
+        Long removido = pedidoService.buscarPorId(pedido.getId()).getItens().stream()
+            .filter(i -> i.getProduto().getId().equals(bolo.getId())).findFirst().orElseThrow().getId();
+        em.clear();
+
+        pedidoService.removerItem(pedido.getId(), removido);
+        em.flush();
+        em.clear();
+
+        Pedido lido = pedidoService.buscarPorId(pedido.getId());
+        assertThat(lido.getItens()).hasSize(1);
+        assertThat(lido.getTotalPedido()).isEqualByComparingTo("60.00");
+        assertThat(em.createQuery("select count(i) from ItemPedido i where i.id = :id", Long.class)
+            .setParameter("id", removido).getSingleResult()).isZero();
     }
 }

@@ -201,6 +201,7 @@ public class PedidoService {
             .quantidade(quantidade)
             .precoUnitario(produto.getPrecoVenda())
             .build();
+        pedido.getItens().add(item);
         itemRepository.save(item); // @PrePersist calcula o subtotal automaticamente
         recalcularTotal(pedidoId);
     }
@@ -211,7 +212,7 @@ public class PedidoService {
         if (!pedido.getStatus().podeAdicionarItens()) {
             throw new IllegalStateException("Itens só podem ser removidos de pedidos com status NOVO.");
         }
-        itemRepository.deleteById(itemId);
+        pedido.getItens().removeIf(i -> i.getId().equals(itemId));
         recalcularTotal(pedidoId);
     }
 
