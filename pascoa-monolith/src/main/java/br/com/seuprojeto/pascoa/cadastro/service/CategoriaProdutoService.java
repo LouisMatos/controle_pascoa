@@ -25,4 +25,30 @@ public class CategoriaProdutoService {
         return repository.findById(id)
             .orElseThrow(() -> new RecursoNaoEncontradoException("Categoria não encontrada: " + id));
     }
+
+    @Transactional(readOnly = true)
+    public List<CategoriaProduto> listarTodas() {
+        return repository.findAllByOrderByNomeAsc();
+    }
+
+    @Transactional
+    public CategoriaProduto salvar(CategoriaProduto form) {
+        String nome = form.getNome().trim();
+        boolean duplicada = form.getId() == null
+            ? repository.existsByNomeIgnoreCase(nome)
+            : repository.existsByNomeIgnoreCaseAndIdNot(nome, form.getId());
+        if (duplicada) {
+            throw new IllegalArgumentException("Já existe uma categoria com este nome.");
+        }
+        CategoriaProduto categoria = form.getId() == null ? new CategoriaProduto() : buscarPorId(form.getId());
+        categoria.setNome(nome);
+        return repository.save(categoria);
+    }
+
+    @Transactional
+    public void alternarAtivo(Long id) {
+        CategoriaProduto categoria = buscarPorId(id);
+        categoria.setAtivo(!categoria.getAtivo());
+        repository.save(categoria);
+    }
 }

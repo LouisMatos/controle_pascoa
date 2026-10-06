@@ -44,6 +44,8 @@ class CategoriaTelasTest {
 
         mvc.perform(get("/produtos")).andExpect(status().isOk()).andExpect(content().string(containsString(nomeCategoria)));
         mvc.perform(get("/produtos/novo")).andExpect(status().isOk()).andExpect(content().string(containsString(nomeCategoria)));
+        mvc.perform(get("/categorias")).andExpect(status().isOk()).andExpect(content().string(containsString(nomeCategoria)));
+        mvc.perform(get("/categorias/novo")).andExpect(status().isOk());
         mvc.perform(get("/catalogo")).andExpect(status().isOk()).andExpect(content().string(containsString(nomeProduto)));
     }
 }

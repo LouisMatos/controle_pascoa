@@ -12,7 +12,8 @@ public class LayoutAdvice {
 		String uri = request.getRequestURI();
 
 		if (uri.startsWith("/clientes") || uri.startsWith("/produtos") ||
-		    uri.startsWith("/materias") || uri.startsWith("/fornecedores")) {
+		    uri.startsWith("/materias") || uri.startsWith("/fornecedores") ||
+		    uri.startsWith("/categorias")) {
 			return "cadastros";
 		}
 		if (uri.startsWith("/pedidos") || uri.startsWith("/orcamentos") || uri.startsWith("/crm")) {

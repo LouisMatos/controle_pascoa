@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="${categoria.id == null ? 'Nova categoria' : 'Editar categoria'} + ' — Sistema Páscoa'">Formulário</title>
+</head>
+<body>
+<div id="pageContent">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">
+            <i class="bi bi-tags me-2 text-success" aria-hidden="true"></i>
+            <span th:text="${categoria.id == null ? 'Nova categoria' : 'Editar categoria'}"></span>
+        </h2>
+        <a th:href="@{/categorias}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Voltar
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form th:action="@{/categorias/salvar}" th:object="${categoria}" method="post">
+                <input type="hidden" th:field="*{id}">
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold" for="nome">Nome <span class="text-danger" aria-hidden="true">*</span></label>
+                        <input type="text" class="form-control"
+                               th:field="*{nome}" required autocomplete="off" maxlength="60"
+                               th:classappend="${#fields.hasErrors('nome')} ? 'is-invalid'"
+                               placeholder="Ex.: Salgados fritos, Doces de festa">
+                        <div class="invalid-feedback" th:errors="*{nome}"></div>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-success px-4">
+                        <i class="bi bi-check-lg me-1" aria-hidden="true"></i>Salvar
+                    </button>
+                    <a th:href="@{/categorias}" class="btn btn-outline-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

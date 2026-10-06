@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pageContent})}"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Categorias — Sistema Páscoa</title>
+</head>
+<body>
+<div id="pageContent">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0"><i class="bi bi-tags me-2 text-success" aria-hidden="true"></i>Categorias de produto</h2>
+        <a th:href="@{/categorias/novo}" class="btn btn-success">
+            <i class="bi bi-plus-lg me-1" aria-hidden="true"></i>Nova categoria
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body p-0">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0 tabela-cadastro">
+                <thead>
+                    <tr>
+                        <th scope="col" class="ps-3">Nome</th>
+                        <th scope="col">Situação</th>
+                        <th scope="col" class="text-center pe-3">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="c : ${categorias}">
+                        <td class="ps-3 fw-semibold" th:text="${c.nome}"></td>
+                        <td>
+                            <span class="badge" th:classappend="${c.ativo} ? 'text-bg-success' : 'text-bg-secondary'"
+                                  th:text="${c.ativo} ? 'Ativa' : 'Inativa'"></span>
+                        </td>
+                        <td class="text-center pe-3">
+                            <a th:href="@{/categorias/{id}/editar(id=${c.id})}"
+                               class="btn btn-sm btn-outline-primary me-1" title="Editar" aria-label="Editar">
+                                <i class="bi bi-pencil" aria-hidden="true"></i>
+                            </a>
+                            <form th:action="@{/categorias/{id}/ativar(id=${c.id})}" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary"
+                                        th:title="${c.ativo} ? 'Inativar' : 'Reativar'"
+                                        th:aria-label="${c.ativo} ? 'Inativar' : 'Reativar'">
+                                    <i class="bi bi-power" aria-hidden="true"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(categorias)}">
+                        <td colspan="3" class="text-center text-muted py-5">
+                            <i class="bi bi-tags fs-3 d-block mb-2 opacity-50" aria-hidden="true"></i>
+                            Nenhuma categoria cadastrada.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+          </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>
