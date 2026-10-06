@@ -93,7 +93,7 @@ class ProducaoStatusPedidoTest {
         return produto;
     }
 
-    private Long pedidoConfirmado(List<Long> produtoIds, List<Integer> quantidades) {
+    private Long pedidoConfirmado(List<Long> produtoIds, List<BigDecimal> quantidades) {
         Pedido pedido = pedidoService.criarComItens(
                 cliente.getId(), LocalDate.now().plusDays(3), null, null, produtoIds, quantidades);
         em.flush();
@@ -113,7 +113,7 @@ class ProducaoStatusPedidoTest {
     @Test
     @DisplayName("Iniciar ordem leva pedido CONFIRMADO para EM_PRODUCAO")
     void iniciarOrdem_pedidoVaiParaEmProducao() {
-        Long pedidoId = pedidoConfirmado(List.of(produtoA.getId()), List.of(1));
+        Long pedidoId = pedidoConfirmado(List.of(produtoA.getId()), List.of(BigDecimal.ONE));
         OrdemProducao ordem = producaoService.listarPorPedido(pedidoId).get(0);
 
         producaoService.iniciarProducao(ordem.getId());
@@ -124,7 +124,7 @@ class ProducaoStatusPedidoTest {
     @Test
     @DisplayName("Concluir a última ordem aberta leva pedido para PRONTO")
     void concluirUltimaOrdem_pedidoVaiParaPronto() {
-        Long pedidoId = pedidoConfirmado(List.of(produtoA.getId()), List.of(1));
+        Long pedidoId = pedidoConfirmado(List.of(produtoA.getId()), List.of(BigDecimal.ONE));
         OrdemProducao ordem = producaoService.listarPorPedido(pedidoId).get(0);
 
         producaoService.concluirOrdem(ordem.getId());
@@ -136,7 +136,7 @@ class ProducaoStatusPedidoTest {
     @DisplayName("Concluir uma ordem com outra pendente não leva pedido para PRONTO")
     void concluirUmaOrdem_comOutraPendente_pedidoNaoVaiParaPronto() {
         Long pedidoId = pedidoConfirmado(
-                List.of(produtoA.getId(), produtoB.getId()), List.of(1, 1));
+                List.of(produtoA.getId(), produtoB.getId()), List.of(BigDecimal.ONE, BigDecimal.ONE));
         List<OrdemProducao> ordens = producaoService.listarPorPedido(pedidoId);
         assertThat(ordens).hasSize(2);
 
@@ -148,7 +148,7 @@ class ProducaoStatusPedidoTest {
     @Test
     @DisplayName("Cancelar a única ordem pendente não leva pedido para PRONTO")
     void cancelarOrdem_pedidoNaoVaiParaPronto() {
-        Long pedidoId = pedidoConfirmado(List.of(produtoA.getId()), List.of(1));
+        Long pedidoId = pedidoConfirmado(List.of(produtoA.getId()), List.of(BigDecimal.ONE));
         OrdemProducao ordem = producaoService.listarPorPedido(pedidoId).get(0);
 
         producaoService.cancelarOrdem(ordem.getId());

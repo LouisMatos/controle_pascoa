@@ -1,7 +1,6 @@
 package br.com.seuprojeto.pascoa.orcamento.dto;
 
 import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
@@ -14,8 +13,8 @@ public class OrcamentoItemForm {
     private Long produtoId;
 
     @NotNull(message = "Quantidade é obrigatória")
-    @Min(value = 1, message = "Quantidade mínima é 1")
-    private Integer quantidade;
+    @DecimalMin(value = "0.001", message = "Quantidade deve ser maior que zero")
+    private BigDecimal quantidade;
 
     // Opcional: se preenchido, deve ser positivo; null = usar preço de venda do produto
     @DecimalMin(value = "0.01", message = "Preço unitário deve ser maior que zero")

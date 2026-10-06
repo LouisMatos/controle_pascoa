@@ -64,7 +64,7 @@ class SoftDeleteHistoricoTest {
     private Long pedidoComItem() {
         Pedido pedido = pedidoService.criarComItens(
                 cliente.getId(), LocalDate.now().plusDays(2), null, null,
-                List.of(produto.getId()), List.of(1));
+                List.of(produto.getId()), List.of(BigDecimal.ONE));
         em.flush();
         em.clear();
         return pedido.getId();
@@ -130,7 +130,7 @@ class SoftDeleteHistoricoTest {
         em.flush();
         em.clear();
 
-        assertThatThrownBy(() -> pedidoService.adicionarItem(pedidoId, outro.getId(), 1))
+        assertThatThrownBy(() -> pedidoService.adicionarItem(pedidoId, outro.getId(), BigDecimal.ONE))
                 .isInstanceOf(RecursoNaoEncontradoException.class);
     }
 }

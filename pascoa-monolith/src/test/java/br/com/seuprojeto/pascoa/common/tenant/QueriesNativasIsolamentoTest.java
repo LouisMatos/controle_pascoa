@@ -96,7 +96,7 @@ class QueriesNativasIsolamentoTest {
                 .precoVenda(BigDecimal.TEN).build());
             Pedido pedido = pedidos.save(Pedido.builder().cliente(c).status(StatusPedido.ENTREGUE)
                 .totalPedido(new BigDecimal("100.00")).build());
-            itens.save(ItemPedido.builder().pedido(pedido).produto(p).quantidade(2)
+            itens.save(ItemPedido.builder().pedido(pedido).produto(p).quantidade(new BigDecimal("2"))
                 .precoUnitario(new BigDecimal("50.00")).build());
         });
 

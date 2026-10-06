@@ -55,17 +55,17 @@ public class BreakevenService {
             })
             .toList();
 
-        long totalUnidades = pedidosMes.stream()
+        BigDecimal totalUnidades = pedidosMes.stream()
             .flatMap(p -> p.getItens().stream())
-            .mapToLong(i -> i.getQuantidade())
-            .sum();
+            .map(i -> i.getQuantidade())
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal faturamentoMes = pedidosMes.stream()
             .map(p -> p.getTotalPedido())
             .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal precoMedioVenda = totalUnidades > 0
-            ? faturamentoMes.divide(BigDecimal.valueOf(totalUnidades), 4, RoundingMode.HALF_UP)
+        BigDecimal precoMedioVenda = totalUnidades.signum() > 0
+            ? faturamentoMes.divide(totalUnidades, 4, RoundingMode.HALF_UP)
             : BigDecimal.ZERO;
 
         // Custo médio variável: custoRealCalculado / unidades (fallback: 60% do preço)
@@ -77,9 +77,9 @@ public class BreakevenService {
         long pedidosComCusto = pedidosMes.stream()
             .filter(p -> p.getCustoRealCalculado() != null).count();
 
-        if (pedidosComCusto > 0 && totalUnidades > 0) {
+        if (pedidosComCusto > 0 && totalUnidades.signum() > 0) {
             custoMedioVariavel = custoMedioVariavel.divide(
-                BigDecimal.valueOf(totalUnidades), 4, RoundingMode.HALF_UP);
+                totalUnidades, 4, RoundingMode.HALF_UP);
         } else if (precoMedioVenda.compareTo(BigDecimal.ZERO) > 0) {
             custoMedioVariavel = precoMedioVenda.multiply(new BigDecimal("0.60"));
         }
@@ -92,14 +92,14 @@ public class BreakevenService {
         }
 
         BigDecimal pctAtingido = pontoEquilibrio.compareTo(BigDecimal.ZERO) > 0
-            ? BigDecimal.valueOf(totalUnidades)
+            ? totalUnidades
                 .divide(pontoEquilibrio, 4, RoundingMode.HALF_UP)
                 .multiply(BigDecimal.valueOf(100)).setScale(1, RoundingMode.HALF_UP)
             : BigDecimal.ZERO;
 
-        boolean acima = BigDecimal.valueOf(totalUnidades).compareTo(pontoEquilibrio) >= 0;
+        boolean acima = totalUnidades.compareTo(pontoEquilibrio) >= 0;
         long faltando = acima ? 0L
-            : pontoEquilibrio.subtract(BigDecimal.valueOf(totalUnidades))
+            : pontoEquilibrio.subtract(totalUnidades)
                 .setScale(0, RoundingMode.CEILING).longValue();
 
         return BreakevenDto.builder()
@@ -110,7 +110,7 @@ public class BreakevenService {
             .custoMedioVariavel(custoMedioVariavel.setScale(2, RoundingMode.HALF_UP))
             .margemContribuicao(margemContribuicao.setScale(2, RoundingMode.HALF_UP))
             .pontoEquilibrio(pontoEquilibrio)
-            .unidadesVendidasMes(totalUnidades)
+            .unidadesVendidasMes(totalUnidades.setScale(0, RoundingMode.HALF_UP).longValue())
             .acimaEquilibrio(acima)
             .percentualAtingido(pctAtingido)
             .unidadesFaltando(faltando)

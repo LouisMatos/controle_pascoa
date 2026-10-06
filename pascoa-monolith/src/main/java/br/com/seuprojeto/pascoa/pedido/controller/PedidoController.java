@@ -74,7 +74,7 @@ public class PedidoController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.TIME) LocalTime slotEntrega,
             @RequestParam(required = false) String observacoes,
             @RequestParam(value = "produtoId", required = false) List<Long> produtoIds,
-            @RequestParam(value = "quantidade", required = false) List<Integer> quantidades,
+            @RequestParam(value = "quantidade", required = false) List<BigDecimal> quantidades,
             RedirectAttributes ra) {
         try {
             Pedido pedido = pedidoService.criarComItens(

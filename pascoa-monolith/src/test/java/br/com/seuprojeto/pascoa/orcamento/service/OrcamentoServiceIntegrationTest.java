@@ -64,7 +64,7 @@ class OrcamentoServiceIntegrationTest {
     private OrcamentoForm formComUmItem(int qtd, BigDecimal preco) {
         OrcamentoItemForm itemForm = new OrcamentoItemForm();
         itemForm.setProdutoId(produto.getId());
-        itemForm.setQuantidade(qtd);
+        itemForm.setQuantidade(BigDecimal.valueOf(qtd));
         itemForm.setPrecoUnitario(preco);
 
         OrcamentoForm form = new OrcamentoForm();

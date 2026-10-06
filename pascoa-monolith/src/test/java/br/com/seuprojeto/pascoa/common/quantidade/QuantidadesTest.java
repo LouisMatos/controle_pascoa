@@ -39,6 +39,21 @@ class QuantidadesTest {
     }
 
     @Test
+    void limiteMaximoEhAceito_eAcimaEhRejeitado() {
+        assertThatCode(() -> Quantidades.validar(new BigDecimal("9999999.999"), UnidadeVenda.KG)).doesNotThrowAnyException();
+        assertThatThrownBy(() -> Quantidades.validar(new BigDecimal("10000000"), UnidadeVenda.KG))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Quantidade acima do máximo permitido.");
+    }
+
+    @Test
+    void unidadeNulaEhRejeitada() {
+        assertThatThrownBy(() -> Quantidades.validar(BigDecimal.ONE, null))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Unidade de venda é obrigatória.");
+    }
+
+    @Test
     void maisDeTresCasasEhRejeitado() {
         assertThatThrownBy(() -> Quantidades.validar(new BigDecimal("1.2345"), UnidadeVenda.KG))
             .hasMessage("Quantidade aceita no máximo 3 casas decimais.");

@@ -6,6 +6,7 @@ import br.com.seuprojeto.pascoa.financeiro.dto.CustoRealDto;
 import br.com.seuprojeto.pascoa.financeiro.repository.ConfiguracaoFinanceiraRepository;
 import br.com.seuprojeto.pascoa.financeiro.repository.DespesaFixaRepository;
 import br.com.seuprojeto.pascoa.financeiro.repository.DespesaVariavelRepository;
+import br.com.seuprojeto.pascoa.pedido.entity.ItemPedido;
 import br.com.seuprojeto.pascoa.pedido.entity.Pedido;
 import br.com.seuprojeto.pascoa.pedido.entity.StatusPedido;
 import br.com.seuprojeto.pascoa.pedido.repository.ItemPedidoRepository;
@@ -45,7 +46,7 @@ public class CustoRealService {
                 ? item.getCustoUnitario()
                 : custoUnitarioPelaFicha(fichasPorProduto.get(produto != null ? produto.getId() : null));
 
-            BigDecimal subtotal = custoUnit.multiply(BigDecimal.valueOf(item.getQuantidade()));
+            BigDecimal subtotal = custoUnit.multiply(item.getQuantidade());
             return CustoRealDto.LinhaCustoMpDto.builder()
                 .produto(produto != null ? produto.getNome() : "(produto removido)")
                 .quantidade(item.getQuantidade())
@@ -59,14 +60,14 @@ public class CustoRealService {
             .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal totalFixoMensal = despesaFixaRepository.sumMensalAtivas();
-        long totalUnidadesMes = contarUnidadesMes(pedido);
+        BigDecimal totalUnidadesMes = contarUnidadesMes(pedido);
         BigDecimal rateioFixo = BigDecimal.ZERO;
-        if (totalUnidadesMes > 0 && totalFixoMensal.compareTo(BigDecimal.ZERO) > 0) {
+        if (totalUnidadesMes.signum() > 0 && totalFixoMensal.compareTo(BigDecimal.ZERO) > 0) {
             BigDecimal rateioUnit = totalFixoMensal.divide(
-                BigDecimal.valueOf(totalUnidadesMes), 4, RoundingMode.HALF_UP);
-            long qtdPedido = pedido.getItens().stream()
-                .mapToLong(i -> i.getQuantidade()).sum();
-            rateioFixo = rateioUnit.multiply(BigDecimal.valueOf(qtdPedido))
+                totalUnidadesMes, 4, RoundingMode.HALF_UP);
+            BigDecimal qtdPedido = pedido.getItens().stream()
+                .map(ItemPedido::getQuantidade).reduce(BigDecimal.ZERO, BigDecimal::add);
+            rateioFixo = rateioUnit.multiply(qtdPedido)
                 .setScale(2, RoundingMode.HALF_UP);
         }
 
@@ -134,7 +135,7 @@ public class CustoRealService {
             : BigDecimal.ZERO;
     }
 
-    private long contarUnidadesMes(Pedido pedido) {
+    private BigDecimal contarUnidadesMes(Pedido pedido) {
         var mesRef = pedido.getDataPedido().toLocalDate().withDayOfMonth(1);
         var fimMes = mesRef.plusMonths(1);
         return pedidoRepository.findAllComCliente().stream()
@@ -144,7 +145,7 @@ public class CustoRealService {
                 return !d.isBefore(mesRef) && d.isBefore(fimMes);
             })
             .flatMap(p -> p.getItens().stream())
-            .mapToLong(i -> i.getQuantidade())
-            .sum();
+            .map(ItemPedido::getQuantidade)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }

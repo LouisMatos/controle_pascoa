@@ -100,7 +100,7 @@ class CustoRealServiceIntegrationTest {
         ItemPedido item = ItemPedido.builder()
                 .pedido(pedido)
                 .produto(produto)
-                .quantidade(qtd)
+                .quantidade(BigDecimal.valueOf(qtd))
                 .precoUnitario(precoUnit)
                 .build();
         pedido.getItens().add(item);
@@ -136,7 +136,7 @@ class CustoRealServiceIntegrationTest {
         assertThat(dto.getCustoMP()).isEqualByComparingTo(BigDecimal.ZERO);
         assertThat(dto.getLinhasMP()).hasSize(1);
         assertThat(dto.getLinhasMP().get(0).getProduto()).isEqualTo("Ovo Tradicional Puro");
-        assertThat(dto.getLinhasMP().get(0).getQuantidade()).isEqualTo(2);
+        assertThat(dto.getLinhasMP().get(0).getQuantidade()).isEqualByComparingTo("2");
         assertThat(dto.getLinhasMP().get(0).getSubtotal()).isEqualByComparingTo(BigDecimal.ZERO);
         assertThat(dto.getClienteNome()).isEqualTo("Maria");
         assertThat(dto.getTotalPedido()).isEqualByComparingTo(new BigDecimal("100.00"));

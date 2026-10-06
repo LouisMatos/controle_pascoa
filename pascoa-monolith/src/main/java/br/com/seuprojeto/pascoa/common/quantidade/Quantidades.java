@@ -7,13 +7,20 @@ import java.math.BigDecimal;
 public final class Quantidades {
 
     private static final int CASAS_MAXIMAS = 3;
+    private static final BigDecimal MAXIMO = new BigDecimal("9999999.999");
 
     private Quantidades() {
     }
 
     public static void validar(BigDecimal quantidade, UnidadeVenda unidade) {
+        if (unidade == null) {
+            throw new IllegalArgumentException("Unidade de venda é obrigatória.");
+        }
         if (quantidade == null || quantidade.signum() <= 0) {
             throw new IllegalArgumentException("Quantidade deve ser maior que zero.");
+        }
+        if (quantidade.compareTo(MAXIMO) > 0) {
+            throw new IllegalArgumentException("Quantidade acima do máximo permitido.");
         }
         int casas = Math.max(quantidade.stripTrailingZeros().scale(), 0);
         if (casas > CASAS_MAXIMAS) {

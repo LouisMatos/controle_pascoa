@@ -50,7 +50,7 @@ public class FinanceiroService {
             .limit(5)
             .map(r -> new TopProdutoDto(
                 (String) r[0],
-                ((Number) r[1]).longValue(),
+                toBigDecimal(r[1]),
                 r[2] != null ? (BigDecimal) r[2] : BigDecimal.ZERO))
             .toList();
 
@@ -100,5 +100,11 @@ public class FinanceiroService {
 
     private BigDecimal safe(BigDecimal v) {
         return v != null ? v : BigDecimal.ZERO;
+    }
+
+    private BigDecimal toBigDecimal(Object value) {
+        if (value == null) { return BigDecimal.ZERO; }
+        if (value instanceof BigDecimal bd) { return bd; }
+        return new BigDecimal(value.toString());
     }
 }

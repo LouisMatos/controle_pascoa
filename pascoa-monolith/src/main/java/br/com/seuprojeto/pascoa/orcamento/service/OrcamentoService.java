@@ -4,6 +4,7 @@ import br.com.seuprojeto.pascoa.cadastro.entity.Cliente;
 import br.com.seuprojeto.pascoa.cadastro.entity.Produto;
 import br.com.seuprojeto.pascoa.cadastro.repository.ClienteRepository;
 import br.com.seuprojeto.pascoa.cadastro.repository.ProdutoRepository;
+import br.com.seuprojeto.pascoa.common.quantidade.Quantidades;
 import br.com.seuprojeto.pascoa.orcamento.dto.OrcamentoForm;
 import br.com.seuprojeto.pascoa.orcamento.dto.OrcamentoItemForm;
 import br.com.seuprojeto.pascoa.orcamento.entity.Orcamento;
@@ -199,13 +200,14 @@ public class OrcamentoService {
             if (itemForm.getProdutoId() == null) {
                 continue;
             }
-            Integer qtd = itemForm.getQuantidade() != null ? itemForm.getQuantidade() : 1;
-            if (qtd <= 0) {
+            BigDecimal qtd = itemForm.getQuantidade() != null ? itemForm.getQuantidade() : BigDecimal.ONE;
+            if (qtd.signum() <= 0) {
                 continue;
             }
 
             Produto produto = produtoRepo.findById(itemForm.getProdutoId())
                     .orElseThrow(() -> new EntityNotFoundException("Produto não encontrado"));
+            Quantidades.validar(qtd, produto.getUnidadeVenda());
 
             BigDecimal preco = itemForm.getPrecoUnitario() != null
                     ? itemForm.getPrecoUnitario()
@@ -216,7 +218,7 @@ public class OrcamentoService {
                     .produto(produto)
                     .quantidade(qtd)
                     .precoUnitario(preco)
-                    .subtotal(preco.multiply(BigDecimal.valueOf(qtd)))
+                    .subtotal(preco.multiply(qtd).setScale(2, java.math.RoundingMode.HALF_UP))
                     .build();
             orc.getItens().add(oi);
             total = total.add(oi.getSubtotal());

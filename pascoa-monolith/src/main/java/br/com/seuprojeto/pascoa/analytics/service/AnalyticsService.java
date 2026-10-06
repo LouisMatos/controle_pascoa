@@ -73,7 +73,7 @@ public class AnalyticsService {
                 .map(r -> new RankingProdutoDto(
                         (String) r[0],
                         r[1] != null ? (String) r[1] : "—",
-                        ((Number) r[2]).longValue(),
+                        toBigDecimal(r[2]),
                         toBigDecimal(r[3])))
                 .collect(Collectors.toList());
     }

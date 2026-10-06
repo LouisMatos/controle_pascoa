@@ -21,6 +21,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 @Entity
 @Table(name = "orcamento_itens")
@@ -44,8 +45,8 @@ public class OrcamentoItem extends TenantEntity {
     @JoinColumn(name = "produto_id", nullable = false)
     private Produto produto;
 
-    @Column(nullable = false)
-    private Integer quantidade;
+    @Column(nullable = false, precision = 10, scale = 3)
+    private BigDecimal quantidade;
 
     @Column(name = "preco_unitario", nullable = false, precision = 10, scale = 2)
     private BigDecimal precoUnitario;
@@ -57,7 +58,7 @@ public class OrcamentoItem extends TenantEntity {
     @PreUpdate
     private void calcular() {
         if (quantidade != null && precoUnitario != null) {
-            subtotal = precoUnitario.multiply(BigDecimal.valueOf(quantidade));
+            subtotal = precoUnitario.multiply(quantidade).setScale(2, RoundingMode.HALF_UP);
         }
     }
 }

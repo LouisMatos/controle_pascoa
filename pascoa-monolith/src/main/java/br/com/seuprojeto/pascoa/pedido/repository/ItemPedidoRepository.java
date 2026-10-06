@@ -23,7 +23,7 @@ public interface ItemPedidoRepository extends JpaRepository<ItemPedido, Long> {
     List<Object[]> topProdutos(@Param("cancelado") StatusPedido cancelado);
 
     /** Ranking de produtos por ano: [nome, categoria, qtd, faturamento] */
-    @Query(value = "SELECT pr.nome, c.nome, SUM(i.quantidade)::bigint, COALESCE(SUM(i.subtotal), 0) " +
+    @Query(value = "SELECT pr.nome, c.nome, SUM(i.quantidade), COALESCE(SUM(i.subtotal), 0) " +
                    "FROM itens_pedido i " +
                    "JOIN produtos pr ON i.produto_id = pr.id " +
                    "LEFT JOIN categorias_produto c ON pr.categoria_id = c.id " +

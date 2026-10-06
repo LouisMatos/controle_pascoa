@@ -22,6 +22,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -46,8 +47,8 @@ public class OrdemProducao extends TenantEntity {
     @JoinColumn(name = "produto_id", nullable = false)
     private Produto produto;
 
-    @Column(nullable = false)
-    private Integer quantidade;
+    @Column(nullable = false, precision = 10, scale = 3)
+    private BigDecimal quantidade;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

@@ -87,7 +87,7 @@ class PedidoStateMachineTest {
                 null,
                 "Pedido de teste",
                 List.of(produto.getId()),
-                List.of(2));
+                List.of(new BigDecimal("2")));
         em.flush();
         em.clear();
         return pedido;

@@ -62,7 +62,7 @@ class AgingDerivadoTest {
         // o serviço recusa entrega no passado; pedido vencido é criado no futuro e recuado direto na entidade
         LocalDate entregaValida = dataEntrega.isBefore(LocalDate.now()) ? LocalDate.now().plusDays(1) : dataEntrega;
         Pedido pedido = pedidoService.criarComItens(
-                cliente.getId(), entregaValida, null, null, List.of(produto.getId()), List.of(2));
+                cliente.getId(), entregaValida, null, null, List.of(produto.getId()), List.of(new BigDecimal("2")));
         em.flush();
         em.clear();
         pedidoService.confirmar(pedido.getId());

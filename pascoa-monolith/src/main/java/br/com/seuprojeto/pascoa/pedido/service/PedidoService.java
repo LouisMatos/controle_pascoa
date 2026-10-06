@@ -4,6 +4,7 @@ import br.com.seuprojeto.pascoa.cadastro.entity.Cliente;
 import br.com.seuprojeto.pascoa.cadastro.entity.Produto;
 import br.com.seuprojeto.pascoa.cadastro.repository.ClienteRepository;
 import br.com.seuprojeto.pascoa.cadastro.repository.ProdutoRepository;
+import br.com.seuprojeto.pascoa.common.quantidade.Quantidades;
 import br.com.seuprojeto.pascoa.fichaTecnica.entity.FichaTecnica;
 import br.com.seuprojeto.pascoa.fichaTecnica.service.FichaTecnicaService;
 import br.com.seuprojeto.pascoa.notificacao.entity.EventoNotificacao;
@@ -34,6 +35,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -105,7 +107,7 @@ public class PedidoService {
                                 java.time.LocalTime slotEntrega,
                                 String observacoes,
                                 List<Long> produtoIds,
-                                List<Integer> quantidades) {
+                                List<BigDecimal> quantidades) {
         if (produtoIds == null || produtoIds.isEmpty()) {
             throw new IllegalArgumentException("O pedido precisa ter pelo menos um produto.");
         }
@@ -138,18 +140,20 @@ public class PedidoService {
         BigDecimal total = BigDecimal.ZERO;
         for (int i = 0; i < produtoIds.size(); i++) {
             Long produtoId = produtoIds.get(i);
-            Integer qtd = (quantidades != null && i < quantidades.size())
-                    ? quantidades.get(i) : 1;
-            if (produtoId == null || qtd == null || qtd <= 0) { continue; }
+            BigDecimal qtd = (quantidades != null && i < quantidades.size())
+                    ? quantidades.get(i) : BigDecimal.ONE;
+            if (produtoId == null || qtd == null || qtd.signum() <= 0) { continue; }
 
             Produto produto = produtosPorId.get(produtoId);
-            itens.add(ItemPedido.builder()
+            Quantidades.validar(qtd, produto.getUnidadeVenda());
+            ItemPedido item = ItemPedido.builder()
                 .pedido(pedido)
                 .produto(produto)
                 .quantidade(qtd)
                 .precoUnitario(produto.getPrecoVenda())
-                .build());
-            total = total.add(produto.getPrecoVenda().multiply(BigDecimal.valueOf(qtd)));
+                .build();
+            itens.add(item);
+            total = total.add(produto.getPrecoVenda().multiply(qtd).setScale(2, RoundingMode.HALF_UP));
         }
         if (itens.isEmpty()) {
             throw new IllegalArgumentException("Informe pelo menos um produto com quantidade maior que zero.");
@@ -179,7 +183,7 @@ public class PedidoService {
     // -----------------------------------------------------------------------
 
     @Transactional
-    public void adicionarItem(Long pedidoId, Long produtoId, Integer quantidade) {
+    public void adicionarItem(Long pedidoId, Long produtoId, BigDecimal quantidade) {
         Pedido pedido = buscarPorId(pedidoId);
         if (!pedido.getStatus().podeAdicionarItens()) {
             throw new IllegalStateException("Itens só podem ser adicionados a pedidos com status NOVO.");
@@ -189,6 +193,7 @@ public class PedidoService {
         }
         Produto produto = produtoRepository.findVigenteById(produtoId)
             .orElseThrow(() -> new RecursoNaoEncontradoException("Produto não encontrado"));
+        Quantidades.validar(quantidade, produto.getUnidadeVenda());
 
         ItemPedido item = ItemPedido.builder()
             .pedido(pedido)
@@ -258,7 +263,7 @@ public class PedidoService {
                 avisos.add(nome + ": sem ficha técnica válida");
                 continue;
             }
-            BigDecimal qtd = BigDecimal.valueOf(item.getQuantidade());
+            BigDecimal qtd = item.getQuantidade();
             for (var fi : ficha.getItens()) {
                 BigDecimal necessario = fi.getQuantidade().multiply(qtd)
                     .divide(ficha.getRendimento(), 4, java.math.RoundingMode.HALF_UP);

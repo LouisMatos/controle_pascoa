@@ -60,7 +60,7 @@ class PainelDoDiaTest {
         // o serviço recusa entrega no passado; pedido atrasado é criado no futuro e recuado direto na entidade
         LocalDate entregaValida = dataEntrega.isBefore(LocalDate.now()) ? LocalDate.now().plusDays(1) : dataEntrega;
         Pedido pedido = pedidoService.criarComItens(
-                cliente.getId(), entregaValida, null, null, List.of(produto.getId()), List.of(1));
+                cliente.getId(), entregaValida, null, null, List.of(produto.getId()), List.of(BigDecimal.ONE));
         Pedido confirmado = pedidoService.confirmar(pedido.getId());
         if (!entregaValida.equals(dataEntrega)) {
             Pedido atrasado = pedidoRepository.findById(confirmado.getId()).orElseThrow();

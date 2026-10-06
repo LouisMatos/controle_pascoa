@@ -26,7 +26,7 @@ class OrcamentoPdfServiceTest {
 
         OrcamentoItem item = OrcamentoItem.builder()
                 .produto(Produto.builder().nome("Ovo 500g").build())
-                .quantidade(2)
+                .quantidade(new BigDecimal("2"))
                 .precoUnitario(new BigDecimal("80.00"))
                 .subtotal(new BigDecimal("160.00"))
                 .build();

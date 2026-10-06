@@ -28,7 +28,7 @@ public class CustoRealDto {
     @Builder
     public static class LinhaCustoMpDto {
         private String produto;
-        private int quantidade;
+        private BigDecimal quantidade;
         private BigDecimal custoUnitario;
         private BigDecimal subtotal;
     }

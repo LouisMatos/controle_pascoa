@@ -25,7 +25,7 @@ class ProducaoReceitaTest {
         FichaTecnica ficha = FichaTecnica.builder().rendimento(new BigDecimal("5")).itens(List.of(
             FichaTecnicaItem.builder().materiaPrima(comCusto).quantidade(new BigDecimal("2")).build(),
             FichaTecnicaItem.builder().materiaPrima(semCusto).quantidade(new BigDecimal("1")).build())).build();
-        OrdemProducao ordem = OrdemProducao.builder().quantidade(10).build();
+        OrdemProducao ordem = OrdemProducao.builder().quantidade(BigDecimal.TEN).build();
 
         var r = service.calcularReceita(ordem, ficha);
 
@@ -36,5 +36,21 @@ class ProducaoReceitaTest {
         assertThat(r.custoPorUnidade()).isEqualByComparingTo("4.00");
         assertThat(r.insuficientes()).isEqualTo(1);
         assertThat(r.semCusto()).isEqualTo(1);
+    }
+
+    @Test
+    void calcularReceita_aceitaQuantidadeFracionada() {
+        MateriaPrima comCusto = MateriaPrima.builder().nome("Chocolate").unidade(Unidade.KG)
+            .quantidadeAtual(new BigDecimal("3")).custoUnitario(new BigDecimal("10")).build();
+        FichaTecnica ficha = FichaTecnica.builder().rendimento(new BigDecimal("5")).itens(List.of(
+            FichaTecnicaItem.builder().materiaPrima(comCusto).quantidade(new BigDecimal("2")).build())).build();
+        OrdemProducao ordem = OrdemProducao.builder().quantidade(new BigDecimal("2.5")).build();
+
+        var r = service.calcularReceita(ordem, ficha);
+
+        assertThat(r.linhas().get(0).qtdNecessaria()).isEqualByComparingTo("1.000");
+        assertThat(r.linhas().get(0).custo()).isEqualByComparingTo("10.00");
+        assertThat(r.linhas().get(0).estoqueOk()).isTrue();
+        assertThat(r.custoPorUnidade()).isEqualByComparingTo("4.00");
     }
 }

@@ -5,6 +5,7 @@ import br.com.seuprojeto.pascoa.fichaTecnica.entity.FichaTecnica;
 import br.com.seuprojeto.pascoa.fichaTecnica.entity.FichaTecnicaItem;
 import br.com.seuprojeto.pascoa.fichaTecnica.repository.FichaTecnicaRepository;
 import br.com.seuprojeto.pascoa.notificacao.service.AlertaInternoService;
+import br.com.seuprojeto.pascoa.common.quantidade.Quantidades;
 import br.com.seuprojeto.pascoa.pedido.entity.ItemPedido;
 import br.com.seuprojeto.pascoa.pedido.entity.Pedido;
 import br.com.seuprojeto.pascoa.producao.entity.OrdemProducao;
@@ -80,7 +81,7 @@ public class ProducaoService {
 
     /** Quantidade e custo por insumo escalados pela ordem: item × qtdOrdem ÷ rendimento. */
     public ReceitaCalculada calcularReceita(OrdemProducao ordem, FichaTecnica ficha) {
-        BigDecimal qtdOrdem = BigDecimal.valueOf(ordem.getQuantidade());
+        BigDecimal qtdOrdem = ordem.getQuantidade();
         BigDecimal rendimento = ficha.getRendimento();
         boolean rendimentoValido = rendimento != null && rendimento.compareTo(BigDecimal.ZERO) > 0;
         List<LinhaReceita> linhas = new ArrayList<>();
@@ -97,7 +98,7 @@ public class ProducaoService {
                 custoUnit, custo));
         }
         BigDecimal total = linhas.stream().map(LinhaReceita::custo).reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal porUnidade = ordem.getQuantidade() > 0
+        BigDecimal porUnidade = qtdOrdem.signum() > 0
             ? total.divide(qtdOrdem, 2, RoundingMode.HALF_UP) : BigDecimal.ZERO;
         return new ReceitaCalculada(linhas, total, porUnidade,
             linhas.stream().filter(l -> !l.estoqueOk()).count(),
@@ -168,7 +169,7 @@ public class ProducaoService {
                 "' não possui ingredientes cadastrados.");
         }
 
-        BigDecimal qtdOrdem = BigDecimal.valueOf(ordem.getQuantidade());
+        BigDecimal qtdOrdem = ordem.getQuantidade();
         BigDecimal rendimento = ficha.getRendimento();
 
         if (rendimento == null || rendimento.compareTo(BigDecimal.ZERO) <= 0) {
@@ -180,8 +181,8 @@ public class ProducaoService {
         // Valida disponibilidade de TODAS as MPs antes de deduzir qualquer uma
         verificarDisponibilidadeMP(ficha.getItens(), qtdOrdem, rendimento, ordem.getProduto().getNome());
 
-        String motivoBase = "Produção: " + ordem.getQuantidade() +
-                            "x " + ordem.getProduto().getNome() +
+        String motivoBase = "Produção: " + Quantidades.formatar(ordem.getQuantidade(), ordem.getProduto().getUnidadeVenda()) +
+                            " de " + ordem.getProduto().getNome() +
                             " | Ordem #" + ordem.getId();
 
         // Ordenação por ID da MP evita deadlock quando múltiplas MPs são bloqueadas em paralelo
