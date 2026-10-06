@@ -2,7 +2,7 @@
 
 > **Fonte:** Migrations V1–V16 do monólito + V1 de cada microsserviço  
 > **Bancos:** 10 PostgreSQL (1 monólito + 9 microsserviços) | **Versionamento:** Flyway  
-> **Atualizado em:** 2026-05-29
+> **Atualizado em:** 2026-10-05
 
 ---
 
@@ -63,11 +63,11 @@ audit_log           — tabela autônoma (sem FK, registra ações)
 configuracao_sistema — tabela singleton (id = 1 fixo)
 ```
 
-
 ## Multi-tenant (V16)
 
 - `lojas` (PK id, `nome` NN): uma linha por loja; id 1 = "Loja Padrão"; global, sem `loja_id`.
 - `loja_id BIGINT NN DEFAULT 1 FK→lojas` em `usuarios` e nas 29 tabelas de negócio (`@TenantId`). O `DEFAULT 1` mantém os dados existentes na loja padrão; o Hibernate sempre grava a loja do contexto. UNIQUE de negócio são compostos com `loja_id`.
+- `TenantAwareRepository` (base repository em `AppConfig`) existe porque o Hibernate 6.5 não aplica o `@TenantId` em `find`/`findById`; sobrescreve `findById`/`getReferenceById` com JPQL.
 - Sem `loja_id`: `lojas`, `shedlock`, `configuracao_sistema`.
 
 ---
@@ -614,10 +614,10 @@ configuracao_sistema — tabela singleton (id = 1 fixo)
 
 ## 16. Guia para Novas Migrations
 
-Próxima versão disponível: **V16**
+Próxima versão disponível: **V17**
 
 ```sql
--- Arquivo: src/main/resources/db/migration/V16__descricao.sql
+-- Arquivo: src/main/resources/db/migration/V17__descricao.sql
 
 -- Adicionar coluna nullable (seguro, sem DEFAULT obrigatório)
 ALTER TABLE nome_tabela ADD COLUMN nova_coluna VARCHAR(100);

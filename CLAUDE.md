@@ -52,7 +52,7 @@ Features novas nascem no microsserviço correspondente; monólito ainda concentr
 - `@RequiredArgsConstructor`, nunca `@Autowired`. Services `@Transactional`. Entidades herdam `BaseEntity`. Soft-delete `@SQLDelete` + `@SQLRestriction`.
 - Banco: nunca mexer em `ddl-auto`. Migration Flyway `V{N}__{descricao_snake_case}.sql` em `src/main/resources/db/migration/` (próxima: V17). Coluna NOT NULL nova exige DEFAULT.
 - Thymeleaf: `th:replace="~{fragments/layout :: layout(~{::title}, ~{::main})}"`; permissão via `sec:authorize`; forms com `th:action`/`th:object`/`th:field`.
-- Multi-tenant: entidade nova herda `TenantEntity` (ou `BaseEntity`) e a tabela ganha `loja_id BIGINT NOT NULL DEFAULT 1 REFERENCES lojas(id)`. `nativeQuery` exige `AND loja_id = " + TenantContext.LOJA_ATUAL_SPEL`. Job `@Scheduled` usa `TenantJobRunner.porLoja`. Thread própria: `TenantContext.executar(lojaId, ...)`.
+- Multi-tenant: entidade nova herda `TenantEntity` (ou `BaseEntity`) e a tabela ganha `loja_id BIGINT NOT NULL DEFAULT 1 REFERENCES lojas(id)`. `nativeQuery` exige `AND loja_id = " + TenantContext.LOJA_ATUAL_SPEL`. Job `@Scheduled` usa `TenantJobRunner.porLoja`. Thread própria: `TenantContext.executar(lojaId, ...)`. `TenantAwareRepository` (base repo) corrige `findById` que o Hibernate 6.5 não filtra por `@TenantId`.
 - Segurança: rota nova entra em `SecurityConfig.java`. Roles: ADMIN, FINANCEIRO, ATENDENTE, CONFEITEIRO, GESTOR_QUALIDADE, ANALISTA.
 - Spring Security 6: nunca `session.setAttribute(SPRING_SECURITY_CONTEXT_KEY, ctx)` — injetar `SecurityContextRepository` e chamar `saveContext(context, request, response)`. Ver `docs/10-bugfix-login-loop-gateway.md`.
 - `server.forward-headers-strategy=framework` obrigatório no monólito atrás do gateway.
