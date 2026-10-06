@@ -268,8 +268,9 @@ PAGAMENTO_RECEBIDO, PEDIDO_CANCELADO, ORCAMENTO_APROVADO, ORCAMENTO_RECUSADO
 | `V14__novas_notificacoes_item25.sql` | ✅ | Item 25: `cliente_id` + `orcamento_id` em notificacoes_enviadas, índices de idempotência |
 | `V15__indices_performance_fluxo_caixa.sql` | ✅ | Performance: `idx_pagamento_data_pagamento` + `idx_movimentacao_estoque_tipo_data` para agregações no DB |
 | `V16__multi_tenant.sql` | ✅ | F0.1: `lojas` + `loja_id` nas 29 tabelas de negócio e em `usuarios`; UNIQUE de `configuracao_canal`/`orcamentos_gasto` compostos |
+| `V17__categorias_produto.sql` | ✅ | F0.3: `categorias_produto` por loja; `produtos.categoria` (enum) vira `categoria_id` FK |
 
-> **Próxima versão de migration disponível:** V17.
+> **Próxima versão de migration disponível:** V18.
 
 ---
 
@@ -760,3 +761,14 @@ Pendentes (fora do escopo de design):
 - Queries nativas filtram por `TenantContext.LOJA_ATUAL_SPEL`; jobs `@Scheduled` rodam por loja (`TenantJobRunner.porLoja`); `@Async` e fila de campanha propagam a loja.
 - Catálogo público (`/catalogo/**`) preso à loja 1 até o F2.3. `/admin/sistema` só para usuários da loja 1 (403 nas demais).
 - Validado em PostgreSQL 16: V16 aplicada (success), `ddl-auto=validate` OK, 30 colunas `loja_id`, 0 pedidos fora da loja 1; duas lojas isoladas (clientes/pedidos/produtos/dashboard), tokens públicos de acompanhamento e orçamento funcionam sem login.
+
+---
+
+## 28. F0.3 — Doces e salgados
+
+**Fase A concluída** (categorias livres por loja). Fases B (unidade de venda e sazonal, V18) e C (quantidade decimal) pendentes.
+
+- Migration `V17__categorias_produto.sql` (próxima livre: V18): tabela `categorias_produto` (`loja_id`, `nome`, `ativo`, UNIQUE `(loja_id, nome)`), seis categorias iniciais por loja, `produtos.categoria_id` FK preenchido a partir do enum antigo e coluna `produtos.categoria` removida.
+- Enum `Categoria` removido; produto referencia `CategoriaProduto`. Tela `/categorias` (listar, criar, editar, inativar/reativar); `/produtos/novo` oferece as categorias ativas + "Sem categoria"; `/catalogo?categoria=<id>` filtra.
+- Seeds em `infra/seed/` atualizados para `categoria_id`.
+- Validado em PostgreSQL 16: `ddl-auto=validate` OK sobre o banco do dev (já em V17), telas `/produtos`, `/categorias`, `/catalogo`, `/analytics` conferidas por curl; os quatro seeds aplicam sem erro em banco novo migrado do zero até V17.

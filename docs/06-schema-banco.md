@@ -1,6 +1,6 @@
 # Schema do Banco de Dados — Sistema Controle Páscoa
 
-> **Fonte:** Migrations V1–V16 do monólito + V1 de cada microsserviço  
+> **Fonte:** Migrations V1–V17 do monólito + V1 de cada microsserviço  
 > **Bancos:** 10 PostgreSQL (1 monólito + 9 microsserviços) | **Versionamento:** Flyway  
 > **Atualizado em:** 2026-10-05
 
@@ -121,7 +121,7 @@ configuracao_sistema — tabela singleton (id = 1 fixo)
 | `id` | BIGSERIAL | PK | |
 | `nome` | VARCHAR(150) | NN | |
 | `descricao` | VARCHAR(500) | | |
-| `categoria` | VARCHAR(20) | NN | Enum: TRUFADO, RECHEADO, DIET, VEGANO, TRADICIONAL, ESPECIAL |
+| `categoria_id` | BIGINT | FK → `categorias_produto(id)`, IDX | **V17** — nullable ("Sem categoria"); substitui a coluna enum `categoria` |
 | `preco_venda` | NUMERIC(10,2) | NN | |
 | `ativo` | BOOLEAN | NN, DEF `TRUE` | |
 | `margem_desejada` | NUMERIC(5,2) | | % de margem desejada |
@@ -135,6 +135,16 @@ configuracao_sistema — tabela singleton (id = 1 fixo)
 | `atualizado_por` | VARCHAR(100) | | Auditoria BaseEntity |
 
 ---
+
+### `categorias_produto`
+| Coluna | Tipo | Restrições | Notas |
+|--------|------|-----------|-------|
+| `id` | BIGSERIAL | PK | **V17** |
+| `loja_id` | BIGINT | NN, DEF 1, FK → `lojas(id)`, IDX | |
+| `nome` | VARCHAR(60) | NN, UQ `(loja_id, nome)` | |
+| `ativo` | BOOLEAN | NN, DEF `TRUE` | Inativa some do formulário de produto |
+
+Seed V17: Trufado, Recheado, Diet, Vegano, Tradicional, Especial para cada loja.
 
 ### `materias_primas`
 | Coluna | Tipo | Restrições | Notas |
@@ -614,10 +624,10 @@ configuracao_sistema — tabela singleton (id = 1 fixo)
 
 ## 16. Guia para Novas Migrations
 
-Próxima versão disponível: **V17**
+Próxima versão disponível: **V18**
 
 ```sql
--- Arquivo: src/main/resources/db/migration/V17__descricao.sql
+-- Arquivo: src/main/resources/db/migration/V18__descricao.sql
 
 -- Adicionar coluna nullable (seguro, sem DEFAULT obrigatório)
 ALTER TABLE nome_tabela ADD COLUMN nova_coluna VARCHAR(100);
