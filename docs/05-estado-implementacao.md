@@ -279,7 +279,7 @@ PAGAMENTO_RECEBIDO, PEDIDO_CANCELADO, ORCAMENTO_APROVADO, ORCAMENTO_RECUSADO
 
 ## 15. Testes
 
-### ✅ Testes — 189 (0 falhas; tabela abaixo parcial)
+### ✅ Testes — 205 (0 falhas; tabela abaixo parcial)
 
 | Classe | Testes | Cobre |
 |--------|--------|-------|
@@ -785,6 +785,7 @@ Pendentes (fora do escopo de design):
 - Migration `V19__quantidade_decimal.sql`: `quantidade` de `itens_pedido`, `orcamento_itens` e `ordens_producao` vira NUMERIC(10,3). Máximo 9999999.999, acima disso "Quantidade acima do máximo permitido." (sem HTTP 500).
 - `Quantidades` (validação por unidade: só KG aceita fração; as demais respondem "<Unidade> só aceita quantidade inteira.") e `QuantidadeFormatter`, exposto nos templates como `@fmt`, formata em pt-BR ("1,5 kg"). Wizard, formulários, detalhes e PDFs mostram a unidade; o navegador envia ponto decimal, a vírgula é só de exibição. Receita da ordem escalada por quantidade ÷ rendimento.
 - Correção: `PedidoService.adicionarItem`/`removerItem` agora atualizam o total do pedido (bug anterior).
-- Validado em PostgreSQL 16 sobre cópia do dev (V18, 123 pedidos, 164 itens): V19 aplicada, soma das quantidades preservada (209), `ddl-auto=validate` OK. Manual (porta 8086): Bolo por Quilo R$ 40 (ficha rendimento 2) com 1,5 kg pelo wizard = R$ 60,00, ordem "1,5 kg" com insumo 0,8 -> 0,600 kg, PDFs de ordem/pedido/orçamento, Coxinha por Cento recusa 1,5, orçamento com os dois itens convertido em pedido, `/financeiro/dashboard`, `/analytics` e `/financeiro/custo-real/<id>` 200. Os quatro seeds aplicam em banco novo V1..V19. Suíte: 174 testes (sem IT/`*IntegrationTest`) + 31 `*IntegrationTest`, 0 falhas.
+- Validado em PostgreSQL 16 sobre cópia do dev (V18, 123 pedidos, 164 itens): V19 aplicada, soma das quantidades preservada (209), `ddl-auto=validate` OK. Manual (porta 8086): Bolo por Quilo R$ 40 (ficha rendimento 2) com 1,5 kg por POST do wizard via curl (JS lido, não testado em navegador) = R$ 60,00, ordem "1,5 kg" com insumo 0,8 -> 0,600 kg, PDFs de ordem/pedido/orçamento, Coxinha por Cento recusa 1,5, orçamento com os dois itens convertido em pedido (aprovado via SQL; link público `/orcamento-publico/{token}` não exercitado), `/financeiro/dashboard`, `/analytics` e `/financeiro/custo-real/<id>` 200. Os quatro seeds aplicam em banco novo V1..V19. Suíte: 174 testes (sem IT/`*IntegrationTest`) + 31 `*IntegrationTest`, 0 falhas.
+- A UI do wizard não foi testada em navegador.
 - Limitação conhecida: rateio de despesa fixa e ponto de equilíbrio somam quantidades de unidades de venda diferentes (kg + cento + un), distorcendo a conta quando a loja mistura unidades; usar a receita como base é item futuro.
 - Limitação conhecida: quantidade no máximo vezes o preço pode estourar `pedidos.total_pedido` NUMERIC(10,2) (erro de banco exibido na mensagem do wizard).
