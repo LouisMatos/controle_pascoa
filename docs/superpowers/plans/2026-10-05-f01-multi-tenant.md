@@ -581,7 +581,88 @@ class TenantIsolamentoTest {
 - [ ] **Step 6: Rodar o teste de isolamento**
 
 Run: `mvn test -pl pascoa-monolith -Dtest=TenantIsolamentoTest`
-Expected: 5 testes passando. Se `findById_deOutraLoja_voltaVazio` falhar (o Hibernate não aplicar o filtro de tenant em `find`), **parar e reportar** ao responsável antes de seguir: o desenho assume que `@TenantId` cobre `findById`.
+Expected: 5 testes; `findById_deOutraLoja_voltaVazio` falha até o Step 6b (o Hibernate não aplica o filtro de `@TenantId` em `find`).
+
+- [ ] **Step 6b: Base repository tenant-aware (o Hibernate 6.5 não aplica o filtro de `@TenantId` em `find`/`findById`)**
+
+Confirmado na execução: `clientes.findById(id)` na loja 2 devolvia o cliente da loja 1 (`findAll` e JPQL já isolavam). Decisão do responsável: sobrescrever `findById` e `getReferenceById` numa base global, usando JPQL, que o filtro cobre.
+
+`<main>/common/tenant/TenantAwareRepository.java`:
+
+```java
+package br.com.seuprojeto.pascoa.common.tenant;
+
+import br.com.seuprojeto.pascoa.common.entity.TenantEntity;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.data.jpa.repository.support.JpaEntityInformation;
+import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
+
+public class TenantAwareRepository<T, ID> extends SimpleJpaRepository<T, ID> {
+
+    private final EntityManager em;
+    private final JpaEntityInformation<T, ?> info;
+    private final boolean porTenant;
+
+    public TenantAwareRepository(JpaEntityInformation<T, ?> info, EntityManager em) {
+        super(info, em);
+        this.em = em;
+        this.info = info;
+        this.porTenant = TenantEntity.class.isAssignableFrom(info.getJavaType());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<T> findById(ID id) {
+        if (!porTenant) {
+            return super.findById(id);
+        }
+        String atributoId = info.getRequiredIdAttribute().getName();
+        return em.createQuery("select e from " + info.getEntityName() + " e where e." + atributoId + " = :id",
+                info.getJavaType())
+            .setParameter("id", id)
+            .getResultStream()
+            .findFirst();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public T getReferenceById(ID id) {
+        if (!porTenant) {
+            return super.getReferenceById(id);
+        }
+        return findById(id).orElseThrow(
+            () -> new EntityNotFoundException(info.getEntityName() + " não encontrado: " + id));
+    }
+}
+```
+
+Em `<main>/config/AppConfig.java`, acrescentar à classe a anotação (com imports `org.springframework.data.jpa.repository.config.EnableJpaRepositories` e `br.com.seuprojeto.pascoa.common.tenant.TenantAwareRepository`):
+
+```java
+@EnableJpaRepositories(basePackages = "br.com.seuprojeto.pascoa", repositoryBaseClass = TenantAwareRepository.class)
+```
+
+(`basePackages` explícito porque, sem ele, o Spring escanearia só o pacote `config`.) Acrescentar ao `TenantIsolamentoTest`:
+
+```java
+    @Test
+    void deleteById_deOutraLoja_naoApaga_eGetReferenceByIdFalha() {
+        Long id = TenantContext.calcular(1L, () -> fornecedores.save(Fornecedor.builder()
+            .nome("Fornecedor-" + UUID.randomUUID()).build()).getId());
+
+        TenantContext.executar(2L, () -> fornecedores.deleteById(id));
+
+        assertThat(TenantContext.calcular(1L, () -> fornecedores.findById(id))).isPresent();
+        assertThatThrownBy(() -> TenantContext.executar(2L, () -> fornecedores.getReferenceById(id)))
+            .isInstanceOf(jakarta.persistence.EntityNotFoundException.class);
+    }
+```
+
+Rodar `mvn test -pl pascoa-monolith -Dtest=TenantIsolamentoTest`: os 6 testes devem passar.
 
 - [ ] **Step 7: Rodar a suíte completa**
 
