@@ -28,7 +28,7 @@
 | Catálogo público | ✅ Completo |
 | PWA | ✅ Completo |
 | Segurança / RBAC | ✅ Completo |
-| Testes de integração | ✅ 189 testes cobrindo todos os módulos críticos |
+| Testes de integração | ✅ 205 testes (174 unitários + 31 `*IntegrationTest`) cobrindo todos os módulos críticos |
 
 ### Microsserviços v5 — Migração Strangler Fig (design doc v5)
 | Serviço | Status | Porta | Checklist 11.1 |
@@ -271,7 +271,9 @@ PAGAMENTO_RECEBIDO, PEDIDO_CANCELADO, ORCAMENTO_APROVADO, ORCAMENTO_RECUSADO
 | `V17__categorias_produto.sql` | ✅ | F0.3: `categorias_produto` por loja; `produtos.categoria` (enum) vira `categoria_id` FK |
 | `V18__unidade_venda_sazonal.sql` | ✅ | F0.3: `produtos.unidade_venda` (default `UNIDADE`, deduzida da ficha) e `produtos.sazonal`; `fichas_tecnicas.unidade_rendimento` passa a nullable |
 
-> **Próxima versão de migration disponível:** V19.
+| `V19__quantidade_decimal.sql` | ✅ | F0.3: `quantidade` de `itens_pedido`, `orcamento_itens` e `ordens_producao` INTEGER -> NUMERIC(10,3) |
+
+> **Próxima versão de migration disponível:** V20.
 
 ---
 
@@ -767,7 +769,7 @@ Pendentes (fora do escopo de design):
 
 ## 28. F0.3 — Doces e salgados
 
-**Fases A e B concluídas** (categorias livres por loja; unidade de venda e sazonal). Fase C (quantidade decimal, V19) pendente.
+**F0.3 concluído** (Fases A, B e C: categorias livres por loja; unidade de venda e sazonal; quantidade decimal).
 
 - Migration `V17__categorias_produto.sql` (V18 aplicada na Fase B): tabela `categorias_produto` (`loja_id`, `nome`, `ativo`, UNIQUE `(loja_id, nome)`), seis categorias iniciais por loja, `produtos.categoria_id` FK preenchido a partir do enum antigo e coluna `produtos.categoria` removida.
 - Enum `Categoria` removido; produto referencia `CategoriaProduto`. Tela `/categorias` (listar, criar, editar, inativar/reativar); `/produtos/novo` oferece as categorias ativas + "Sem categoria"; `/catalogo?categoria=<id>` filtra.
@@ -778,4 +780,11 @@ Pendentes (fora do escopo de design):
 - Migration `V18__unidade_venda_sazonal.sql` (próxima livre: V19): `produtos.unidade_venda` (NN, DEF `UNIDADE`; deduzida da ficha: KG->KG, CX->PACOTE, demais->UNIDADE), `produtos.sazonal` (NN, DEF `FALSE`; `TRUE` onde havia `inicio_safra`/`fim_safra`) e `fichas_tecnicas.unidade_rendimento` nullable.
 - Enum `UnidadeVenda` (UNIDADE, DUZIA, CENTO, PACOTE, KG). Form do produto: select "Vendido por" e checkbox "sazonal" que mostra/oculta as datas (`static/js/produto-form.js`). Ficha técnica: rendimento na unidade de venda do produto, sem seletor de unidade; `unidade_rendimento` fica sem uso e opcional. PDF da ordem: "Rendimento da receita: N <símbolo>". "Safra" vira "Período" no rótulo de analytics.
 - Validado em PostgreSQL 16 sobre cópia do dev (já em V18): `ddl-auto=validate` OK; 8 produtos, todos UNIDADE/não sazonal (8 fichas em UN, nenhuma com datas de safra). Ramos KG/CX/G/L/ML/sem ficha/com datas exercitados em banco descartável (V1..V17 + V18 manual). Manual: produto "Coxinha" por Cento (campos de temporada ocultos/visíveis conforme o checkbox), ficha sem seletor de unidade ("Rendimento (em Cento)"), PDF da ordem com "100,000 cento".
-- Pendente (Fase C): "Quantidade: N unidade(s)" no PDF da ordem ainda é fixo.
+
+**Fase C** (V19):
+- Migration `V19__quantidade_decimal.sql`: `quantidade` de `itens_pedido`, `orcamento_itens` e `ordens_producao` vira NUMERIC(10,3). Máximo 9999999.999, acima disso "Quantidade acima do máximo permitido." (sem HTTP 500).
+- `Quantidades` (validação por unidade: só KG aceita fração; as demais respondem "<Unidade> só aceita quantidade inteira.") e `QuantidadeFormatter`, exposto nos templates como `@fmt`, formata em pt-BR ("1,5 kg"). Wizard, formulários, detalhes e PDFs mostram a unidade; o navegador envia ponto decimal, a vírgula é só de exibição. Receita da ordem escalada por quantidade ÷ rendimento.
+- Correção: `PedidoService.adicionarItem`/`removerItem` agora atualizam o total do pedido (bug anterior).
+- Validado em PostgreSQL 16 sobre cópia do dev (V18, 123 pedidos, 164 itens): V19 aplicada, soma das quantidades preservada (209), `ddl-auto=validate` OK. Manual (porta 8086): Bolo por Quilo R$ 40 (ficha rendimento 2) com 1,5 kg pelo wizard = R$ 60,00, ordem "1,5 kg" com insumo 0,8 -> 0,600 kg, PDFs de ordem/pedido/orçamento, Coxinha por Cento recusa 1,5, orçamento com os dois itens convertido em pedido, `/financeiro/dashboard`, `/analytics` e `/financeiro/custo-real/<id>` 200. Os quatro seeds aplicam em banco novo V1..V19. Suíte: 174 testes (sem IT/`*IntegrationTest`) + 31 `*IntegrationTest`, 0 falhas.
+- Limitação conhecida: rateio de despesa fixa e ponto de equilíbrio somam quantidades de unidades de venda diferentes (kg + cento + un), distorcendo a conta quando a loja mistura unidades; usar a receita como base é item futuro.
+- Limitação conhecida: quantidade no máximo vezes o preço pode estourar `pedidos.total_pedido` NUMERIC(10,2) (erro de banco exibido na mensagem do wizard).

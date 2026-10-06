@@ -1,6 +1,6 @@
 # Schema do Banco de Dados — Sistema Controle Páscoa
 
-> **Fonte:** Migrations V1–V18 do monólito + V1 de cada microsserviço  
+> **Fonte:** Migrations V1–V19 do monólito + V1 de cada microsserviço  
 > **Bancos:** 10 PostgreSQL (1 monólito + 9 microsserviços) | **Versionamento:** Flyway  
 > **Atualizado em:** 2026-10-05
 
@@ -214,7 +214,7 @@ Seed V17: Trufado, Recheado, Diet, Vegano, Tradicional, Especial para cada loja.
 | `id` | BIGSERIAL | PK | |
 | `pedido_id` | BIGINT | NN, FK → `pedidos(id)` | |
 | `produto_id` | BIGINT | NN, FK → `produtos(id)` | |
-| `quantidade` | INTEGER | NN | |
+| `quantidade` | NUMERIC(10,3) | NN | **V19** — era INTEGER; fração só em unidade KG |
 | `preco_unitario` | NUMERIC(10,2) | NN | **Fixado no momento do pedido** — não atualiza se produto mudar de preço |
 | `subtotal` | NUMERIC(12,2) | | `quantidade × preco_unitario` |
 
@@ -255,7 +255,7 @@ Seed V17: Trufado, Recheado, Diet, Vegano, Tradicional, Especial para cada loja.
 | `id` | BIGSERIAL | PK | |
 | `orcamento_id` | BIGINT | NN, FK → `orcamentos(id)` ON DELETE CASCADE | |
 | `produto_id` | BIGINT | NN, FK → `produtos(id)` | |
-| `quantidade` | INTEGER | NN | |
+| `quantidade` | NUMERIC(10,3) | NN | **V19** — era INTEGER |
 | `preco_unitario` | NUMERIC(10,2) | NN | |
 | `subtotal` | NUMERIC(12,2) | NN | |
 
@@ -286,7 +286,7 @@ Seed V17: Trufado, Recheado, Diet, Vegano, Tradicional, Especial para cada loja.
 | `id` | BIGSERIAL | PK | |
 | `pedido_id` | BIGINT | FK → `pedidos(id)` | Opcional — ordem pode existir sem pedido direto |
 | `produto_id` | BIGINT | NN, FK → `produtos(id)` | |
-| `quantidade` | INTEGER | NN | |
+| `quantidade` | NUMERIC(10,3) | NN | **V19** — era INTEGER |
 | `status` | VARCHAR(20) | NN, DEF `'PENDENTE'` | Enum: PENDENTE, EM_ANDAMENTO, CONCLUIDA |
 | `data_abertura` | TIMESTAMP | | |
 | `data_conclusao` | TIMESTAMP | | |
@@ -626,10 +626,10 @@ Seed V17: Trufado, Recheado, Diet, Vegano, Tradicional, Especial para cada loja.
 
 ## 16. Guia para Novas Migrations
 
-Próxima versão disponível: **V19**
+Próxima versão disponível: **V20**
 
 ```sql
--- Arquivo: src/main/resources/db/migration/V19__descricao.sql
+-- Arquivo: src/main/resources/db/migration/V20__descricao.sql
 
 -- Adicionar coluna nullable (seguro, sem DEFAULT obrigatório)
 ALTER TABLE nome_tabela ADD COLUMN nova_coluna VARCHAR(100);
@@ -715,7 +715,7 @@ Cada microsserviço possui seu próprio banco e migration `V1__create_{servico}_
 
 | Serviço | Última migration | Próxima |
 |---------|----------------|---------|
-| pascoa-monolith | V18 | **V19** |
+| pascoa-monolith | V19 | **V20** |
 | pascoa-auth-service | V1 | **V2** |
 | pascoa-customer-service | V1 | **V2** |
 | pascoa-inventory-service | V1 | **V2** |

@@ -50,7 +50,7 @@ Features novas nascem no microsserviço correspondente; monólito ainda concentr
 ## Convenções
 
 - `@RequiredArgsConstructor`, nunca `@Autowired`. Services `@Transactional`. Entidades herdam `BaseEntity`. Soft-delete `@SQLDelete` + `@SQLRestriction`.
-- Banco: nunca mexer em `ddl-auto`. Migration Flyway `V{N}__{descricao_snake_case}.sql` em `src/main/resources/db/migration/` (próxima: V19). Coluna NOT NULL nova exige DEFAULT.
+- Banco: nunca mexer em `ddl-auto`. Migration Flyway `V{N}__{descricao_snake_case}.sql` em `src/main/resources/db/migration/` (próxima: V20). Coluna NOT NULL nova exige DEFAULT.
 - Thymeleaf: `th:replace="~{fragments/layout :: layout(~{::title}, ~{::main})}"`; permissão via `sec:authorize`; forms com `th:action`/`th:object`/`th:field`.
 - Multi-tenant: entidade nova herda `TenantEntity` (ou `BaseEntity`) e a tabela ganha `loja_id BIGINT NOT NULL DEFAULT 1 REFERENCES lojas(id)`. `nativeQuery` exige `AND loja_id = " + TenantContext.LOJA_ATUAL_SPEL`. Job `@Scheduled` usa `TenantJobRunner.porLoja`. Thread própria: `TenantContext.executar(lojaId, ...)`. `TenantAwareRepository` (base repo) corrige `findById`/`getReferenceById`/`save`/`delete`, que o Hibernate 6.5 não filtra por `@TenantId`. Trocar o tenant não afeta uma sessão Hibernate já aberta (o tenant fica fixo na abertura da sessão).
 - Segurança: rota nova entra em `SecurityConfig.java`. Roles: ADMIN, FINANCEIRO, ATENDENTE, CONFEITEIRO, GESTOR_QUALIDADE, ANALISTA.
@@ -73,7 +73,7 @@ Jobs: aniversário 08h, orçamento expirando 09h.
 | `docs/02-arquitetura-tecnica.md` | código Java |
 | `docs/03-fluxos-negocio.md` | regra de negócio |
 | `docs/04-rotas-endpoints.md` | rotas/permissões |
-| `docs/06-schema-banco.md` | 29 tabelas, FKs, migrations V1–V18 |
+| `docs/06-schema-banco.md` | 29 tabelas, FKs, migrations V1–V19 |
 | `docs/07-convencoes-desenvolvimento.md` | padrões + checklist de PR |
 | `docs/01-infraestrutura.md` | deploy/infra |
 | `docs/08-manutencao-docs.md` | protocolo de fim de sessão |

@@ -20,7 +20,7 @@ Critério de pronto de qualquer item: funciona no celular, não exige leitura de
 |---|---|---|
 | F0.1 | Multi-tenant: `loja_id` em todas as entidades, filtro automático (Hibernate filter), testes de isolamento entre lojas | Bloqueia a venda a terceiros. Migration com `loja_id NOT NULL DEFAULT` apontando para a loja atual |
 | F0.2 | Cadastro self-service da loja e onboarding de 3 passos (nome da loja, produtos de exemplo, primeiro pedido) | Hoje só ADMIN cria usuário |
-| F0.3 | Generalizar "Páscoa": produto com unidade de venda (unidade, dúzia, cento, kg), categoria (doce, salgado, ovo, outro), sazonal opcional. "Safra" vira "período" | Salgado se vende por cento |
+| F0.3 (concluído) | Generalizar "Páscoa": produto com unidade de venda (unidade, dúzia, cento, kg), categoria (doce, salgado, ovo, outro), sazonal opcional. "Safra" vira "período" | Salgado se vende por cento |
 | F0.4 | Modo simples: 6 roles viram 2 (Dono, Equipe). Qualidade, LGPD, auditoria e 2FA vão para "Configurações avançadas". Menu enxuto | Mapear roles antigas para as novas na migration |
 | F0.5 | Congelar microsserviços v5 | Decisão confirmada: parar de investir, não apagar |
 | F0.6 | Dívidas de segurança: exclusão por GET virar POST com CSRF (`/notificacoes/templates/{id}/excluir`), senha mínima de 4 caracteres, uploads em S3 | Antes de abrir a terceiros |
