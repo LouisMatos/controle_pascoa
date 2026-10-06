@@ -1,5 +1,6 @@
 package br.com.seuprojeto.pascoa.cadastro.repository;
 
+import br.com.seuprojeto.pascoa.common.tenant.TenantContext;
 import br.com.seuprojeto.pascoa.cadastro.dto.ClienteComboDto;
 import br.com.seuprojeto.pascoa.cadastro.entity.Cliente;
 import org.springframework.data.domain.Page;
@@ -42,7 +43,8 @@ public interface ClienteRepository extends JpaRepository<Cliente, Long> {
                    "AND EXTRACT(MONTH FROM data_nascimento) = :mes " +
                    "AND EXTRACT(DAY FROM data_nascimento) = :dia " +
                    "AND opt_in = TRUE " +
-                   "AND excluido_em IS NULL",
+                   "AND excluido_em IS NULL " +
+                   "AND loja_id = " + TenantContext.LOJA_ATUAL_SPEL,
            nativeQuery = true)
     List<Cliente> findAniversariantesHoje(@Param("mes") int mes, @Param("dia") int dia);
 

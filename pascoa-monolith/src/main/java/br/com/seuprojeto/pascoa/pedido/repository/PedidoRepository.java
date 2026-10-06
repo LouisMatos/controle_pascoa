@@ -1,5 +1,6 @@
 package br.com.seuprojeto.pascoa.pedido.repository;
 
+import br.com.seuprojeto.pascoa.common.tenant.TenantContext;
 import br.com.seuprojeto.pascoa.pedido.entity.Pedido;
 import br.com.seuprojeto.pascoa.pedido.entity.StatusPedido;
 import org.springframework.data.domain.Page;
@@ -72,24 +73,28 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     /** Faturamento e contagem por mês de um ano: [mes(int), faturamento, count] */
     @Query(value = "SELECT EXTRACT(MONTH FROM data_pedido)::int, COALESCE(SUM(total_pedido),0), COUNT(*) " +
                    "FROM pedidos WHERE EXTRACT(YEAR FROM data_pedido) = :ano AND status != 'CANCELADO' " +
+                   "AND loja_id = " + TenantContext.LOJA_ATUAL_SPEL + " " +
                    "GROUP BY 1 ORDER BY 1", nativeQuery = true)
     List<Object[]> faturamentoPorMes(@Param("ano") int ano);
 
     /** Total de faturamento de um ano (excluindo CANCELADO). */
     @Query(value = "SELECT COALESCE(SUM(total_pedido), 0) FROM pedidos " +
-                   "WHERE EXTRACT(YEAR FROM data_pedido) = :ano AND status != 'CANCELADO'",
+                   "WHERE EXTRACT(YEAR FROM data_pedido) = :ano AND status != 'CANCELADO' " +
+                   "AND loja_id = " + TenantContext.LOJA_ATUAL_SPEL,
            nativeQuery = true)
     BigDecimal totalPorAno(@Param("ano") int ano);
 
     /** Total de pedidos de um ano (excluindo CANCELADO). */
     @Query(value = "SELECT COUNT(*) FROM pedidos " +
-                   "WHERE EXTRACT(YEAR FROM data_pedido) = :ano AND status != 'CANCELADO'",
+                   "WHERE EXTRACT(YEAR FROM data_pedido) = :ano AND status != 'CANCELADO' " +
+                   "AND loja_id = " + TenantContext.LOJA_ATUAL_SPEL,
            nativeQuery = true)
     long countPorAno(@Param("ano") int ano);
 
     /** Anos distintos que têm pedidos (ordenado DESC). */
     @Query(value = "SELECT DISTINCT EXTRACT(YEAR FROM data_pedido)::int FROM pedidos " +
-                   "WHERE status != 'CANCELADO' ORDER BY 1 DESC", nativeQuery = true)
+                   "WHERE status != 'CANCELADO' AND loja_id = " + TenantContext.LOJA_ATUAL_SPEL +
+                   " ORDER BY 1 DESC", nativeQuery = true)
     List<Integer> anosComPedidos();
 
     @Query("SELECT COALESCE(SUM(p.totalPedido), 0) FROM Pedido p " +

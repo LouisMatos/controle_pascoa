@@ -1,5 +1,6 @@
 package br.com.seuprojeto.pascoa.notificacao.repository;
 
+import br.com.seuprojeto.pascoa.common.tenant.TenantContext;
 import br.com.seuprojeto.pascoa.notificacao.entity.CanalNotificacao;
 import br.com.seuprojeto.pascoa.notificacao.entity.EventoNotificacao;
 import br.com.seuprojeto.pascoa.notificacao.entity.NotificacaoEnviada;
@@ -42,7 +43,8 @@ public interface NotificacaoEnviadaRepository extends JpaRepository<NotificacaoE
                    "AND evento = :evento " +
                    "AND canal = :canal " +
                    "AND status = 'ENVIADA' " +
-                   "AND EXTRACT(YEAR FROM data_envio) = :ano",
+                   "AND EXTRACT(YEAR FROM data_envio) = :ano " +
+                   "AND loja_id = " + TenantContext.LOJA_ATUAL_SPEL,
            nativeQuery = true)
     boolean jaEnviouAniversarioNoAno(@Param("clienteId") Long clienteId,
                                      @Param("evento") String evento,

@@ -1,5 +1,6 @@
 package br.com.seuprojeto.pascoa.pedido.repository;
 
+import br.com.seuprojeto.pascoa.common.tenant.TenantContext;
 import br.com.seuprojeto.pascoa.pedido.entity.ItemPedido;
 import br.com.seuprojeto.pascoa.pedido.entity.StatusPedido;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -27,6 +28,9 @@ public interface ItemPedidoRepository extends JpaRepository<ItemPedido, Long> {
                    "JOIN produtos pr ON i.produto_id = pr.id " +
                    "JOIN pedidos ped ON i.pedido_id = ped.id " +
                    "WHERE EXTRACT(YEAR FROM ped.data_pedido) = :ano AND ped.status != 'CANCELADO' " +
+                   "AND i.loja_id = " + TenantContext.LOJA_ATUAL_SPEL + " " +
+                   "AND ped.loja_id = " + TenantContext.LOJA_ATUAL_SPEL + " " +
+                   "AND pr.loja_id = " + TenantContext.LOJA_ATUAL_SPEL + " " +
                    "GROUP BY pr.id, pr.nome, pr.categoria " +
                    "ORDER BY SUM(i.quantidade) DESC LIMIT 15",
            nativeQuery = true)
