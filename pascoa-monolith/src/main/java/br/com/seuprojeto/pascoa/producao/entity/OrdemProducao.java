@@ -1,5 +1,6 @@
 package br.com.seuprojeto.pascoa.producao.entity;
 
+import br.com.seuprojeto.pascoa.common.entity.TenantEntity;
 import br.com.seuprojeto.pascoa.cadastro.entity.Produto;
 import br.com.seuprojeto.pascoa.pedido.entity.Pedido;
 import jakarta.persistence.Column;
@@ -30,7 +31,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(of = "id")
-public class OrdemProducao {
+public class OrdemProducao extends TenantEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

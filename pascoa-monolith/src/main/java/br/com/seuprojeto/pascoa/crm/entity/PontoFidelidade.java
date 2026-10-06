@@ -1,5 +1,6 @@
 package br.com.seuprojeto.pascoa.crm.entity;
 
+import br.com.seuprojeto.pascoa.common.entity.TenantEntity;
 import br.com.seuprojeto.pascoa.cadastro.entity.Cliente;
 import br.com.seuprojeto.pascoa.pedido.entity.Pedido;
 import jakarta.persistence.Column;
@@ -31,7 +32,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class PontoFidelidade {
+public class PontoFidelidade extends TenantEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

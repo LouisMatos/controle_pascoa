@@ -1,5 +1,6 @@
 package br.com.seuprojeto.pascoa.estoque.entity;
 
+import br.com.seuprojeto.pascoa.common.entity.TenantEntity;
 import br.com.seuprojeto.pascoa.cadastro.entity.MateriaPrima;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -29,7 +30,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class MovimentacaoEstoque {
+public class MovimentacaoEstoque extends TenantEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

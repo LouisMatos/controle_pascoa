@@ -1,5 +1,6 @@
 package br.com.seuprojeto.pascoa.notificacao.entity;
 
+import br.com.seuprojeto.pascoa.common.entity.TenantEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TemplateNotificacao {
+public class TemplateNotificacao extends TenantEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

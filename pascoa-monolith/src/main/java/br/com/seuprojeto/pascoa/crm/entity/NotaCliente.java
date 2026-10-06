@@ -1,5 +1,6 @@
 package br.com.seuprojeto.pascoa.crm.entity;
 
+import br.com.seuprojeto.pascoa.common.entity.TenantEntity;
 import br.com.seuprojeto.pascoa.cadastro.entity.Cliente;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -27,7 +28,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class NotaCliente {
+public class NotaCliente extends TenantEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

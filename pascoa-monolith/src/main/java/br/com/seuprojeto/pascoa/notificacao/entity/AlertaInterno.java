@@ -1,5 +1,6 @@
 package br.com.seuprojeto.pascoa.notificacao.entity;
 
+import br.com.seuprojeto.pascoa.common.entity.TenantEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -11,7 +12,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AlertaInterno {
+public class AlertaInterno extends TenantEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

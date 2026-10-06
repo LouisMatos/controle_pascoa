@@ -1,5 +1,6 @@
 package br.com.seuprojeto.pascoa.gastos.entity;
 
+import br.com.seuprojeto.pascoa.common.entity.TenantEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -19,13 +20,13 @@ import java.math.BigDecimal;
 
 @Entity
 @Table(name = "orcamentos_gasto",
-       uniqueConstraints = @UniqueConstraint(columnNames = {"categoria", "referencia_mes", "referencia_ano"}))
+       uniqueConstraints = @UniqueConstraint(columnNames = {"loja_id", "categoria", "referencia_mes", "referencia_ano"}))
 @Data
 @EqualsAndHashCode(of = "id")
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class OrcamentoGasto {
+public class OrcamentoGasto extends TenantEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

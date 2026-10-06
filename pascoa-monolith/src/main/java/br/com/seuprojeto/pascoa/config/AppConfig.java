@@ -2,7 +2,9 @@ package br.com.seuprojeto.pascoa.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import br.com.seuprojeto.pascoa.common.tenant.TenantAwareRepository;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.web.client.RestTemplate;
 
@@ -14,6 +16,7 @@ import org.springframework.web.client.RestTemplate;
 @Configuration
 @EnableAsync
 @EnableJpaAuditing(auditorAwareRef = "auditorAwareImpl")
+@EnableJpaRepositories(basePackages = "br.com.seuprojeto.pascoa", repositoryBaseClass = TenantAwareRepository.class)
 public class AppConfig {
 
     @Bean

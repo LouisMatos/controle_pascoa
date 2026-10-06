@@ -1,5 +1,6 @@
 package br.com.seuprojeto.pascoa.orcamento.entity;
 
+import br.com.seuprojeto.pascoa.common.entity.TenantEntity;
 import br.com.seuprojeto.pascoa.cadastro.entity.Cliente;
 import br.com.seuprojeto.pascoa.pedido.entity.Pedido;
 import jakarta.persistence.CascadeType;
@@ -37,7 +38,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Orcamento {
+public class Orcamento extends TenantEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

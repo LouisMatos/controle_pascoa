@@ -1,5 +1,6 @@
 package br.com.seuprojeto.pascoa.qualidade.entity;
 
+import br.com.seuprojeto.pascoa.common.entity.TenantEntity;
 import br.com.seuprojeto.pascoa.producao.entity.OrdemProducao;
 import br.com.seuprojeto.pascoa.qualidade.dto.ItemVerificadoDto;
 import jakarta.persistence.Column;
@@ -31,7 +32,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class InspecaoQualidade {
+public class InspecaoQualidade extends TenantEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

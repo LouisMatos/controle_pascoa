@@ -1,5 +1,6 @@
 package br.com.seuprojeto.pascoa.fichaTecnica.entity;
 
+import br.com.seuprojeto.pascoa.common.entity.TenantEntity;
 import br.com.seuprojeto.pascoa.cadastro.entity.Produto;
 import br.com.seuprojeto.pascoa.cadastro.entity.Unidade;
 import jakarta.persistence.CascadeType;
@@ -36,7 +37,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class FichaTecnica {
+public class FichaTecnica extends TenantEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

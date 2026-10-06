@@ -1,0 +1,1 @@
+org.springframework.test.context.TestExecutionListener=br.com.seuprojeto.pascoa.common.TenantTestExecutionListener

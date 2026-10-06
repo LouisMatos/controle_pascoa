@@ -1,5 +1,6 @@
 package br.com.seuprojeto.pascoa.gastos.entity;
 
+import br.com.seuprojeto.pascoa.common.entity.TenantEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -26,7 +27,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class GastoVariavel {
+public class GastoVariavel extends TenantEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

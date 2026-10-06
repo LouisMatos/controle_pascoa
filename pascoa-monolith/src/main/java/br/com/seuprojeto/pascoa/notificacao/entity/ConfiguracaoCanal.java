@@ -1,5 +1,6 @@
 package br.com.seuprojeto.pascoa.notificacao.entity;
 
+import br.com.seuprojeto.pascoa.common.entity.TenantEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,19 +8,19 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "configuracao_canal")
+@Table(name = "configuracao_canal", uniqueConstraints = @UniqueConstraint(columnNames = {"loja_id", "tipo"}))
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ConfiguracaoCanal {
+public class ConfiguracaoCanal extends TenantEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "tipo", nullable = false, unique = true, length = 10)
+    @Column(name = "tipo", nullable = false, length = 10)
     private CanalNotificacao tipo;
 
     /**
