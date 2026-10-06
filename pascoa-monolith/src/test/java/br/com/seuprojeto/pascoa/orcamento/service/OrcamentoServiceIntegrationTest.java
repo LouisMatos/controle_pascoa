@@ -162,6 +162,29 @@ class OrcamentoServiceIntegrationTest {
     }
 
     @Test
+    @DisplayName("Criar orçamento com total acima do máximo é rejeitado")
+    void criar_totalAcimaDoMaximo_rejeita() {
+        assertThatThrownBy(() -> service.criar(formComUmItem(1, new BigDecimal("100000000.00")), "op"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Total acima do máximo permitido.");
+    }
+
+    @Test
+    @DisplayName("Converter orçamento cujo total estoura o limite do pedido é rejeitado")
+    @WithMockUser(roles = "ADMIN")
+    void converter_totalAcimaDoMaximo_rejeita() {
+        Orcamento orc = service.criar(formComUmItem(1, new BigDecimal("89.90")), "op");
+        service.aprovar(orc.getTokenAprovacao());
+        orc.getItens().get(0).setPrecoUnitario(new BigDecimal("99999999.99"));
+        orc.getItens().get(0).setQuantidade(new BigDecimal("2"));
+        em.flush();
+
+        assertThatThrownBy(() -> service.converter(orc.getId()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Total acima do máximo permitido.");
+    }
+
+    @Test
     @DisplayName("Converter orçamento não-APROVADO lança IllegalStateException")
     @WithMockUser(roles = "ADMIN")
     void converter_naoAprovado_lancaExcecao() {

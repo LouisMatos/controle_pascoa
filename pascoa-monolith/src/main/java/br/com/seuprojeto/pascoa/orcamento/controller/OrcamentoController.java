@@ -86,7 +86,15 @@ public class OrcamentoController {
             model.addAttribute("produtos", produtoRepo.findByAtivoTrueOrderByNomeAsc());
             return "orcamentos/form";
         }
-        Orcamento orc = service.criar(form, usuario.getUsername());
+        Orcamento orc;
+        try {
+            orc = service.criar(form, usuario.getUsername());
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("erroItens", e.getMessage());
+            model.addAttribute("clientes", clienteRepo.findAllComboBox());
+            model.addAttribute("produtos", produtoRepo.findByAtivoTrueOrderByNomeAsc());
+            return "orcamentos/form";
+        }
         redirectAttributes.addFlashAttribute("sucesso", "Orçamento #" + orc.getId() + " criado com sucesso.");
         return "redirect:/orcamentos/" + orc.getId();
     }
@@ -130,7 +138,16 @@ public class OrcamentoController {
             model.addAttribute("produtos", produtoRepo.findByAtivoTrueOrderByNomeAsc());
             return "orcamentos/form";
         }
-        service.atualizar(id, form);
+        try {
+            service.atualizar(id, form);
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("erroItens", e.getMessage());
+            model.addAttribute("orcId", id);
+            model.addAttribute("clientes", clienteRepo.findAllComboBox());
+            model.addAttribute("produtos", produtoRepo.findByAtivoTrueOrderByNomeAsc());
+            model.addAttribute("itensExistentes", service.buscarPorId(id).getItens());
+            return "orcamentos/form";
+        }
         redirectAttributes.addFlashAttribute("sucesso", "Orçamento atualizado.");
         return "redirect:/orcamentos/" + id;
     }

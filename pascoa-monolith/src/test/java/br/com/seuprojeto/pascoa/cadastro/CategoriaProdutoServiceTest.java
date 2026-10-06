@@ -38,6 +38,18 @@ class CategoriaProdutoServiceTest {
     }
 
     @Test
+    void salvar_mesmoNomeEmOutraLoja_funciona() {
+        String nome = "Compartilhada-" + UUID.randomUUID();
+        Long idLoja1 = TenantContext.calcular(1L, () -> service.salvar(form(nome)).getId());
+
+        Long idLoja2 = TenantContext.calcular(2L, () -> service.salvar(form(nome)).getId());
+
+        assertThat(idLoja2).isNotEqualTo(idLoja1);
+        assertThat(TenantContext.calcular(2L, () -> service.listarAtivas())).anyMatch(c -> c.getId().equals(idLoja2));
+        assertThat(TenantContext.calcular(2L, () -> service.listarAtivas())).noneMatch(c -> c.getId().equals(idLoja1));
+    }
+
+    @Test
     void editar_semMudarONome_naoContaComoDuplicata() {
         String nome = "Bolos-" + UUID.randomUUID();
         CategoriaProduto salva = TenantContext.calcular(1L, () -> service.salvar(form(nome)));

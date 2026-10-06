@@ -87,7 +87,7 @@ function adicionarItem() {
 
   if (!pid) { sel.classList.add('is-invalid'); return; }
   sel.classList.remove('is-invalid');
-  if (!qtd || qtd <= 0) { qtdInput.classList.add('is-invalid'); return; }
+  if (!qtd || qtd <= 0 || !qtdInput.checkValidity()) { qtdInput.classList.add('is-invalid'); return; }
   qtdInput.classList.remove('is-invalid');
 
   // Atualiza se já existe
@@ -121,7 +121,7 @@ function renderizarTabela() {
       '<i class="bi bi-inbox me-1"></i>Nenhum produto adicionado ainda.</td></tr>';
   } else {
     itensSelecionados.forEach((item, idx) => {
-      const sub = item.quantidade * item.preco;
+      const sub = Math.round((item.quantidade * item.preco + Number.EPSILON) * 100) / 100;
       total += sub;
       corpo.innerHTML += `
         <tr>
@@ -233,7 +233,7 @@ function construirResumo() {
   tbody.innerHTML = '';
   let total = 0;
   itensSelecionados.forEach(item => {
-    const sub = item.quantidade * item.preco;
+    const sub = Math.round((item.quantidade * item.preco + Number.EPSILON) * 100) / 100;
     total += sub;
     tbody.innerHTML += `<tr>
       <td>${item.nome}</td>

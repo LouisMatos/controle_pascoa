@@ -10,7 +10,7 @@
     corpo.querySelectorAll('tr').forEach(function (tr) {
       var preco = tr.querySelector('.preco-input');
       var qtd = tr.querySelector('.qtd-input');
-      var sub = parseFloat(preco && preco.value || 0) * parseFloat(qtd && qtd.value || 0);
+      var sub = Math.round((parseFloat(preco && preco.value || 0) * parseFloat(qtd && qtd.value || 0) + Number.EPSILON) * 100) / 100;
       var cel = tr.querySelector('.subtotal');
       if (cel) cel.textContent = sub > 0 ? moeda(sub) : '—';
       total += sub || 0;

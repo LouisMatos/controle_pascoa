@@ -9,7 +9,16 @@ public final class Quantidades {
     private static final int CASAS_MAXIMAS = 3;
     private static final BigDecimal MAXIMO = new BigDecimal("9999999.999");
 
+    public static final BigDecimal TOTAL_MAXIMO = new BigDecimal("99999999.99");
+
     private Quantidades() {
+    }
+
+    public static BigDecimal validarTotal(BigDecimal total) {
+        if (total.compareTo(TOTAL_MAXIMO) > 0) {
+            throw new IllegalArgumentException("Total acima do máximo permitido.");
+        }
+        return total;
     }
 
     public static void validar(BigDecimal quantidade, UnidadeVenda unidade) {

@@ -22,6 +22,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.matchesPattern;
+import static org.hamcrest.Matchers.not;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -50,6 +52,39 @@ class CategoriaTelasTest {
         mvc.perform(get("/categorias")).andExpect(status().isOk()).andExpect(content().string(containsString(nomeCategoria)));
         mvc.perform(get("/categorias/novo")).andExpect(status().isOk());
         mvc.perform(get("/catalogo")).andExpect(status().isOk()).andExpect(content().string(containsString(nomeProduto)));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void editarProdutoComCategoriaInativa_mantemACategoriaSelecionada() throws Exception {
+        String nomeCategoria = "Inativa-" + UUID.randomUUID();
+        Long id = TenantContext.calcular(1L, () -> {
+            CategoriaProduto categoria = categorias.save(CategoriaProduto.builder().nome(nomeCategoria).ativo(false).build());
+            return produtoService.salvar(Produto.builder().nome("Prod-" + UUID.randomUUID())
+                .precoVenda(BigDecimal.TEN).categoria(categoria).build()).getId();
+        });
+
+        mvc.perform(get("/produtos/{id}/editar", id)).andExpect(status().isOk())
+            .andExpect(content().string(matchesPattern("(?s).*<option[^>]*selected[^>]*>" + nomeCategoria + " \\(inativa\\)</option>.*")));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void catalogo_categoriaInvalidaMostraTudo_eCategoriaValidaFiltra() throws Exception {
+        String nomeCategoria = "Filtro-" + UUID.randomUUID();
+        String dentro = "Dentro-" + UUID.randomUUID();
+        String fora = "Fora-" + UUID.randomUUID();
+        Long categoriaId = TenantContext.calcular(1L, () -> {
+            CategoriaProduto categoria = categorias.save(CategoriaProduto.builder().nome(nomeCategoria).build());
+            produtoService.salvar(Produto.builder().nome(dentro).precoVenda(BigDecimal.TEN).categoria(categoria).build());
+            produtoService.salvar(Produto.builder().nome(fora).precoVenda(BigDecimal.TEN).build());
+            return categoria.getId();
+        });
+
+        mvc.perform(get("/catalogo").param("categoria", "TRUFADO")).andExpect(status().isOk())
+            .andExpect(content().string(containsString(dentro))).andExpect(content().string(containsString(fora)));
+        mvc.perform(get("/catalogo").param("categoria", categoriaId.toString())).andExpect(status().isOk())
+            .andExpect(content().string(containsString(dentro))).andExpect(content().string(not(containsString(fora))));
     }
 
     @Test

@@ -160,7 +160,7 @@ public class PedidoService {
         }
         itemRepository.saveAll(itens);
 
-        pedido.setTotalPedido(total);
+        pedido.setTotalPedido(Quantidades.validarTotal(total));
         return pedidoRepository.save(pedido);
     }
 
@@ -194,6 +194,8 @@ public class PedidoService {
         Produto produto = produtoRepository.findVigenteById(produtoId)
             .orElseThrow(() -> new RecursoNaoEncontradoException("Produto não encontrado"));
         Quantidades.validar(quantidade, produto.getUnidadeVenda());
+        BigDecimal atual = pedido.getTotalPedido() != null ? pedido.getTotalPedido() : BigDecimal.ZERO;
+        Quantidades.validarTotal(atual.add(produto.getPrecoVenda().multiply(quantidade).setScale(2, RoundingMode.HALF_UP)));
 
         ItemPedido item = ItemPedido.builder()
             .pedido(pedido)
@@ -222,7 +224,7 @@ public class PedidoService {
         BigDecimal total = pedido.getItens().stream()
             .map(i -> i.getSubtotal() != null ? i.getSubtotal() : BigDecimal.ZERO)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
-        pedido.setTotalPedido(total);
+        pedido.setTotalPedido(Quantidades.validarTotal(total));
         pedidoRepository.save(pedido);
     }
 

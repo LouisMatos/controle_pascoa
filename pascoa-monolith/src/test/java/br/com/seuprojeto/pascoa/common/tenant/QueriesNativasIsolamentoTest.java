@@ -1,6 +1,8 @@
 package br.com.seuprojeto.pascoa.common.tenant;
 
+import br.com.seuprojeto.pascoa.cadastro.entity.CategoriaProduto;
 import br.com.seuprojeto.pascoa.cadastro.entity.Cliente;
+import br.com.seuprojeto.pascoa.cadastro.repository.CategoriaProdutoRepository;
 import br.com.seuprojeto.pascoa.cadastro.entity.PreferenciaCanal;
 import br.com.seuprojeto.pascoa.cadastro.entity.Produto;
 import br.com.seuprojeto.pascoa.cadastro.repository.ClienteRepository;
@@ -39,6 +41,8 @@ class QueriesNativasIsolamentoTest {
     @Autowired private ItemPedidoRepository itens;
     @Autowired private PontoFidelidadeRepository pontos;
     @Autowired private NotificacaoEnviadaRepository notificacoes;
+    @Autowired private CategoriaProdutoRepository categorias;
+    @Autowired private org.springframework.jdbc.core.JdbcTemplate jdbc;
 
     private Cliente novoCliente(LocalDate nascimento) {
         return Cliente.builder().nome("C-" + UUID.randomUUID()).optIn(true)
@@ -85,6 +89,29 @@ class QueriesNativasIsolamentoTest {
             notificacoes.jaEnviouAniversarioNoAno(clienteId, "ANIVERSARIO_CLIENTE", "EMAIL", ano))).isTrue();
         assertThat(TenantContext.calcular(2L, () ->
             notificacoes.jaEnviouAniversarioNoAno(clienteId, "ANIVERSARIO_CLIENTE", "EMAIL", ano))).isFalse();
+    }
+
+    @Test
+    void rankingDeProdutos_trazANomeDaCategoriaSomenteNaLojaDona() {
+        int ano = 1900 + new java.util.Random().nextInt(90);
+        String nomeCategoria = "Cat-" + UUID.randomUUID();
+        TenantContext.executar(1L, () -> {
+            CategoriaProduto categoria = categorias.save(CategoriaProduto.builder().nome(nomeCategoria).build());
+            Cliente c = clientes.save(novoCliente(null));
+            Produto p = produtos.save(Produto.builder().nome("P-" + UUID.randomUUID())
+                .precoVenda(BigDecimal.TEN).categoria(categoria).build());
+            Pedido pedido = pedidos.save(Pedido.builder().cliente(c).status(StatusPedido.ENTREGUE)
+                .totalPedido(new BigDecimal("20.00")).build());
+            itens.save(ItemPedido.builder().pedido(pedido).produto(p).quantidade(new BigDecimal("2"))
+                .precoUnitario(BigDecimal.TEN).build());
+            jdbc.update("UPDATE pedidos SET data_pedido = ? WHERE id = ?",
+                java.sql.Timestamp.valueOf(ano + "-06-01 10:00:00"), pedido.getId());
+        });
+
+        assertThat(TenantContext.calcular(1L, () -> itens.rankingProdutosPorAno(ano)))
+            .anyMatch(linha -> nomeCategoria.equals(linha[1]));
+        assertThat(TenantContext.calcular(2L, () -> itens.rankingProdutosPorAno(ano)))
+            .noneMatch(linha -> nomeCategoria.equals(linha[1]));
     }
 
     @Test

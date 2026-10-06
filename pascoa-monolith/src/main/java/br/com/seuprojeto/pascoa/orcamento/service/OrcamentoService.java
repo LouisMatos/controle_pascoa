@@ -174,7 +174,7 @@ public class OrcamentoService {
             total = total.add(oi.getSubtotal());
         }
 
-        pedido.setTotalPedido(total);
+        pedido.setTotalPedido(Quantidades.validarTotal(total));
         pedido = pedidoRepo.save(pedido);
 
         orc.setPedido(pedido);
@@ -224,7 +224,7 @@ public class OrcamentoService {
             total = total.add(oi.getSubtotal());
         }
 
-        orc.setTotal(total);
+        orc.setTotal(Quantidades.validarTotal(total));
         return orcamentoRepo.save(orc);
     }
 }

@@ -40,9 +40,10 @@
                             <option value="">Sem categoria</option>
                             <option th:each="cat : ${categorias}"
                                     th:value="${cat.id}"
-                                    th:text="${cat.nome}"
+                                    th:text="${cat.ativo ? cat.nome : cat.nome + ' (inativa)'}"
                                     th:selected="${produto.categoria != null and produto.categoria.id == cat.id}"></option>
                         </select>
+                        <div th:if="${erroCategoria}" class="text-danger small mt-1" role="alert" th:text="${erroCategoria}"></div>
                         <div class="form-text"><a th:href="@{/categorias}">Gerenciar categorias</a></div>
                     </div>
 

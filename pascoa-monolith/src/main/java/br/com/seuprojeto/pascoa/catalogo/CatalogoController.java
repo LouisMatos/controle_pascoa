@@ -37,12 +37,13 @@ public class CatalogoController {
     // ── Vitrine ────────────────────────────────────────────────────────────
 
     @GetMapping
-    public String index(@RequestParam(required = false) Long categoria, Model model) {
+    public String index(@RequestParam(required = false) String categoria, Model model) {
+        Long categoriaId = parseId(categoria);
         List<Produto> produtos = produtoService.listarAtivos();
         List<CategoriaProduto> categorias = categoriaService.listarAtivas();
 
-        CategoriaProduto categoriaAtiva = categoria == null ? null : categorias.stream()
-            .filter(c -> c.getId().equals(categoria))
+        CategoriaProduto categoriaAtiva = categoriaId == null ? null : categorias.stream()
+            .filter(c -> c.getId().equals(categoriaId))
             .findFirst()
             .orElse(null);
         if (categoriaAtiva != null) {
@@ -88,6 +89,14 @@ public class CatalogoController {
     }
 
     // ── Auxiliar ───────────────────────────────────────────────────────────
+
+    private static Long parseId(String valor) {
+        try {
+            return valor == null ? null : Long.valueOf(valor.trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
 
     private String buildBaseUrl(HttpServletRequest request) {
         int port = request.getServerPort();
