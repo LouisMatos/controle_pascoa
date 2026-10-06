@@ -28,7 +28,7 @@
 | Catálogo público | ✅ Completo |
 | PWA | ✅ Completo |
 | Segurança / RBAC | ✅ Completo |
-| Testes de integração | ✅ 107 testes — 10 classes cobrindo todos os módulos críticos |
+| Testes de integração | ✅ 141 testes cobrindo todos os módulos críticos |
 
 ### Microsserviços v5 — Migração Strangler Fig (design doc v5)
 | Serviço | Status | Porta | Checklist 11.1 |
@@ -267,7 +267,6 @@ PAGAMENTO_RECEBIDO, PEDIDO_CANCELADO, ORCAMENTO_APROVADO, ORCAMENTO_RECUSADO
 | `V13__cliente_segmento_campo.sql` | ✅ | Item 23 F8: campo `segmento` em clientes |
 | `V14__novas_notificacoes_item25.sql` | ✅ | Item 25: `cliente_id` + `orcamento_id` em notificacoes_enviadas, índices de idempotência |
 | `V15__indices_performance_fluxo_caixa.sql` | ✅ | Performance: `idx_pagamento_data_pagamento` + `idx_movimentacao_estoque_tipo_data` para agregações no DB |
-
 | `V16__multi_tenant.sql` | ✅ | F0.1: `lojas` + `loja_id` nas 29 tabelas de negócio e em `usuarios`; UNIQUE de `configuracao_canal`/`orcamentos_gasto` compostos |
 
 > **Próxima versão de migration disponível:** V17.
@@ -276,7 +275,7 @@ PAGAMENTO_RECEBIDO, PEDIDO_CANCELADO, ORCAMENTO_APROVADO, ORCAMENTO_RECUSADO
 
 ## 15. Testes
 
-### ✅ 10 classes de teste — 107 testes (0 falhas)
+### ✅ Testes — 141 (0 falhas; tabela abaixo parcial) (0 falhas)
 
 | Classe | Testes | Cobre |
 |--------|--------|-------|
@@ -755,7 +754,7 @@ Pendentes (fora do escopo de design):
 ## 27. F0.1 Multi-tenant (2026-10-05) ✅
 
 - Mecanismo: `@TenantId` (Hibernate) em `TenantEntity`/`BaseEntity` + `TenantContext` (loja atual por thread) + `TenantFilter` (resolve a loja pelo usuário logado, pelo token público ou pelo catálogo).
-- Migration `V16__multi_tenant.sql` (próxima livre: V17): cria `lojas` (loja 1 = "Loja Padrão") e adiciona `loja_id BIGINT NOT NULL DEFAULT 1 REFERENCES lojas(id)` nas 29 tabelas de negócio + `usuarios`; UNIQUE passam a ser compostos com `loja_id`.
+- Migration `V16__multi_tenant.sql` (próxima livre: V17): cria `lojas` (loja 1 = "Loja Padrão") e adiciona `loja_id BIGINT NOT NULL DEFAULT 1 REFERENCES lojas(id)` nas 29 tabelas de negócio + `usuarios`; só dois UNIQUE mudaram, e passam a incluir `loja_id`: `configuracao_canal(loja_id, tipo)` e `orcamentos_gasto(loja_id, categoria, referencia_mes, referencia_ano)`.
 - `TenantAwareRepository` (base repository, registrado via `@EnableJpaRepositories(repositoryBaseClass=...)` em `AppConfig`): o Hibernate 6.5 não aplica o filtro `@TenantId` em `find`/`findById`; a base sobrescreve `findById`/`getReferenceById` com JPQL para subclasses de `TenantEntity`.
 - Global (sem `loja_id`): `lojas`, `shedlock`, `configuracao_sistema`.
 - Queries nativas filtram por `TenantContext.LOJA_ATUAL_SPEL`; jobs `@Scheduled` rodam por loja (`TenantJobRunner.porLoja`); `@Async` e fila de campanha propagam a loja.

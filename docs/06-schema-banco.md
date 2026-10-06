@@ -66,9 +66,9 @@ configuracao_sistema — tabela singleton (id = 1 fixo)
 ## Multi-tenant (V16)
 
 - `lojas` (PK id, `nome` NN): uma linha por loja; id 1 = "Loja Padrão"; global, sem `loja_id`.
-- `loja_id BIGINT NN DEFAULT 1 FK→lojas` em `usuarios` e nas 29 tabelas de negócio (`@TenantId`). O `DEFAULT 1` mantém os dados existentes na loja padrão; o Hibernate sempre grava a loja do contexto. UNIQUE de negócio são compostos com `loja_id`.
-- `TenantAwareRepository` (base repository em `AppConfig`) existe porque o Hibernate 6.5 não aplica o `@TenantId` em `find`/`findById`; sobrescreve `findById`/`getReferenceById` com JPQL.
-- Sem `loja_id`: `lojas`, `shedlock`, `configuracao_sistema`.
+- `loja_id BIGINT NN DEFAULT 1 FK→lojas` em `usuarios` e nas 29 tabelas de negócio (`@TenantId`). O `DEFAULT 1` mantém os dados existentes na loja padrão; o Hibernate sempre grava a loja do contexto. Só dois UNIQUE mudaram: `configuracao_canal(loja_id, tipo)` e `orcamentos_gasto(loja_id, categoria, referencia_mes, referencia_ano)`.
+- `TenantAwareRepository` (base repository em `AppConfig`) existe porque o Hibernate 6.5 não aplica o `@TenantId` em `find`/`findById`; sobrescreve `findById`/`getReferenceById` com JPQL e faz `save`/`delete` falharem com `EntityNotFoundException` quando o id não é da loja atual (o `merge` e o `em.find` do Hibernate ignoram o filtro).
+- Sem `loja_id`: `lojas`, `shedlock`, `configuracao_sistema`, `password_reset_token` (resolvido via `usuarios`) e `campanha_reengajamento` (sem entity).
 
 ---
 

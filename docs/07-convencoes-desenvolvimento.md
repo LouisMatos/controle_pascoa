@@ -814,6 +814,10 @@ Disponíveis diretamente em qualquer template — não precisam ser adicionados 
 - [ ] Rota adicionada no `SecurityConfig.java`
 - [ ] Link adicionado no menu do `layout.html`
 - [ ] `ddl-auto=validate` **não alterado**
+- [ ] Multi-tenant: entity herda `TenantEntity`/`BaseEntity` e a tabela nova tem `loja_id BIGINT NOT NULL DEFAULT 1 REFERENCES lojas(id)`
+- [ ] Multi-tenant: `nativeQuery` filtra com `loja_id = " + TenantContext.LOJA_ATUAL_SPEL`
+- [ ] Multi-tenant: `@Scheduled` usa `TenantJobRunner.porLoja`; thread própria usa `TenantContext.executar`
+- [ ] Multi-tenant: repository usa a base `TenantAwareRepository`; nada de `em.find`/`em.merge`/`JdbcTemplate` em tabela com `loja_id`
 
 ---
 

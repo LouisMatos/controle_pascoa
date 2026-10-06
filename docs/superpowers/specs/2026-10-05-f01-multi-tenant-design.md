@@ -10,7 +10,7 @@ Várias lojas no mesmo banco e na mesma aplicação, sem enxergar dados umas das
 
 | Tema | Decisão |
 |---|---|
-| Mecanismo | `@TenantId` do Hibernate 6 (coluna `loja_id`, discriminador). Filtra JPQL, Criteria e `findById`, e preenche `loja_id` no insert |
+| Mecanismo | `@TenantId` do Hibernate 6 (coluna `loja_id`, discriminador). Filtra JPQL e Criteria (o Hibernate 6.5 não filtra `find`/`getReference`/`merge`: o `TenantAwareRepository` cobre `findById`/`getReferenceById`/`save`/`delete`) e preenche `loja_id` no insert |
 | Fonte do tenant | `TenantContext` (ThreadLocal) lido por um `CurrentTenantIdentifierResolver` |
 | Sem tenant no contexto | O resolver devolve o sentinela `0L` (nenhuma loja existe com esse id): leituras voltam vazias. Escrita falha: `TenantEntity.@PrePersist` lança `IllegalStateException`. Nunca assume a loja 1 |
 | Login | `usuarios.login` continua único globalmente |
@@ -29,7 +29,7 @@ Várias lojas no mesmo banco e na mesma aplicação, sem enxergar dados umas das
 
 1. Cria `lojas(id BIGSERIAL PK, nome VARCHAR(150) NOT NULL, criada_em TIMESTAMP NOT NULL DEFAULT now())`.
 2. Insere a loja 1, "Loja Padrão".
-3. Em cada tabela abaixo, adiciona `loja_id BIGINT NOT NULL DEFAULT 1 REFERENCES lojas(id)` e cria `idx_<tabela>_loja_id`. O DEFAULT 1 fica: o Hibernate sempre grava `loja_id` explicitamente (a guarda `@PrePersist` impede escrita sem tenant), e os seeds SQL em `infra/seed/` continuam funcionando sem mudança.
+3. Em cada tabela abaixo, adiciona `loja_id BIGINT NOT NULL DEFAULT 1 REFERENCES lojas(id)` e cria `idx_<tabela>_loja_id`. O DEFAULT 1 fica: o Hibernate sempre grava `loja_id` explicitamente (a guarda `@PrePersist` impede escrita sem tenant), e os seeds SQL em `infra/seed/` dependem desse DEFAULT 1 (os `ON CONFLICT` de `orcamentos_gasto` foram atualizados para incluir `loja_id`).
 4. Os UNIQUE de configuração passam a incluir `loja_id` (abaixo).
 5. Ajusta a sequência de `lojas` após o insert explícito do id 1.
 
@@ -108,4 +108,4 @@ Cadastro de loja nova e onboarding (F0.2), roles Dono/Equipe (F0.4), uploads por
 - **Threads fora da requisição:** sem propagação, leituras voltam vazias e escritas falham. Seguro, mas pode silenciar notificações. Coberto pelo `TenantTaskDecorator` e por teste do fluxo de notificação.
 - **Sessões antigas:** a sessão HTTP fica em memória, então o restart do deploy descarta todas. Um principal que não seja `UsuarioPrincipal` (ex.: `@WithMockUser` nos testes) não define tenant; em produção isso não ocorre.
 - **Contador da fila de campanha** (`CampanhaQueue.registrarEnvio/Falha`) segue global. Mostra só totais agregados; separar por loja fica para quando a campanha for revista.
-- **Migration em tabela grande:** `ADD COLUMN ... DEFAULT 1` no Postgres 16 é metadado (rápido). A criação de 31 índices é o trecho lento; aceitável no volume atual (5k pedidos).
+- **Migration em tabela grande:** `ADD COLUMN ... DEFAULT 1` no Postgres 16 é metadado (rápido). A criação de 30 índices é o trecho lento; aceitável no volume atual (5k pedidos).
