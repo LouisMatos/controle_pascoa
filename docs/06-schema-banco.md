@@ -1,6 +1,6 @@
 # Schema do Banco de Dados — Sistema Controle Páscoa
 
-> **Fonte:** Migrations V1–V14 do monólito + V1 de cada microsserviço  
+> **Fonte:** Migrations V1–V16 do monólito + V1 de cada microsserviço  
 > **Bancos:** 10 PostgreSQL (1 monólito + 9 microsserviços) | **Versionamento:** Flyway  
 > **Atualizado em:** 2026-05-29
 
@@ -58,9 +58,17 @@ templates_notificacao ◄──── notificacoes_enviadas  (template_id)
 
 usuarios ◄──── password_reset_token (usuario_id — V11)
 
+lojas               — tenant (id, nome); loja 1 = "Loja Padrão"; global, sem loja_id
 audit_log           — tabela autônoma (sem FK, registra ações)
 configuracao_sistema — tabela singleton (id = 1 fixo)
 ```
+
+
+## Multi-tenant (V16)
+
+- `lojas` (PK id, `nome` NN): uma linha por loja; id 1 = "Loja Padrão"; global, sem `loja_id`.
+- `loja_id BIGINT NN DEFAULT 1 FK→lojas` em `usuarios` e nas 29 tabelas de negócio (`@TenantId`). O `DEFAULT 1` mantém os dados existentes na loja padrão; o Hibernate sempre grava a loja do contexto. UNIQUE de negócio são compostos com `loja_id`.
+- Sem `loja_id`: `lojas`, `shedlock`, `configuracao_sistema`.
 
 ---
 

@@ -15,7 +15,7 @@
 | Orçamentos + aprovação pública | ✅ Completo |
 | Produção (Kanban + fila) | ✅ Completo |
 | Qualidade (inspeção + checklist) | ✅ Completo |
-| Estoque | ⚠️ Template de saída ausente |
+| Estoque | ✅ Completo |
 | Ficha Técnica | ✅ Completo |
 | Financeiro (dashboard, fluxo, breakeven, aging) | ✅ Completo |
 | Gastos integrados ao financeiro | ✅ Completo |
@@ -121,8 +121,6 @@
 - Histórico de movimentações (`/estoque/movimentacoes`)
 - `EstoqueInsuficienteException` ao tentar saída sem saldo
 
-**Gap identificado:**
-- **Template `estoque/saida.html` ausente** — o arquivo não existe em `src/main/resources/templates/estoque/`. O `EstoqueController` pode ter o endpoint mapeado, mas a tela de saída manual não está acessível via UI. Saídas automáticas por produção podem funcionar via código, mas a tela para operador registrar saída manual está faltando.
 
 ---
 
@@ -338,12 +336,6 @@ PAGAMENTO_RECEBIDO, PEDIDO_CANCELADO, ORCAMENTO_APROVADO, ORCAMENTO_RECUSADO
 - `pascoa-api-gateway/application.yml`: `spring.cloud.gateway.x-forwarded.*` habilitado explicitamente
 
 **Detalhes completos:** [docs/10-bugfix-login-loop-gateway.md](10-bugfix-login-loop-gateway.md)
-
-### ⚠️ Gap: Template `estoque/saida.html` ausente
-
-**Problema:** O arquivo `src/main/resources/templates/estoque/saida.html` não existe no projeto. A operação de saída manual de matéria-prima pode não ter tela acessível pela UI.
-
-**Ação:** Criar o template seguindo o padrão de `estoque/entrada.html`.
 
 ---
 
@@ -755,3 +747,14 @@ Pendentes (fora do escopo de design):
 3. **Integração Eureka** — habilitar `EUREKA_ENABLED=true` e testar service discovery entre microsserviços
 4. **Dockerizar microsserviços** — criar Dockerfiles + adicionar serviços no docker-compose.yml
 5. **customer-service com dados reais** — migrar dados de clientes do monólito para pascoa_customers
+
+---
+
+## 27. F0.1 Multi-tenant (2026-10-05) ✅
+
+- Mecanismo: `@TenantId` (Hibernate) em `TenantEntity`/`BaseEntity` + `TenantContext` (loja atual por thread) + `TenantFilter` (resolve a loja pelo usuário logado, pelo token público ou pelo catálogo).
+- Migration `V16__multi_tenant.sql` (próxima livre: V17): cria `lojas` (loja 1 = "Loja Padrão") e adiciona `loja_id BIGINT NOT NULL DEFAULT 1 REFERENCES lojas(id)` nas 29 tabelas de negócio + `usuarios`; UNIQUE passam a ser compostos com `loja_id`.
+- Global (sem `loja_id`): `lojas`, `shedlock`, `configuracao_sistema`.
+- Queries nativas filtram por `TenantContext.LOJA_ATUAL_SPEL`; jobs `@Scheduled` rodam por loja (`TenantJobRunner.porLoja`); `@Async` e fila de campanha propagam a loja.
+- Catálogo público (`/catalogo/**`) preso à loja 1 até o F2.3. `/admin/sistema` só para usuários da loja 1 (403 nas demais).
+- Validado em PostgreSQL 16: V16 aplicada (success), `ddl-auto=validate` OK, 30 colunas `loja_id`, 0 pedidos fora da loja 1; duas lojas isoladas (clientes/pedidos/produtos/dashboard), tokens públicos de acompanhamento e orçamento funcionam sem login.
