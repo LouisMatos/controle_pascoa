@@ -37,7 +37,7 @@
 
 # FASE A — Categorias livres (V17)
 
-### Task A1: Categorias no domínio, migration e produto
+### Task 1: Categorias no domínio, migration e produto
 
 **Files:**
 - Create: `<res>/db/migration/V17__categorias_produto.sql`
@@ -492,7 +492,7 @@ Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
 
 ---
 
-### Task A2: Tela de categorias
+### Task 2: Tela de categorias
 
 **Files:**
 - Modify: `<main>/cadastro/service/CategoriaProdutoService.java`, `<main>/config/LayoutAdvice.java:14`, `<res>/templates/fragments/layout.html` (menu Cadastros, depois do item Produtos)
@@ -500,7 +500,7 @@ Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
 - Create test: `<test>/cadastro/CategoriaProdutoServiceTest.java`
 
 **Interfaces:**
-- Consumes: `CategoriaProdutoRepository` (Task A1).
+- Consumes: `CategoriaProdutoRepository` (Task 1).
 - Produces: `CategoriaProdutoService.listarTodas()`, `salvar(CategoriaProduto)` (lança `IllegalArgumentException("Já existe uma categoria com este nome.")` em duplicidade), `alternarAtivo(Long)`.
 
 - [ ] **Step 1: Escrever o teste**
@@ -837,7 +837,7 @@ Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
 
 ---
 
-### Task A3: Validação da Fase A em PostgreSQL e seeds
+### Task 3: Validação da Fase A em PostgreSQL e seeds
 
 **Files:**
 - Modify: `docs/05-estado-implementacao.md`, `docs/06-schema-banco.md`
@@ -907,7 +907,7 @@ git push
 
 # FASE B — Unidade de venda e sazonal (V18)
 
-### Task B1: Unidade de venda e sazonal
+### Task 4: Unidade de venda e sazonal
 
 **Files:**
 - Create: `<res>/db/migration/V18__unidade_venda_sazonal.sql`, `<main>/cadastro/entity/UnidadeVenda.java`, `<res>/static/js/produto-form.js`
@@ -1227,7 +1227,7 @@ Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
 
 ---
 
-### Task B2: Validação da Fase B em PostgreSQL e docs
+### Task 5: Validação da Fase B em PostgreSQL e docs
 
 **Files:** `docs/05-estado-implementacao.md`, `docs/06-schema-banco.md`, `CLAUDE.md`
 
@@ -1241,7 +1241,7 @@ Registrar o resultado no relatório. Se houver G, L ou ML, **parar e reportar** 
 
 - [ ] **Step 2: Migration V18 sobre cópia do dev**
 
-Repetir o procedimento da Task A3 Step 1 (banco `pascoa_f03` copiado do dev; o dev já está em V17 se a Fase A foi aplicada nele, senão a cópia migra V17 e V18 juntas). Expected: `Migrating ... version "18 - unidade venda sazonal"`, `validate` ok, e:
+Repetir o procedimento da Task 3 Step 1 (banco `pascoa_f03` copiado do dev; o dev já está em V17 se a Fase A foi aplicada nele, senão a cópia migra V17 e V18 juntas). Expected: `Migrating ... version "18 - unidade venda sazonal"`, `validate` ok, e:
 
 ```bash
 docker compose exec -T postgres psql -U postgres -d pascoa_f03 -c "SELECT unidade_venda, sazonal, count(*) FROM produtos GROUP BY 1,2 ORDER BY 1,2;"
@@ -1269,7 +1269,7 @@ git push
 
 # FASE C — Quantidade decimal (V19)
 
-### Task C1: Regras de quantidade (validação e formatação)
+### Task 6: Regras de quantidade (validação e formatação)
 
 **Files:**
 - Create: `<main>/common/quantidade/Quantidades.java`, `<main>/common/quantidade/QuantidadeFormatter.java`
@@ -1432,7 +1432,7 @@ Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
 
 ---
 
-### Task C2: Migration V19 e tipos decimais no domínio e nos serviços
+### Task 7: Migration V19 e tipos decimais no domínio e nos serviços
 
 **Files:**
 - Create: `<res>/db/migration/V19__quantidade_decimal.sql`
@@ -1444,7 +1444,7 @@ Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
 - Create tests: `<test>/pedido/service/QuantidadeDecimalTest.java`; novo caso em `<test>/producao/service/ProducaoReceitaTest.java`
 
 **Interfaces:**
-- Consumes: `Quantidades.validar` (Task C1), `Produto.getUnidadeVenda()` (Task B1).
+- Consumes: `Quantidades.validar` (Task 6), `Produto.getUnidadeVenda()` (Task 4).
 - Produces: `ItemPedido`, `OrcamentoItem`, `OrdemProducao` com `BigDecimal getQuantidade()`; `PedidoService.criarComItens(Long, LocalDate, LocalTime, String, List<Long>, List<BigDecimal>)`; `PedidoService.adicionarItem(Long, Long, BigDecimal)`; `OrcamentoItemForm.getQuantidade()` e `ItemPedidoForm.getQuantidade()` como `BigDecimal`.
 
 - [ ] **Step 1: Testes novos**
@@ -1658,7 +1658,7 @@ Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
 
 ---
 
-### Task C3: Telas, JavaScript e PDFs
+### Task 8: Telas, JavaScript e PDFs
 
 **Files:**
 - Modify JS: `<res>/static/js/pedido-wizard.js:72-92,111-116,200-201,223-227`, `<res>/static/js/orcamento-form.js:13`
@@ -1667,7 +1667,7 @@ Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
 - Create test: `<test>/cadastro/controller/QuantidadeTelasTest.java`
 
 **Interfaces:**
-- Consumes: bean `fmt` (`${@fmt.quantidade(x)}`, `${@fmt.quantidade(x, unidade)}`) e `Quantidades.formatar` (Task C1).
+- Consumes: bean `fmt` (`${@fmt.quantidade(x)}`, `${@fmt.quantidade(x, unidade)}`) e `Quantidades.formatar` (Task 6).
 
 - [ ] **Step 1: Teste de renderização**
 
@@ -1749,13 +1749,13 @@ Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
 
 ---
 
-### Task C4: Validação final em PostgreSQL, docs e push
+### Task 9: Validação final em PostgreSQL, docs e push
 
 **Files:** `docs/05-estado-implementacao.md`, `docs/06-schema-banco.md`, `CLAUDE.md`
 
 - [ ] **Step 1: Migration V19 e suíte**
 
-Rodar a suíte completa (Expected: 0 falhas). Repetir o procedimento da Task A3 Step 1 (banco `pascoa_f03` copiado do dev) e verificar que o log mostra `version "19 - quantidade decimal"` e que o `ddl-auto=validate` passa; conferir:
+Rodar a suíte completa (Expected: 0 falhas). Repetir o procedimento da Task 3 Step 1 (banco `pascoa_f03` copiado do dev) e verificar que o log mostra `version "19 - quantidade decimal"` e que o `ddl-auto=validate` passa; conferir:
 
 ```bash
 docker compose exec -T postgres psql -U postgres -d pascoa_f03 -c "SELECT table_name, data_type, numeric_precision, numeric_scale FROM information_schema.columns WHERE column_name = 'quantidade' AND table_name IN ('itens_pedido','orcamento_itens','ordens_producao');"
@@ -1769,7 +1769,7 @@ Com o banco `pascoa_f03`: criar produto "Bolo" vendido por Quilo (preço 40,00) 
 
 - [ ] **Step 3: Seeds**
 
-Reaplicar os quatro seeds em bancos novos como na Task A3 Step 3 (agora com V19) e conferir `OK` nos quatro. Se algum seed insere `quantidade` de forma incompatível, corrigir o seed.
+Reaplicar os quatro seeds em bancos novos como na Task 3 Step 3 (agora com V19) e conferir `OK` nos quatro. Se algum seed insere `quantidade` de forma incompatível, corrigir o seed.
 
 - [ ] **Step 4: Limpeza, docs e push**
 
@@ -1796,6 +1796,6 @@ git push
 
 **Divergências deliberadas da spec:** (1) `FinanceiroService:82` não muda: a linha multiplica quantidade de `FichaTecnicaItem` (já decimal), não de `ItemPedido`. (2) A entrada decimal usa `type="number"` (o navegador envia ponto), então não há parsing de vírgula no servidor; a vírgula é só de exibição. (3) Categoria do produto é opcional, como a spec diz; antes era obrigatória.
 
-**Consistência de tipos:** `OrdemProducao.getQuantidade()`, `ItemPedido.getQuantidade()` e `OrcamentoItem.getQuantidade()` passam todos a `BigDecimal` na Task C2; `gerarOrdens` copia `item.getQuantidade()` sem mudança. `Quantidades.validar` e `formatar` têm a mesma assinatura em C1, C2 e C3. `PedidoService.criarComItens` recebe `List<BigDecimal>` em C2 e o `PedidoController` é ajustado na mesma tarefa.
+**Consistência de tipos:** `OrdemProducao.getQuantidade()`, `ItemPedido.getQuantidade()` e `OrcamentoItem.getQuantidade()` passam todos a `BigDecimal` na Task 7; `gerarOrdens` copia `item.getQuantidade()` sem mudança. `Quantidades.validar` e `formatar` têm a mesma assinatura em C1, C2 e C3. `PedidoService.criarComItens` recebe `List<BigDecimal>` em C2 e o `PedidoController` é ajustado na mesma tarefa.
 
 **Pontos que dependem de verificação na execução:** (1) a edição de produto por objeto destacado com `@TenantId` (A1, Step 11, com parada explícita); (2) o dado real de `fichas_tecnicas.unidade_rendimento` antes da V18 (B2, Step 1, com parada explícita); (3) a assinatura dos métodos de `BreakevenService` que usam `totalUnidades` (C2, Step 4: compilar e corrigir ocorrência por ocorrência).
