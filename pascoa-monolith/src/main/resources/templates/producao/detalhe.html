@@ -37,7 +37,6 @@
                                 <i class="bi bi-layers me-1" aria-hidden="true"></i>
                                 Quantidade a produzir:
                                 <strong th:text="${@fmt.quantidade(ordem.quantidade, ordem.produto.unidadeVenda)}"></strong>
-                                unidade(s)
                             </div>
                             <div class="text-muted small mt-1" th:if="${ordem.pedido != null}">
                                 <i class="bi bi-cart3 me-1" aria-hidden="true"></i>

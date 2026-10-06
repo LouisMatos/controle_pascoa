@@ -100,7 +100,7 @@
                                     <td>
                                         <input type="number" min="0.001" step="any"
                                                th:name="'itens[' + ${i.index} + '].quantidade'"
-                                               th:value="${@fmt.quantidade(item.quantidade).replace(',', '.')}"
+                                               th:value="${item.quantidade != null ? @fmt.quantidade(item.quantidade).replace(',', '.') : ''}"
                                                class="form-control form-control-sm text-center qtd-input">
                                     </td>
                                     <td>

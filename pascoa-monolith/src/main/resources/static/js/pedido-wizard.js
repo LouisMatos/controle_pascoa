@@ -6,7 +6,8 @@
       produtoMap[id] = {
         id:    id,
         nome:  opt.dataset.nome,
-        preco: parseFloat(opt.dataset.preco)
+        preco: parseFloat(opt.dataset.preco),
+        unidade: opt.dataset.unidade || ''
       };
     }
   });
@@ -73,7 +74,7 @@ selProduto.addEventListener('change', function () {
   const opt = selProduto.selectedOptions[0];
   const fracionavel = opt && opt.dataset.fracionavel === 'true';
   const qtdEl = document.getElementById('inpQtd');
-  qtdEl.step = fracionavel ? '0.001' : '1';
+  qtdEl.step = fracionavel ? 'any' : '1';
   qtdEl.min = fracionavel ? '0.001' : '1';
   lblUnidade.textContent = opt && opt.dataset.unidade ? '(' + opt.dataset.unidade + ')' : '';
 });
@@ -96,7 +97,7 @@ function adicionarItem() {
     renderizarTabela();
   } else {
     const p = produtoMap[pid];
-    itensSelecionados.push({ produtoId: pid, nome: p.nome, quantidade: qtd, preco: p.preco });
+    itensSelecionados.push({ produtoId: pid, nome: p.nome, quantidade: qtd, preco: p.preco, unidade: p.unidade });
     renderizarTabela();
   }
   sel.value = '';
@@ -125,7 +126,7 @@ function renderizarTabela() {
       corpo.innerHTML += `
         <tr>
           <td>${item.nome}</td>
-          <td class="text-center">${String(item.quantidade).replace(".", ",")}</td>
+          <td class="text-center">${String(item.quantidade).replace(".", ",")} ${item.unidade}</td>
           <td class="text-end">R$ ${formatarMoeda(item.preco)}</td>
           <td class="text-end fw-semibold">R$ ${formatarMoeda(sub)}</td>
           <td class="text-center">
@@ -236,7 +237,7 @@ function construirResumo() {
     total += sub;
     tbody.innerHTML += `<tr>
       <td>${item.nome}</td>
-      <td class="text-center">${String(item.quantidade).replace(".", ",")}</td>
+      <td class="text-center">${String(item.quantidade).replace(".", ",")} ${item.unidade}</td>
       <td class="text-end">R$ ${formatarMoeda(item.preco)}</td>
       <td class="text-end fw-semibold">R$ ${formatarMoeda(sub)}</td>
     </tr>`;
