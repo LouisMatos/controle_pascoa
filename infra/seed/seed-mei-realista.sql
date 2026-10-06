@@ -67,17 +67,17 @@ SELECT id, nome, unidade, 0, minima, custo, custo, forn, TIMESTAMP '2025-12-15 1
 SELECT setval(pg_get_serial_sequence('materias_primas', 'id'), 14);
 
 -- Produtos e fichas tecnicas -------------------------------------------------
-INSERT INTO produtos (id, nome, descricao, categoria, preco_venda, ativo, margem_desejada, criado_em, criado_por)
+INSERT INTO produtos (id, nome, descricao, categoria_id, preco_venda, ativo, margem_desejada, criado_em, criado_por)
 OVERRIDING SYSTEM VALUE
 VALUES
-    (1, 'Ovo ao Leite 250g',                'Casca de chocolate ao leite com recheio de brigadeiro.',  'TRADICIONAL', 54.90, true, 40, TIMESTAMP '2025-12-15 10:00', 'admin'),
-    (2, 'Ovo Meio Amargo 350g',             'Casca meio amargo com ganache.',                          'TRADICIONAL', 74.90, true, 40, TIMESTAMP '2025-12-15 10:00', 'admin'),
-    (3, 'Ovo de Brigadeiro 350g',           'Casca ao leite recheada com brigadeiro cremoso.',         'RECHEADO',    79.90, true, 40, TIMESTAMP '2025-12-15 10:00', 'admin'),
-    (4, 'Ovo Trufado de Maracuja 350g',     'Casca de chocolate branco, trufa de maracuja.',           'TRUFADO',     84.90, true, 40, TIMESTAMP '2025-12-15 10:00', 'admin'),
-    (5, 'Ovo de Doce de Leite 500g',        'Casca ao leite recheada com doce de leite e brigadeiro.', 'RECHEADO',   109.90, true, 40, TIMESTAMP '2025-12-15 10:00', 'admin'),
-    (6, 'Ovo Branco com Avela 350g',        'Casca de chocolate branco, recheio de creme de avela.',   'ESPECIAL',    89.90, true, 40, TIMESTAMP '2025-12-15 10:00', 'admin'),
-    (7, 'Caixa de Mini Ovos (6 un)',        'Seis mini ovos sortidos ao leite e meio amargo.',         'TRADICIONAL', 34.90, true, 40, TIMESTAMP '2025-12-15 10:00', 'admin'),
-    (8, 'Caixa de Trufas (12 un)',          'Doze trufas de chocolate meio amargo.',                   'TRUFADO',     44.90, true, 40, TIMESTAMP '2025-12-15 10:00', 'admin');
+    (1, 'Ovo ao Leite 250g',                'Casca de chocolate ao leite com recheio de brigadeiro.',  (SELECT id FROM categorias_produto WHERE loja_id = 1 AND upper(nome) = 'TRADICIONAL'), 54.90, true, 40, TIMESTAMP '2025-12-15 10:00', 'admin'),
+    (2, 'Ovo Meio Amargo 350g',             'Casca meio amargo com ganache.',                          (SELECT id FROM categorias_produto WHERE loja_id = 1 AND upper(nome) = 'TRADICIONAL'), 74.90, true, 40, TIMESTAMP '2025-12-15 10:00', 'admin'),
+    (3, 'Ovo de Brigadeiro 350g',           'Casca ao leite recheada com brigadeiro cremoso.',         (SELECT id FROM categorias_produto WHERE loja_id = 1 AND upper(nome) = 'RECHEADO'),    79.90, true, 40, TIMESTAMP '2025-12-15 10:00', 'admin'),
+    (4, 'Ovo Trufado de Maracuja 350g',     'Casca de chocolate branco, trufa de maracuja.',           (SELECT id FROM categorias_produto WHERE loja_id = 1 AND upper(nome) = 'TRUFADO'),     84.90, true, 40, TIMESTAMP '2025-12-15 10:00', 'admin'),
+    (5, 'Ovo de Doce de Leite 500g',        'Casca ao leite recheada com doce de leite e brigadeiro.', (SELECT id FROM categorias_produto WHERE loja_id = 1 AND upper(nome) = 'RECHEADO'),   109.90, true, 40, TIMESTAMP '2025-12-15 10:00', 'admin'),
+    (6, 'Ovo Branco com Avela 350g',        'Casca de chocolate branco, recheio de creme de avela.',   (SELECT id FROM categorias_produto WHERE loja_id = 1 AND upper(nome) = 'ESPECIAL'),    89.90, true, 40, TIMESTAMP '2025-12-15 10:00', 'admin'),
+    (7, 'Caixa de Mini Ovos (6 un)',        'Seis mini ovos sortidos ao leite e meio amargo.',         (SELECT id FROM categorias_produto WHERE loja_id = 1 AND upper(nome) = 'TRADICIONAL'), 34.90, true, 40, TIMESTAMP '2025-12-15 10:00', 'admin'),
+    (8, 'Caixa de Trufas (12 un)',          'Doze trufas de chocolate meio amargo.',                   (SELECT id FROM categorias_produto WHERE loja_id = 1 AND upper(nome) = 'TRUFADO'),     44.90, true, 40, TIMESTAMP '2025-12-15 10:00', 'admin');
 SELECT setval(pg_get_serial_sequence('produtos', 'id'), 8);
 
 INSERT INTO fichas_tecnicas (produto_id, rendimento, unidade_rendimento, observacoes)

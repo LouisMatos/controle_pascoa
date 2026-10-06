@@ -1,6 +1,5 @@
 package br.com.seuprojeto.pascoa.cadastro.controller;
 
-import br.com.seuprojeto.pascoa.cadastro.entity.Categoria;
 import br.com.seuprojeto.pascoa.cadastro.entity.Cliente;
 import br.com.seuprojeto.pascoa.cadastro.entity.PreferenciaCanal;
 import br.com.seuprojeto.pascoa.cadastro.entity.Produto;
@@ -52,7 +51,6 @@ class PainelDoDiaTest {
                 .build());
         produto = produtoRepository.save(Produto.builder()
                 .nome("Ovo Painel")
-                .categoria(Categoria.TRADICIONAL)
                 .precoVenda(new BigDecimal("50.00"))
                 .ativo(true)
                 .build());

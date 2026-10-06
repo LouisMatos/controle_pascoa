@@ -1,6 +1,5 @@
 package br.com.seuprojeto.pascoa.common.tenant;
 
-import br.com.seuprojeto.pascoa.cadastro.entity.Categoria;
 import br.com.seuprojeto.pascoa.cadastro.entity.Cliente;
 import br.com.seuprojeto.pascoa.cadastro.entity.Fornecedor;
 import br.com.seuprojeto.pascoa.cadastro.entity.PreferenciaCanal;
@@ -66,7 +65,7 @@ class TenantIsolamentoTest {
         String nomeProduto = "Produto-" + UUID.randomUUID();
         TenantContext.executar(1L, () -> {
             fornecedores.save(Fornecedor.builder().nome(nomeFornecedor).build());
-            produtos.save(Produto.builder().nome(nomeProduto).categoria(Categoria.TRUFADO)
+            produtos.save(Produto.builder().nome(nomeProduto)
                 .precoVenda(BigDecimal.TEN).build());
         });
 

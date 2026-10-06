@@ -1,6 +1,7 @@
 package br.com.seuprojeto.pascoa.cadastro.service;
 
 import br.com.seuprojeto.pascoa.cadastro.entity.Produto;
+import br.com.seuprojeto.pascoa.cadastro.repository.CategoriaProdutoRepository;
 import br.com.seuprojeto.pascoa.cadastro.repository.ProdutoRepository;
 import br.com.seuprojeto.pascoa.shared.exception.RecursoNaoEncontradoException;
 import br.com.seuprojeto.pascoa.shared.service.FileValidationService;
@@ -24,6 +25,7 @@ import java.util.UUID;
 public class ProdutoService {
 
     private final ProdutoRepository repository;
+    private final CategoriaProdutoRepository categoriaRepository;
     private final FileValidationService fileValidationService;
 
     @Value("${app.upload.dir:${user.home}/pascoa-uploads}")
@@ -59,6 +61,11 @@ public class ProdutoService {
     public Produto salvar(Produto produto, MultipartFile fotoFile) {
         if (produto.getAtivo() == null) {
             produto.setAtivo(true);
+        }
+        if (produto.getCategoria() != null) {
+            Long categoriaId = produto.getCategoria().getId();
+            produto.setCategoria(categoriaId == null ? null : categoriaRepository.findById(categoriaId)
+                .orElseThrow(() -> new RecursoNaoEncontradoException("Categoria não encontrada: " + categoriaId)));
         }
         if (fotoFile != null && !fotoFile.isEmpty()) {
             produto.setFoto(salvarFoto(fotoFile));

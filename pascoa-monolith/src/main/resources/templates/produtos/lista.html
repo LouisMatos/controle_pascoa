@@ -51,9 +51,8 @@
                             <div class="text-muted small" th:text="${p.descricao}" th:if="${p.descricao != null and !#strings.isEmpty(p.descricao)}"></div>
                         </td>
                         <td>
-                            <span class="badge text-white"
-                                  th:classappend="'badge-' + ${p.categoria.name()}"
-                                  th:text="${p.categoria.descricao}"></span>
+                            <span class="badge text-bg-secondary" th:if="${p.categoria != null}"
+                                  th:text="${p.categoria.nome}"></span>
                         </td>
                         <td class="text-end fw-semibold">
                             R$ <span th:text="${#numbers.formatDecimal(p.precoVenda, 1, 'POINT', 2, 'COMMA')}"></span>

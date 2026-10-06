@@ -163,8 +163,8 @@ WHERE s.materia_prima_id = m.id;
 -- ---------------------------------------------------------------------------
 -- 4. Produtos (CEN-PRD) e fichas tecnicas (CEN-FT)
 -- ---------------------------------------------------------------------------
-INSERT INTO produtos (nome, descricao, categoria, preco_venda, ativo, margem_desejada, inicio_safra, fim_safra, excluido_em, criado_em, criado_por)
-SELECT v.nome || ' [CEN-PRD-' || lpad(v.n::text, 2, '0') || ']', v.descricao, v.categoria, v.preco, v.ativo, v.margem,
+INSERT INTO produtos (nome, descricao, categoria_id, preco_venda, ativo, margem_desejada, inicio_safra, fim_safra, excluido_em, criado_em, criado_por)
+SELECT v.nome || ' [CEN-PRD-' || lpad(v.n::text, 2, '0') || ']', v.descricao, (SELECT cp.id FROM categorias_produto cp WHERE cp.loja_id = 1 AND upper(cp.nome) = v.categoria), v.preco, v.ativo, v.margem,
        v.ini, v.fim, v.excluido, now() - interval '150 days', 'seed'
 FROM (VALUES
     ( 1, 'Ovo Trufado Padrao',      'Ovo trufado cenario',     'TRUFADO',     89.90, true,  45.00, NULL::date, NULL::date, NULL::timestamp),

@@ -167,9 +167,8 @@
                                 <td class="ps-3">
                                     <div class="fw-semibold" th:text="${item.produto.nome}"></div>
                                     <div class="small text-muted">
-                                        <span class="badge text-white"
-                                              th:classappend="'badge-' + ${item.produto.categoria.name()}"
-                                              th:text="${item.produto.categoria.descricao}"></span>
+                                        <span class="badge text-bg-secondary" th:if="${item.produto.categoria != null}"
+                                              th:text="${item.produto.categoria.nome}"></span>
                                     </div>
                                 </td>
                                 <td class="text-center" th:text="${item.quantidade}"></td>

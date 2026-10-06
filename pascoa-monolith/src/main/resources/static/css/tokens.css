@@ -159,12 +159,6 @@ body { font-size: 0.93rem; }
 .navbar-brand { font-weight: 700; letter-spacing: 0.5px; }
 .nav-link { font-weight: 500; }
 .table thead th { background-color: #f8f9fa; font-weight: 600; border-bottom: 2px solid #dee2e6; }
-.badge-TRUFADO    { background-color: #6f42c1; }
-.badge-RECHEADO   { background-color: #fd7e14; }
-.badge-DIET       { background-color: #0dcaf0; color: #000; }
-.badge-VEGANO     { background-color: #198754; }
-.badge-TRADICIONAL{ background-color: #6c757d; }
-.badge-ESPECIAL   { background-color: #d63384; }
 .estoque-critico  { background-color: #fff3cd !important; }
 .card { border: none; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
 .alerta-badge { font-size: .65rem; }

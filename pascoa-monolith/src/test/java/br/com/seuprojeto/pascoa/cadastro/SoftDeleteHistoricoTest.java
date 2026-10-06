@@ -1,6 +1,5 @@
 package br.com.seuprojeto.pascoa.cadastro;
 
-import br.com.seuprojeto.pascoa.cadastro.entity.Categoria;
 import br.com.seuprojeto.pascoa.cadastro.entity.Cliente;
 import br.com.seuprojeto.pascoa.cadastro.entity.PreferenciaCanal;
 import br.com.seuprojeto.pascoa.cadastro.entity.Produto;
@@ -55,7 +54,6 @@ class SoftDeleteHistoricoTest {
                 .build());
         produto = produtoRepository.save(Produto.builder()
                 .nome("Ovo Soft Delete")
-                .categoria(Categoria.TRADICIONAL)
                 .precoVenda(new BigDecimal("50.00"))
                 .ativo(true)
                 .build());
@@ -124,7 +122,6 @@ class SoftDeleteHistoricoTest {
         Long pedidoId = pedidoComItem();
         Produto outro = produtoRepository.save(Produto.builder()
                 .nome("Ovo Excluido")
-                .categoria(Categoria.TRADICIONAL)
                 .precoVenda(new BigDecimal("70.00"))
                 .ativo(true)
                 .build());

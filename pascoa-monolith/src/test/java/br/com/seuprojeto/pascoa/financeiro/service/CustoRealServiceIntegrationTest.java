@@ -1,6 +1,5 @@
 package br.com.seuprojeto.pascoa.financeiro.service;
 
-import br.com.seuprojeto.pascoa.cadastro.entity.Categoria;
 import br.com.seuprojeto.pascoa.cadastro.entity.Cliente;
 import br.com.seuprojeto.pascoa.cadastro.entity.MateriaPrima;
 import br.com.seuprojeto.pascoa.cadastro.entity.PreferenciaCanal;
@@ -66,7 +65,6 @@ class CustoRealServiceIntegrationTest {
     private Produto salvarProduto(String nome) {
         return produtoRepository.save(Produto.builder()
                 .nome(nome)
-                .categoria(Categoria.TRADICIONAL)
                 .precoVenda(new BigDecimal("50.00"))
                 .ativo(true)
                 .build());

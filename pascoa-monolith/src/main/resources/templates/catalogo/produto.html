@@ -37,9 +37,9 @@
         </div>
 
         <div class="col-md-7">
-            <span th:classappend="'badge-' + ${produto.categoria.name()}"
-                  class="badge fs-6 mb-2 px-3"
-                  th:text="${produto.categoria.descricao}"></span>
+            <span th:if="${produto.categoria != null}"
+                  class="badge text-bg-secondary fs-6 mb-2 px-3"
+                  th:text="${produto.categoria.nome}"></span>
 
             <h1 class="h2 fw-bold mb-2" th:text="${produto.nome}"></h1>
 

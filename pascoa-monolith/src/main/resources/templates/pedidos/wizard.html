@@ -147,7 +147,7 @@
                         th:value="${p.id}"
                         th:data-nome="${p.nome}"
                         th:data-preco="${p.precoVenda}"
-                        th:data-categoria="${p.categoria}"
+                        th:data-categoria="${p.categoria != null ? p.categoria.nome : ''}"
                         th:text="${p.nome} + ' — R$ ' + ${#numbers.formatDecimal(p.precoVenda,1,'POINT',2,'COMMA')}">
                 </option>
               </select>

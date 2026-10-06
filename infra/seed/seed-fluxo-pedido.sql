@@ -34,8 +34,8 @@ FROM (VALUES
 ) AS v(nome, unidade, qtd, minima, custo)
 WHERE NOT EXISTS (SELECT 1 FROM materias_primas m WHERE m.nome = v.nome || ' (Teste)');
 
-INSERT INTO produtos (nome, descricao, categoria, preco_venda, ativo, margem_desejada, criado_em, criado_por)
-SELECT v.nome || ' (Teste)', 'Produto de teste do fluxo de pedido', v.categoria, v.preco, v.ativo, 45.00, now(), 'seed'
+INSERT INTO produtos (nome, descricao, categoria_id, preco_venda, ativo, margem_desejada, criado_em, criado_por)
+SELECT v.nome || ' (Teste)', 'Produto de teste do fluxo de pedido', (SELECT cp.id FROM categorias_produto cp WHERE cp.loja_id = 1 AND upper(cp.nome) = v.categoria), v.preco, v.ativo, 45.00, now(), 'seed'
 FROM (VALUES
     ('Ovo Trufado 350g',        'TRUFADO',     89.90, true),
     ('Ovo Recheado 500g',       'RECHEADO',   119.90, true),

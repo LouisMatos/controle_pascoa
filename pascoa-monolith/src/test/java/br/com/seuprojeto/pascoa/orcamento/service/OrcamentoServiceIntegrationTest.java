@@ -1,6 +1,5 @@
 package br.com.seuprojeto.pascoa.orcamento.service;
 
-import br.com.seuprojeto.pascoa.cadastro.entity.Categoria;
 import br.com.seuprojeto.pascoa.cadastro.entity.Cliente;
 import br.com.seuprojeto.pascoa.cadastro.entity.PreferenciaCanal;
 import br.com.seuprojeto.pascoa.cadastro.entity.Produto;
@@ -55,7 +54,6 @@ class OrcamentoServiceIntegrationTest {
 
         produto = produtoRepository.save(Produto.builder()
                 .nome("Ovo de Páscoa Trufado 500g")
-                .categoria(Categoria.TRUFADO)
                 .precoVenda(new BigDecimal("89.90"))
                 .ativo(true)
                 .build());

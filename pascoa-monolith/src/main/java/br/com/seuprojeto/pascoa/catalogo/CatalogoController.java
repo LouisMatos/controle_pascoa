@@ -1,7 +1,8 @@
 package br.com.seuprojeto.pascoa.catalogo;
 
-import br.com.seuprojeto.pascoa.cadastro.entity.Categoria;
+import br.com.seuprojeto.pascoa.cadastro.entity.CategoriaProduto;
 import br.com.seuprojeto.pascoa.cadastro.entity.Produto;
+import br.com.seuprojeto.pascoa.cadastro.service.CategoriaProdutoService;
 import br.com.seuprojeto.pascoa.cadastro.service.ProdutoService;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
@@ -28,6 +29,7 @@ import java.util.List;
 public class CatalogoController {
 
     private final ProdutoService produtoService;
+    private final CategoriaProdutoService categoriaService;
 
     @Value("${app.base-url:http://localhost:8080}")
     private String baseUrl;
@@ -35,23 +37,24 @@ public class CatalogoController {
     // ── Vitrine ────────────────────────────────────────────────────────────
 
     @GetMapping
-    public String index(@RequestParam(required = false) String categoria, Model model) {
+    public String index(@RequestParam(required = false) Long categoria, Model model) {
         List<Produto> produtos = produtoService.listarAtivos();
+        List<CategoriaProduto> categorias = categoriaService.listarAtivas();
 
-        Categoria categoriaFiltro = null;
-        if (categoria != null && !categoria.isBlank()) {
-            try {
-                categoriaFiltro = Categoria.valueOf(categoria.toUpperCase());
-                final Categoria cf = categoriaFiltro;
-                produtos = produtos.stream().filter(p -> p.getCategoria() == cf).toList();
-            } catch (IllegalArgumentException ignored) {
-                // categoria inválida — exibe todos
-            }
+        CategoriaProduto categoriaAtiva = categoria == null ? null : categorias.stream()
+            .filter(c -> c.getId().equals(categoria))
+            .findFirst()
+            .orElse(null);
+        if (categoriaAtiva != null) {
+            Long idAtivo = categoriaAtiva.getId();
+            produtos = produtos.stream()
+                .filter(p -> p.getCategoria() != null && idAtivo.equals(p.getCategoria().getId()))
+                .toList();
         }
 
         model.addAttribute("produtos", produtos);
-        model.addAttribute("categorias", Categoria.values());
-        model.addAttribute("categoriaAtiva", categoriaFiltro);
+        model.addAttribute("categorias", categorias);
+        model.addAttribute("categoriaAtiva", categoriaAtiva);
         return "catalogo/index";
     }
 

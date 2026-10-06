@@ -23,15 +23,17 @@ public interface ItemPedidoRepository extends JpaRepository<ItemPedido, Long> {
     List<Object[]> topProdutos(@Param("cancelado") StatusPedido cancelado);
 
     /** Ranking de produtos por ano: [nome, categoria, qtd, faturamento] */
-    @Query(value = "SELECT pr.nome, pr.categoria, SUM(i.quantidade)::bigint, COALESCE(SUM(i.subtotal), 0) " +
+    @Query(value = "SELECT pr.nome, c.nome, SUM(i.quantidade)::bigint, COALESCE(SUM(i.subtotal), 0) " +
                    "FROM itens_pedido i " +
                    "JOIN produtos pr ON i.produto_id = pr.id " +
+                   "LEFT JOIN categorias_produto c ON pr.categoria_id = c.id " +
+                   "AND c.loja_id = " + TenantContext.LOJA_ATUAL_SPEL + " " +
                    "JOIN pedidos ped ON i.pedido_id = ped.id " +
                    "WHERE EXTRACT(YEAR FROM ped.data_pedido) = :ano AND ped.status != 'CANCELADO' " +
                    "AND i.loja_id = " + TenantContext.LOJA_ATUAL_SPEL + " " +
                    "AND ped.loja_id = " + TenantContext.LOJA_ATUAL_SPEL + " " +
                    "AND pr.loja_id = " + TenantContext.LOJA_ATUAL_SPEL + " " +
-                   "GROUP BY pr.id, pr.nome, pr.categoria " +
+                   "GROUP BY pr.id, pr.nome, c.nome " +
                    "ORDER BY SUM(i.quantidade) DESC LIMIT 15",
            nativeQuery = true)
     List<Object[]> rankingProdutosPorAno(@Param("ano") int ano);

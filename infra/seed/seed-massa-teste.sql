@@ -111,13 +111,13 @@ FROM (VALUES
 -- ---------------------------------------------------------------------------
 -- 4. Produtos (6 categorias, inativos, safra, soft-delete, sem ficha tecnica)
 -- ---------------------------------------------------------------------------
-INSERT INTO produtos (nome, descricao, categoria, preco_venda, ativo, margem_desejada,
+INSERT INTO produtos (nome, descricao, categoria_id, preco_venda, ativo, margem_desejada,
                       inicio_safra, fim_safra, excluido_em, criado_em, criado_por)
 SELECT (ARRAY['Ovo Trufado','Ovo Recheado','Ovo ao Leite','Ovo Meio Amargo','Ovo Branco',
               'Ovo Crocante','Ovo Diet','Ovo Vegano','Ovo Gourmet','Barra Recheada'])[1 + (g % 10)]
        || ' ' || (ARRAY['250g','350g','500g','750g','1kg'])[1 + (g % 5)] || ' #' || g,
        CASE WHEN g % 8 = 0 THEN NULL ELSE 'Produto de teste numero ' || g END,
-       (ARRAY['TRUFADO','RECHEADO','DIET','VEGANO','TRADICIONAL','ESPECIAL'])[1 + (g % 6)],
+       (SELECT cp.id FROM categorias_produto cp WHERE cp.loja_id = 1 AND upper(cp.nome) = (ARRAY['TRUFADO','RECHEADO','DIET','VEGANO','TRADICIONAL','ESPECIAL'])[1 + (g % 6)]),
        round((45 + (g % 12) * 8.5)::numeric, 2),
        g % 11 <> 0,
        round((40 + (g % 5) * 7)::numeric, 2),

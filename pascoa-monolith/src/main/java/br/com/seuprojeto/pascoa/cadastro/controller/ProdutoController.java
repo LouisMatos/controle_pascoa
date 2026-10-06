@@ -1,6 +1,6 @@
 package br.com.seuprojeto.pascoa.cadastro.controller;
 
-import br.com.seuprojeto.pascoa.cadastro.entity.Categoria;
+import br.com.seuprojeto.pascoa.cadastro.service.CategoriaProdutoService;
 import br.com.seuprojeto.pascoa.cadastro.entity.Produto;
 import br.com.seuprojeto.pascoa.cadastro.service.ProdutoService;
 import jakarta.validation.Valid;
@@ -23,6 +23,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class ProdutoController {
 
     private final ProdutoService service;
+    private final CategoriaProdutoService categoriaService;
 
     @GetMapping
     public String listar(@RequestParam(required = false) String busca, Model model) {
@@ -37,14 +38,14 @@ public class ProdutoController {
     @GetMapping("/novo")
     public String novo(Model model) {
         model.addAttribute("produto", new Produto());
-        model.addAttribute("categorias", Categoria.values());
+        model.addAttribute("categorias", categoriaService.listarAtivas());
         return "produtos/form";
     }
 
     @GetMapping("/{id}/editar")
     public String editar(@PathVariable Long id, Model model) {
         model.addAttribute("produto", service.buscarPorId(id));
-        model.addAttribute("categorias", Categoria.values());
+        model.addAttribute("categorias", categoriaService.listarAtivas());
         return "produtos/form";
     }
 
@@ -54,14 +55,14 @@ public class ProdutoController {
                          @RequestParam("fotoFile") MultipartFile fotoFile,
                          Model model, RedirectAttributes ra) {
         if (result.hasErrors()) {
-            model.addAttribute("categorias", Categoria.values());
+            model.addAttribute("categorias", categoriaService.listarAtivas());
             return "produtos/form";
         }
         try {
             service.salvar(produto, fotoFile);
             ra.addFlashAttribute("sucesso", "Produto salvo com sucesso!");
         } catch (Exception e) {
-            model.addAttribute("categorias", Categoria.values());
+            model.addAttribute("categorias", categoriaService.listarAtivas());
             model.addAttribute("erroFoto", "Erro ao salvar foto: " + e.getMessage());
             return "produtos/form";
         }

@@ -1,6 +1,5 @@
 package br.com.seuprojeto.pascoa.pedido.service;
 
-import br.com.seuprojeto.pascoa.cadastro.entity.Categoria;
 import br.com.seuprojeto.pascoa.cadastro.entity.Cliente;
 import br.com.seuprojeto.pascoa.cadastro.entity.PreferenciaCanal;
 import br.com.seuprojeto.pascoa.cadastro.entity.Produto;
@@ -67,7 +66,6 @@ class PedidoStateMachineTest {
 
         produto = produtoRepository.save(Produto.builder()
                 .nome("Ovo Teste SM")
-                .categoria(Categoria.TRADICIONAL)
                 .precoVenda(new BigDecimal("50.00"))
                 .ativo(true)
                 .build());

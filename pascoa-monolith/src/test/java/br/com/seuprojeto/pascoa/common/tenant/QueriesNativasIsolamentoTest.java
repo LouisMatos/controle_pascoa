@@ -1,6 +1,5 @@
 package br.com.seuprojeto.pascoa.common.tenant;
 
-import br.com.seuprojeto.pascoa.cadastro.entity.Categoria;
 import br.com.seuprojeto.pascoa.cadastro.entity.Cliente;
 import br.com.seuprojeto.pascoa.cadastro.entity.PreferenciaCanal;
 import br.com.seuprojeto.pascoa.cadastro.entity.Produto;
@@ -94,7 +93,7 @@ class QueriesNativasIsolamentoTest {
         TenantContext.executar(1L, () -> {
             Cliente c = clientes.save(novoCliente(null));
             Produto p = produtos.save(Produto.builder().nome("P-" + UUID.randomUUID())
-                .categoria(Categoria.TRUFADO).precoVenda(BigDecimal.TEN).build());
+                .precoVenda(BigDecimal.TEN).build());
             Pedido pedido = pedidos.save(Pedido.builder().cliente(c).status(StatusPedido.ENTREGUE)
                 .totalPedido(new BigDecimal("100.00")).build());
             itens.save(ItemPedido.builder().pedido(pedido).produto(p).quantidade(2)

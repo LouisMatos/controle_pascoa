@@ -35,16 +35,15 @@
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label fw-semibold" for="categoria">Categoria *</label>
-                        <select class="form-select"
-                                th:field="*{categoria}"
-                                th:classappend="${#fields.hasErrors('categoria')} ? 'is-invalid'">
-                            <option value="">Selecione…</option>
+                        <label class="form-label fw-semibold" for="categoria">Categoria</label>
+                        <select class="form-select" id="categoria" name="categoria.id">
+                            <option value="">Sem categoria</option>
                             <option th:each="cat : ${categorias}"
-                                    th:value="${cat.name()}"
-                                    th:text="${cat.descricao}"></option>
+                                    th:value="${cat.id}"
+                                    th:text="${cat.nome}"
+                                    th:selected="${produto.categoria != null and produto.categoria.id == cat.id}"></option>
                         </select>
-                        <div class="invalid-feedback" th:errors="*{categoria}"></div>
+                        <div class="form-text"><a th:href="@{/categorias}">Gerenciar categorias</a></div>
                     </div>
 
                     <div class="col-md-12">

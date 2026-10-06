@@ -1,6 +1,5 @@
 package br.com.seuprojeto.pascoa.producao.service;
 
-import br.com.seuprojeto.pascoa.cadastro.entity.Categoria;
 import br.com.seuprojeto.pascoa.cadastro.entity.Cliente;
 import br.com.seuprojeto.pascoa.cadastro.entity.MateriaPrima;
 import br.com.seuprojeto.pascoa.cadastro.entity.PreferenciaCanal;
@@ -77,7 +76,6 @@ class ProducaoStatusPedidoTest {
     private Produto produtoComFicha(String nome, MateriaPrima materiaPrima) {
         Produto produto = produtoRepository.save(Produto.builder()
                 .nome(nome)
-                .categoria(Categoria.TRADICIONAL)
                 .precoVenda(new BigDecimal("50.00"))
                 .ativo(true)
                 .build());
