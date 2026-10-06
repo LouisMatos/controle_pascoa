@@ -3,6 +3,7 @@ package br.com.seuprojeto.pascoa.cadastro;
 import br.com.seuprojeto.pascoa.cadastro.entity.CategoriaProduto;
 import br.com.seuprojeto.pascoa.cadastro.service.CategoriaProdutoService;
 import br.com.seuprojeto.pascoa.common.tenant.TenantContext;
+import br.com.seuprojeto.pascoa.shared.exception.RecursoNaoEncontradoException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -62,5 +63,28 @@ class CategoriaProdutoServiceTest {
         TenantContext.executar(1L, () -> service.alternarAtivo(id));
         assertThat(TenantContext.calcular(1L, () -> service.listarAtivas()))
             .anyMatch(c -> c.getId().equals(id));
+    }
+
+    @Test
+    void salvar_comIdDeOutraLoja_falha() {
+        String nome = "Alheia-" + UUID.randomUUID();
+        Long id = TenantContext.calcular(2L, () -> service.salvar(form(nome)).getId());
+
+        CategoriaProduto edicao = form("Invadida-" + UUID.randomUUID());
+        edicao.setId(id);
+        assertThatThrownBy(() -> TenantContext.executar(1L, () -> service.salvar(edicao)))
+            .isInstanceOf(RecursoNaoEncontradoException.class);
+
+        assertThat(TenantContext.calcular(2L, () -> service.buscarPorId(id).getNome())).isEqualTo(nome);
+    }
+
+    @Test
+    void alternarAtivo_deOutraLoja_falha() {
+        Long id = TenantContext.calcular(2L, () -> service.salvar(form("Alheia-" + UUID.randomUUID())).getId());
+
+        assertThatThrownBy(() -> TenantContext.executar(1L, () -> service.alternarAtivo(id)))
+            .isInstanceOf(RecursoNaoEncontradoException.class);
+
+        assertThat(TenantContext.calcular(2L, () -> service.buscarPorId(id).getAtivo())).isTrue();
     }
 }
