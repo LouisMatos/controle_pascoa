@@ -26,7 +26,7 @@ import java.time.LocalDateTime;
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
-public abstract class BaseEntity {
+public abstract class BaseEntity extends TenantEntity {
 
     @CreatedDate
     @Column(name = "criado_em", nullable = false, updatable = false)
