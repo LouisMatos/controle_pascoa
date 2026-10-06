@@ -1,5 +1,6 @@
 package br.com.seuprojeto.pascoa.notificacao.service;
 
+import br.com.seuprojeto.pascoa.common.tenant.TenantJobRunner;
 import br.com.seuprojeto.pascoa.cadastro.entity.Cliente;
 import br.com.seuprojeto.pascoa.cadastro.repository.ClienteRepository;
 import br.com.seuprojeto.pascoa.notificacao.entity.EventoNotificacao;
@@ -36,6 +37,7 @@ public class NotificacaoAgendadaService {
     private final ClienteRepository    clienteRepository;
     private final OrcamentoRepository  orcamentoRepository;
     private final NotificacaoService   notificacaoService;
+    private final TenantJobRunner      tenantJobRunner;
 
     // ══════════════════════════════════════════════════════════════════════════
     // Job 1 — Aniversariantes
@@ -49,8 +51,12 @@ public class NotificacaoAgendadaService {
      * {@link NotificacaoService#processarParaCliente} via consulta ao banco.
      */
     @Scheduled(cron = "0 0 8 * * *")
-    @Transactional
     public void notificarAniversariantes() {
+        tenantJobRunner.porLoja(this::notificarAniversariantesDaLojaAtual);
+    }
+
+    @Transactional
+    public void notificarAniversariantesDaLojaAtual() {
         LocalDate hoje = LocalDate.now();
         List<Cliente> aniversariantes =
                 clienteRepository.findAniversariantesHoje(hoje.getMonthValue(), hoje.getDayOfMonth());
@@ -80,8 +86,12 @@ public class NotificacaoAgendadaService {
      * por índice único no banco ({@code uq_notif_orcamento_expirando}).
      */
     @Scheduled(cron = "0 0 9 * * *")
-    @Transactional
     public void notificarOrcamentosExpirando() {
+        tenantJobRunner.porLoja(this::notificarOrcamentosExpirandoDaLojaAtual);
+    }
+
+    @Transactional
+    public void notificarOrcamentosExpirandoDaLojaAtual() {
         LocalDate dataAlerta = LocalDate.now().plusDays(DIAS_AVISO_ORCAMENTO);
         List<Orcamento> expirando =
                 orcamentoRepository.findPendentesComValidadeEm(StatusOrcamento.PENDENTE, dataAlerta);

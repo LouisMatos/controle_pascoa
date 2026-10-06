@@ -1,5 +1,6 @@
 package br.com.seuprojeto.pascoa.crm.service;
 
+import br.com.seuprojeto.pascoa.common.tenant.TenantContext;
 import br.com.seuprojeto.pascoa.crm.dto.ClienteCrmDto;
 import br.com.seuprojeto.pascoa.crm.entity.CampanhaItem;
 import br.com.seuprojeto.pascoa.crm.entity.SegmentoCliente;
@@ -49,6 +50,7 @@ public class CampanhaService {
             if (destinatario == null || destinatario.isBlank()) { continue; }
 
             campanhaQueue.enqueue(new CampanhaItem(
+                    TenantContext.exigir(),
                     dto.cliente().getId(),
                     dto.cliente().getNome(),
                     destinatario,
@@ -66,7 +68,10 @@ public class CampanhaService {
     public void processarProximo() {
         CampanhaItem item = campanhaQueue.poll();
         if (item == null) { return; }
+        TenantContext.executar(item.lojaId(), () -> enviar(item));
+    }
 
+    private void enviar(CampanhaItem item) {
         Optional<ConfiguracaoCanal> optConfig = canalRepository.findByTipo(item.canal());
         if (optConfig.isEmpty() || !Boolean.TRUE.equals(optConfig.get().getAtivo())) {
             log.warn("[CAMPANHA] Canal {} inativo — descartando envio para {}", item.canal(), item.destinatario());

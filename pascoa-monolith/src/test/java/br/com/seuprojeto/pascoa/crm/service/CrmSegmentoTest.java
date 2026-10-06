@@ -151,7 +151,7 @@ class CrmSegmentoTest {
         // cliente criado no @BeforeEach — sem pedidos
         em.flush(); em.clear();
 
-        crmService.recalcularSegmentos();
+        crmService.recalcularSegmentosDaLojaAtual();
         em.flush(); em.clear();
 
         Cliente atualizado = clienteRepository.findById(cliente.getId()).orElseThrow();
@@ -168,7 +168,7 @@ class CrmSegmentoTest {
                 .build());
         em.flush(); em.clear();
 
-        crmService.recalcularSegmentos();
+        crmService.recalcularSegmentosDaLojaAtual();
         em.flush(); em.clear();
 
         // Ambos sem pedidos → ambos NOVO

@@ -3,6 +3,7 @@ package br.com.seuprojeto.pascoa.crm.entity;
 import br.com.seuprojeto.pascoa.notificacao.entity.CanalNotificacao;
 
 public record CampanhaItem(
+        Long lojaId,
         Long clienteId,
         String nomeCliente,
         String destinatario,

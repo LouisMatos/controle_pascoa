@@ -2,6 +2,7 @@ package br.com.seuprojeto.pascoa.crm.service;
 
 import br.com.seuprojeto.pascoa.cadastro.entity.Cliente;
 import br.com.seuprojeto.pascoa.cadastro.repository.ClienteRepository;
+import br.com.seuprojeto.pascoa.common.tenant.TenantJobRunner;
 import br.com.seuprojeto.pascoa.crm.dto.ClienteCrmDto;
 import br.com.seuprojeto.pascoa.crm.entity.NotaCliente;
 import br.com.seuprojeto.pascoa.crm.entity.PontoFidelidade;
@@ -34,6 +35,7 @@ public class CrmService {
     private final PedidoRepository pedidoRepo;
     private final PontoFidelidadeRepository pontoRepo;
     private final NotaClienteRepository notaRepo;
+    private final TenantJobRunner tenantJobRunner;
 
     // ── Ranking / Dashboard ────────────────────────────────────────────────
 
@@ -147,8 +149,12 @@ public class CrmService {
      * Executa às 02h00.
      */
     @Scheduled(cron = "0 0 2 * * *")
-    @Transactional
     public void recalcularSegmentos() {
+        tenantJobRunner.porLoja(this::recalcularSegmentosDaLojaAtual);
+    }
+
+    @Transactional
+    public void recalcularSegmentosDaLojaAtual() {
         log.info("[CRM] Iniciando recalculo de segmentos de clientes...");
         List<Cliente> clientes = clienteRepo.findAllByOrderByNomeAsc();
         Map<Long, Object[]> statsMap = pedidoRepo.statsPorCliente().stream()
