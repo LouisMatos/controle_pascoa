@@ -1,5 +1,6 @@
 package br.com.seuprojeto.pascoa.seguranca.entity;
 
+import br.com.seuprojeto.pascoa.common.tenant.TenantContext;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -7,6 +8,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -57,4 +59,14 @@ public class Usuario {
     @Builder.Default
     @Column(name = "tentativas_totp_falhas", nullable = false)
     private int tentativasTotpFalhas = 0;
+
+    @Column(name = "loja_id", nullable = false, updatable = false)
+    private Long lojaId;
+
+    @PrePersist
+    void definirLoja() {
+        if (lojaId == null && TenantContext.atual() != TenantContext.SEM_TENANT) {
+            lojaId = TenantContext.atual();
+        }
+    }
 }

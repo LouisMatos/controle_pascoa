@@ -1,12 +1,11 @@
 package br.com.seuprojeto.pascoa.seguranca.service;
 
+import br.com.seuprojeto.pascoa.common.tenant.TenantContext;
 import br.com.seuprojeto.pascoa.seguranca.dto.UsuarioForm;
 import br.com.seuprojeto.pascoa.seguranca.entity.Usuario;
 import br.com.seuprojeto.pascoa.seguranca.repository.UsuarioRepository;
 import br.com.seuprojeto.pascoa.shared.exception.RecursoNaoEncontradoException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import br.com.seuprojeto.pascoa.auditoria.annotation.Auditavel;
@@ -39,11 +38,7 @@ public class UsuarioService implements UserDetailsService {
             throw new UsernameNotFoundException("Usuário inativo: " + login);
         }
 
-        return User.builder()
-            .username(usuario.getLogin())
-            .password(usuario.getSenha())
-            .authorities(new SimpleGrantedAuthority("ROLE_" + usuario.getRole().name()))
-            .build();
+        return new UsuarioPrincipal(usuario);
     }
 
     // -----------------------------------------------------------------------
@@ -53,13 +48,14 @@ public class UsuarioService implements UserDetailsService {
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional(readOnly = true)
     public List<Usuario> listarTodos() {
-        return usuarioRepository.findAllByOrderByNomeAsc();
+        return usuarioRepository.findAllByLojaIdOrderByNomeAsc(TenantContext.exigir());
     }
 
     @PreAuthorize("hasRole('ADMIN')")
     @Transactional(readOnly = true)
     public Usuario buscarPorId(Long id) {
         return usuarioRepository.findById(id)
+            .filter(u -> u.getLojaId() == TenantContext.atual())
             .orElseThrow(() -> new RecursoNaoEncontradoException("Usuário não encontrado: " + id));
     }
 

@@ -5,6 +5,7 @@ import br.com.seuprojeto.pascoa.seguranca.service.UsuarioService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -13,6 +14,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
 import org.springframework.security.web.context.DelegatingSecurityContextRepository;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
@@ -69,9 +71,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                     TwoFactorAuthenticationSuccessHandler twoFactorHandler,
-                                                    SecurityContextRepository securityContextRepository) throws Exception {
+                                                    SecurityContextRepository securityContextRepository,
+                                                    JdbcTemplate jdbcTemplate) throws Exception {
         http
             .securityContext(sc -> sc.securityContextRepository(securityContextRepository))
+            .addFilterAfter(new TenantFilter(jdbcTemplate), AnonymousAuthenticationFilter.class)
             .headers(h -> h
                 .frameOptions(f -> f.deny())
                 .contentTypeOptions(Customizer.withDefaults())

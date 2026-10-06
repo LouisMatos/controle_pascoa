@@ -1,5 +1,6 @@
 package br.com.seuprojeto.pascoa.config;
 
+import br.com.seuprojeto.pascoa.seguranca.entity.Loja;
 import br.com.seuprojeto.pascoa.seguranca.entity.Role;
 import br.com.seuprojeto.pascoa.seguranca.entity.Usuario;
 import br.com.seuprojeto.pascoa.seguranca.repository.UsuarioRepository;
@@ -30,6 +31,7 @@ public class DataInitializer implements CommandLineRunner {
                 .senha(passwordEncoder.encode(senhaInicial))
                 .role(Role.ADMIN)
                 .ativo(true)
+                .lojaId(Loja.PLATAFORMA_ID)
                 .build());
             log.info("=== Usuário inicial criado: login=admin (senha em app.admin.senha-inicial) ===");
         }
