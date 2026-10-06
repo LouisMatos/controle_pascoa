@@ -98,9 +98,9 @@
                                         </select>
                                     </td>
                                     <td>
-                                        <input type="number" min="1"
+                                        <input type="number" min="0.001" step="any"
                                                th:name="'itens[' + ${i.index} + '].quantidade'"
-                                               th:value="${item.quantidade}"
+                                               th:value="${@fmt.quantidade(item.quantidade).replace(',', '.')}"
                                                class="form-control form-control-sm text-center qtd-input">
                                     </td>
                                     <td>
@@ -148,7 +148,7 @@
                             th:attr="data-preco=${p.precoVenda}"></option>
                 </select>
             </td>
-            <td><input type="number" min="1" name="itens[__IDX__].quantidade" value="1" aria-label="Quantidade"
+            <td><input type="number" min="0.001" step="any" name="itens[__IDX__].quantidade" value="1" aria-label="Quantidade"
                        class="form-control form-control-sm text-center qtd-input"></td>
             <td><input type="number" step="0.01" min="0" name="itens[__IDX__].precoUnitario" value="" aria-label="Preço unitário"
                        class="form-control form-control-sm text-end preco-input" placeholder="Preço"></td>

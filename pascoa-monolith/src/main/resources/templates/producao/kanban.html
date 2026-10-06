@@ -33,7 +33,7 @@
       <article th:each="o : ${pendentes}" class="kanban-card pendente" th:aria-label="${o.produto.nome}">
         <div class="kanban-card-title" th:text="${o.produto.nome}"></div>
         <div class="kanban-card-sub">
-          <i class="bi bi-box-seam me-1" aria-hidden="true"></i><span th:text="${o.quantidade}"></span> unid.
+          <i class="bi bi-box-seam me-1" aria-hidden="true"></i><span th:text="${@fmt.quantidade(o.quantidade, o.produto.unidadeVenda)}"></span>
           <span th:if="${o.pedido != null}">
             &nbsp;·&nbsp;<i class="bi bi-cart3 me-1" aria-hidden="true"></i>
             <a th:href="@{/pedidos/{id}(id=${o.pedido.id})}"
@@ -84,7 +84,7 @@
       <article th:each="o : ${emAndamento}" class="kanban-card em-andamento" th:aria-label="${o.produto.nome}">
         <div class="kanban-card-title" th:text="${o.produto.nome}"></div>
         <div class="kanban-card-sub">
-          <i class="bi bi-box-seam me-1" aria-hidden="true"></i><span th:text="${o.quantidade}"></span> unid.
+          <i class="bi bi-box-seam me-1" aria-hidden="true"></i><span th:text="${@fmt.quantidade(o.quantidade, o.produto.unidadeVenda)}"></span>
           <span th:if="${o.pedido != null}">
             &nbsp;·&nbsp;<i class="bi bi-cart3 me-1" aria-hidden="true"></i>
             <a th:href="@{/pedidos/{id}(id=${o.pedido.id})}"
@@ -136,7 +136,7 @@
       <article th:each="o : ${concluidas}" class="kanban-card concluida" th:aria-label="${o.produto.nome}">
         <div class="kanban-card-title" th:text="${o.produto.nome}"></div>
         <div class="kanban-card-sub">
-          <i class="bi bi-box-seam me-1" aria-hidden="true"></i><span th:text="${o.quantidade}"></span> unid.
+          <i class="bi bi-box-seam me-1" aria-hidden="true"></i><span th:text="${@fmt.quantidade(o.quantidade, o.produto.unidadeVenda)}"></span>
           <span th:if="${o.pedido != null}">
             &nbsp;·&nbsp;<i class="bi bi-cart3 me-1" aria-hidden="true"></i>
             <a th:href="@{/pedidos/{id}(id=${o.pedido.id})}"

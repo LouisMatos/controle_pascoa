@@ -70,7 +70,7 @@
             <tbody>
               <tr th:each="linha : ${custo.linhasMP}">
                 <td th:text="${linha.produto}"></td>
-                <td class="text-center" th:text="${linha.quantidade}"></td>
+                <td class="text-center" th:text="${@fmt.quantidade(linha.quantidade)}"></td>
                 <td class="text-end">R$ <span th:text="${#numbers.formatDecimal(linha.custoUnitario,1,'POINT',2,'COMMA')}"></span></td>
                 <td class="text-end fw-semibold">R$ <span th:text="${#numbers.formatDecimal(linha.subtotal,1,'POINT',2,'COMMA')}"></span></td>
               </tr>

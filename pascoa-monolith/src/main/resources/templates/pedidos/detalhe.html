@@ -171,7 +171,7 @@
                                               th:text="${item.produto.categoria.nome}"></span>
                                     </div>
                                 </td>
-                                <td class="text-center" th:text="${item.quantidade}"></td>
+                                <td class="text-center" th:text="${@fmt.quantidade(item.quantidade, item.produto.unidadeVenda)}"></td>
                                 <td class="text-end">
                                     R$ <span th:text="${#numbers.formatDecimal(item.precoUnitario, 1, 'POINT', 2, 'COMMA')}"></span>
                                 </td>
@@ -217,7 +217,7 @@
                             <div class="col-md-3">
                                 <label class="form-label small fw-semibold mb-1" for="quantidade">Quantidade *</label>
                                 <input type="number" class="form-control form-control-sm"
-                                       th:field="*{quantidade}" min="1" placeholder="1">
+                                       th:field="*{quantidade}" min="0.001" step="any" placeholder="1">
                             </div>
                             <div class="col-md-2">
                                 <button type="submit" class="btn btn-success btn-sm w-100">
@@ -345,7 +345,7 @@
                     <tr th:each="o : ${ordens}">
                         <td class="ps-3 text-muted small" th:text="${o.id}"></td>
                         <td class="fw-semibold" th:text="${o.produto.nome}"></td>
-                        <td class="text-center" th:text="${o.quantidade}"></td>
+                        <td class="text-center" th:text="${@fmt.quantidade(o.quantidade, o.produto.unidadeVenda)}"></td>
                         <td class="text-center">
                             <span class="badge" th:classappend="${o.status.badgeCss}"
                                   th:text="${o.status.descricao}"></span>

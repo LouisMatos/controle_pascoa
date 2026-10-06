@@ -67,21 +67,32 @@ document.getElementById('buscaCliente').addEventListener('input', function() {
 // ============================================================
 // Passo 2 — Produtos
 // ============================================================
+const selProduto = document.getElementById('selProduto');
+const lblUnidade = document.getElementById('lblUnidade');
+selProduto.addEventListener('change', function () {
+  const opt = selProduto.selectedOptions[0];
+  const fracionavel = opt && opt.dataset.fracionavel === 'true';
+  const qtdEl = document.getElementById('inpQtd');
+  qtdEl.step = fracionavel ? '0.001' : '1';
+  qtdEl.min = fracionavel ? '0.001' : '1';
+  lblUnidade.textContent = opt && opt.dataset.unidade ? '(' + opt.dataset.unidade + ')' : '';
+});
+
 function adicionarItem() {
   const sel = document.getElementById('selProduto');
   const qtdInput = document.getElementById('inpQtd');
   const pid = parseInt(sel.value);
-  const qtd = parseInt(qtdInput.value);
+  const qtd = parseFloat(qtdInput.value);
 
   if (!pid) { sel.classList.add('is-invalid'); return; }
   sel.classList.remove('is-invalid');
-  if (!qtd || qtd < 1) { qtdInput.classList.add('is-invalid'); return; }
+  if (!qtd || qtd <= 0) { qtdInput.classList.add('is-invalid'); return; }
   qtdInput.classList.remove('is-invalid');
 
   // Atualiza se já existe
   const existente = itensSelecionados.find(i => i.produtoId === pid);
   if (existente) {
-    existente.quantidade += qtd;
+    existente.quantidade = Math.round((existente.quantidade + qtd) * 1000) / 1000;
     renderizarTabela();
   } else {
     const p = produtoMap[pid];
@@ -89,6 +100,7 @@ function adicionarItem() {
     renderizarTabela();
   }
   sel.value = '';
+  sel.dispatchEvent(new Event('change'));
   qtdInput.value = 1;
   document.getElementById('itensErro').classList.add('d-none');
 }
@@ -113,7 +125,7 @@ function renderizarTabela() {
       corpo.innerHTML += `
         <tr>
           <td>${item.nome}</td>
-          <td class="text-center">${item.quantidade}</td>
+          <td class="text-center">${String(item.quantidade).replace(".", ",")}</td>
           <td class="text-end">R$ ${formatarMoeda(item.preco)}</td>
           <td class="text-end fw-semibold">R$ ${formatarMoeda(sub)}</td>
           <td class="text-center">
@@ -224,7 +236,7 @@ function construirResumo() {
     total += sub;
     tbody.innerHTML += `<tr>
       <td>${item.nome}</td>
-      <td class="text-center">${item.quantidade}</td>
+      <td class="text-center">${String(item.quantidade).replace(".", ",")}</td>
       <td class="text-end">R$ ${formatarMoeda(item.preco)}</td>
       <td class="text-end fw-semibold">R$ ${formatarMoeda(sub)}</td>
     </tr>`;

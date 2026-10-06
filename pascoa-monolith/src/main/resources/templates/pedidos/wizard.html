@@ -148,15 +148,17 @@
                         th:data-nome="${p.nome}"
                         th:data-preco="${p.precoVenda}"
                         th:data-categoria="${p.categoria != null ? p.categoria.nome : ''}"
+                        th:data-fracionavel="${p.unidadeVenda.fracionavel}"
+                        th:data-unidade="${p.unidadeVenda.simbolo}"
                         th:text="${p.nome} + ' — R$ ' + ${#numbers.formatDecimal(p.precoVenda,1,'POINT',2,'COMMA')}">
                 </option>
               </select>
               <div class="invalid-feedback">Selecione um produto.</div>
             </div>
             <div class="col-sm-2">
-              <label class="form-label fw-semibold small mb-1" for="inpQtd">Qtd</label>
+              <label class="form-label fw-semibold small mb-1" for="inpQtd">Qtd <span id="lblUnidade" class="text-muted small"></span></label>
               <input type="number" id="inpQtd" class="form-control form-control-sm"
-                     min="1" max="999" value="1"/>
+                     min="0.001" step="1" value="1"/>
               <div class="invalid-feedback">Mín. 1.</div>
             </div>
             <div class="col-sm-3">

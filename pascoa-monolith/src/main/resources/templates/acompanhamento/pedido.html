@@ -123,7 +123,7 @@
           <tbody>
             <tr th:each="item : ${pedido.itens}">
               <td th:text="${item.produto.nome}"></td>
-              <td class="text-center" th:text="${item.quantidade}"></td>
+              <td class="text-center" th:text="${@fmt.quantidade(item.quantidade, item.produto.unidadeVenda)}"></td>
               <td class="text-end" th:text="'R$ ' + ${#numbers.formatDecimal(item.subtotal,1,'POINT',2,'COMMA')}"></td>
             </tr>
           </tbody>
@@ -182,7 +182,7 @@
           <tbody>
             <tr th:each="o : ${ordens}">
               <td th:text="${o.produto.nome}"></td>
-              <td class="text-center" th:text="${o.quantidade}"></td>
+              <td class="text-center" th:text="${@fmt.quantidade(o.quantidade, o.produto.unidadeVenda)}"></td>
               <td class="text-center">
                 <span class="badge" th:classappend="${o.status.badgeCss}"
                       th:text="${o.status.descricao}"></span>

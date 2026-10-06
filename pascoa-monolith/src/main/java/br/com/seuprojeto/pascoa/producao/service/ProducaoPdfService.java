@@ -1,5 +1,6 @@
 package br.com.seuprojeto.pascoa.producao.service;
 
+import br.com.seuprojeto.pascoa.common.quantidade.Quantidades;
 import br.com.seuprojeto.pascoa.fichaTecnica.entity.FichaTecnica;
 import br.com.seuprojeto.pascoa.producao.entity.OrdemProducao;
 import br.com.seuprojeto.pascoa.shared.pdf.PdfKit;
@@ -28,7 +29,7 @@ public class ProducaoPdfService {
             pdf.secao("ORDEM");
             PdfPTable info = pdf.infoTable();
             pdf.addInfo(info, "Produto:", ordem.getProduto().getNome());
-            pdf.addInfo(info, "Quantidade:", ordem.getQuantidade() + " unidade(s)");
+            pdf.addInfo(info, "Quantidade:", Quantidades.formatar(ordem.getQuantidade(), ordem.getProduto().getUnidadeVenda()));
             pdf.addInfo(info, "Status:", ordem.getStatus().getDescricao());
             if (ordem.getPedido() != null) {
                 pdf.addInfo(info, "Pedido:", "#" + ordem.getPedido().getId());

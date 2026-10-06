@@ -108,7 +108,7 @@
                                     <div class="fw-semibold" th:text="${r.nome()}"></div>
                                     <div class="text-muted fs-78" th:text="${r.categoria()}"></div>
                                 </td>
-                                <td class="text-center" th:text="${r.quantidade()}"></td>
+                                <td class="text-center" th:text="${@fmt.quantidade(r.quantidade())}"></td>
                                 <td class="text-end pe-3 text-success fw-semibold"
                                     th:text="'R$ ' + ${#numbers.formatDecimal(r.faturamento(), 1, 'POINT', 2, 'COMMA')}"></td>
                             </tr>

@@ -28,7 +28,7 @@
                 </div>
                 <div class="col-md-4">
                     <div class="text-muted small">Quantidade Produzida</div>
-                    <div class="fw-semibold" th:text="${ordem.quantidade} + ' un.'"></div>
+                    <div class="fw-semibold" th:text="${@fmt.quantidade(ordem.quantidade, ordem.produto.unidadeVenda)}"></div>
                 </div>
             </div>
         </div>

@@ -1,5 +1,6 @@
 package br.com.seuprojeto.pascoa.pedido.service;
 
+import br.com.seuprojeto.pascoa.common.quantidade.Quantidades;
 import br.com.seuprojeto.pascoa.pedido.entity.ItemPedido;
 import br.com.seuprojeto.pascoa.pedido.entity.Pedido;
 import br.com.seuprojeto.pascoa.shared.pdf.PdfKit;
@@ -205,7 +206,7 @@ public class ExportService {
             PdfPTable itensTbl = pdf.itensTable();
             for (ItemPedido item : pedido.getItens()) {
                 pdf.addTd(itensTbl, item.getProduto().getNome(),          Element.ALIGN_LEFT);
-                pdf.addTd(itensTbl, String.valueOf(item.getQuantidade()), Element.ALIGN_CENTER);
+                pdf.addTd(itensTbl, Quantidades.formatar(item.getQuantidade(), item.getProduto().getUnidadeVenda()), Element.ALIGN_CENTER);
                 pdf.addTd(itensTbl, PdfKit.brl(item.getPrecoUnitario()),  Element.ALIGN_RIGHT);
                 pdf.addTd(itensTbl, PdfKit.brl(item.getSubtotal()),       Element.ALIGN_RIGHT);
             }

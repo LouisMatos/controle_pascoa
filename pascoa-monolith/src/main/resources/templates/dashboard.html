@@ -83,7 +83,7 @@
                         <li class="list-group-item d-flex justify-content-between align-items-center"
                             th:each="o : ${produzir}">
                             <a th:href="@{/producao/{id}(id=${o.id})}"
-                               th:text="${o.quantidade} + 'x ' + ${o.produto.nome}">0x</a>
+                               th:text="${@fmt.quantidade(o.quantidade, o.produto.unidadeVenda)} + ' · ' + ${o.produto.nome}">0x</a>
                             <span class="badge bg-light text-dark"
                                   th:text="${o.pedido?.dataEntrega != null} ? ${#temporals.format(o.pedido.dataEntrega,'dd/MM')} : '—'"></span>
                         </li>

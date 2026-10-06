@@ -50,7 +50,7 @@
                     <tr th:each="o : ${ordens}">
                         <td class="ps-3 text-muted small fw-semibold" th:text="${o.id}"></td>
                         <td class="fw-semibold" th:text="${o.produto.nome}"></td>
-                        <td class="text-center fw-semibold" th:text="${o.quantidade}"></td>
+                        <td class="text-center fw-semibold" th:text="${@fmt.quantidade(o.quantidade, o.produto.unidadeVenda)}"></td>
                         <td class="text-center">
                             <span class="badge" th:classappend="${o.status.badgeCss}"
                                   th:text="${o.status.descricao}"></span>

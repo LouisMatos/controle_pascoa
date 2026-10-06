@@ -95,7 +95,7 @@
                         <tbody>
                             <tr th:each="item : ${orc.itens}">
                                 <td class="ps-3 fw-semibold" th:text="${item.produto.nome}"></td>
-                                <td class="text-center" th:text="${item.quantidade}"></td>
+                                <td class="text-center" th:text="${@fmt.quantidade(item.quantidade, item.produto.unidadeVenda)}"></td>
                                 <td class="text-end">
                                     R$ <span th:text="${#numbers.formatDecimal(item.precoUnitario, 1, 'POINT', 2, 'COMMA')}"></span>
                                 </td>
