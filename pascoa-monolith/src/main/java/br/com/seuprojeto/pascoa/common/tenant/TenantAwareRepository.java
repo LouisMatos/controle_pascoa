@@ -45,4 +45,25 @@ public class TenantAwareRepository<T, ID> extends SimpleJpaRepository<T, ID> {
         return findById(id).orElseThrow(
             () -> new EntityNotFoundException(info.getEntityName() + " não encontrado: " + id));
     }
+
+    @Override
+    @Transactional
+    public <S extends T> S save(S entity) {
+        exigirDaLojaAtual(entity);
+        return super.save(entity);
+    }
+
+    @Override
+    @Transactional
+    public void delete(T entity) {
+        exigirDaLojaAtual(entity);
+        super.delete(entity);
+    }
+
+    @SuppressWarnings("unchecked")
+    private void exigirDaLojaAtual(T entity) {
+        if (porTenant && !info.isNew(entity) && findById((ID) info.getId(entity)).isEmpty()) {
+            throw new EntityNotFoundException(info.getEntityName() + " não encontrado: " + info.getId(entity));
+        }
+    }
 }

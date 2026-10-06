@@ -101,4 +101,40 @@ class TenantIsolamentoTest {
             .isInstanceOf(org.springframework.orm.jpa.JpaObjectRetrievalFailureException.class)
             .hasRootCauseInstanceOf(jakarta.persistence.EntityNotFoundException.class);
     }
+
+    @Test
+    void saveComIdDeOutraLoja_falha_eNaoSobrescreve() {
+        Long id = TenantContext.calcular(1L, () -> fornecedores.save(Fornecedor.builder()
+            .nome("Fornecedor-" + UUID.randomUUID()).build()).getId());
+        String nomeOriginal = TenantContext.calcular(1L, () -> fornecedores.findById(id).orElseThrow().getNome());
+
+        assertThatThrownBy(() -> TenantContext.executar(2L,
+            () -> fornecedores.save(Fornecedor.builder().id(id).nome("hack").build())))
+            .hasStackTraceContaining("EntityNotFoundException");
+
+        assertThat(TenantContext.calcular(1L, () -> fornecedores.findById(id).orElseThrow().getNome()))
+            .isEqualTo(nomeOriginal);
+    }
+
+    @Test
+    void deleteDeOutraLoja_falha_eMantemALinha() {
+        Fornecedor f = TenantContext.calcular(1L, () -> fornecedores.save(Fornecedor.builder()
+            .nome("Fornecedor-" + UUID.randomUUID()).build()));
+
+        assertThatThrownBy(() -> TenantContext.executar(2L, () -> fornecedores.delete(f)))
+            .hasStackTraceContaining("EntityNotFoundException");
+
+        assertThat(TenantContext.calcular(1L, () -> fornecedores.findById(f.getId()))).isPresent();
+    }
+
+    @Test
+    void saveDeEntidadeDaLojaAtual_atualiza() {
+        Fornecedor f = TenantContext.calcular(1L, () -> fornecedores.save(Fornecedor.builder()
+            .nome("Fornecedor-" + UUID.randomUUID()).build()));
+
+        TenantContext.executar(1L, () -> fornecedores.save(Fornecedor.builder().id(f.getId()).nome("novo").build()));
+
+        assertThat(TenantContext.calcular(1L, () -> fornecedores.findById(f.getId()).orElseThrow().getNome()))
+            .isEqualTo("novo");
+    }
 }

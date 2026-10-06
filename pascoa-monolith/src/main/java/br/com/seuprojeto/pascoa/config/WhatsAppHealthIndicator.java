@@ -1,9 +1,11 @@
 package br.com.seuprojeto.pascoa.config;
 
+import br.com.seuprojeto.pascoa.common.tenant.TenantContext;
 import br.com.seuprojeto.pascoa.notificacao.entity.CanalNotificacao;
 import br.com.seuprojeto.pascoa.notificacao.entity.ConfiguracaoCanal;
 import br.com.seuprojeto.pascoa.notificacao.repository.ConfiguracaoCanalRepository;
 import br.com.seuprojeto.pascoa.notificacao.service.WhatsAppService;
+import br.com.seuprojeto.pascoa.seguranca.entity.Loja;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
@@ -24,7 +26,8 @@ public class WhatsAppHealthIndicator implements HealthIndicator {
 
     @Override
     public Health health() {
-        Optional<ConfiguracaoCanal> optConfig = canalRepository.findByTipo(CanalNotificacao.WHATSAPP);
+        Optional<ConfiguracaoCanal> optConfig = TenantContext.calcular(Loja.PLATAFORMA_ID,
+            () -> canalRepository.findByTipo(CanalNotificacao.WHATSAPP));
 
         if (optConfig.isEmpty()) {
             return Health.unknown()
