@@ -616,7 +616,7 @@ Seed V17: Trufado, Recheado, Diet, Vegano, Tradicional, Especial para cada loja.
 | Segurança | `usuarios`, `password_reset_token` |
 | Infraestrutura | `audit_log`, `configuracao_sistema` |
 | **Órfã** | `campanha_reengajamento` (sem entity Java) |
-| **Total** | **29 tabelas** |
+| **Total** | **30 tabelas** |
 
 > **Nota V14:** `notificacoes_enviadas` ganhou `pedido_id` nullable + `cliente_id` + `orcamento_id` para suportar notificações proativas sem pedido (aniversário, orçamento expirando).
 >

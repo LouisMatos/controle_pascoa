@@ -73,7 +73,7 @@ Jobs: aniversário 08h, orçamento expirando 09h.
 | `docs/02-arquitetura-tecnica.md` | código Java |
 | `docs/03-fluxos-negocio.md` | regra de negócio |
 | `docs/04-rotas-endpoints.md` | rotas/permissões |
-| `docs/06-schema-banco.md` | 29 tabelas, FKs, migrations V1–V19 |
+| `docs/06-schema-banco.md` | 30 tabelas, FKs, migrations V1–V19 |
 | `docs/07-convencoes-desenvolvimento.md` | padrões + checklist de PR |
 | `docs/01-infraestrutura.md` | deploy/infra |
 | `docs/08-manutencao-docs.md` | protocolo de fim de sessão |

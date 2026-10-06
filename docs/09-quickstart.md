@@ -121,6 +121,8 @@ UI continua em http://localhost:8080.
 
 ---
 
+> **Antes de migrar um banco existente para V17/V18:** `pg_dump` completo e `SELECT unidade_rendimento, count(*) FROM fichas_tecnicas GROUP BY 1` (fichas em G/L/ML viram UNIDADE e exigem revisão manual). Detalhes em `docs/05-estado-implementacao.md` §28.
+
 ## 8. Massa de testes (banco local)
 
 Popular o banco de desenvolvimento com todos os cenários da aplicação em volume de estresse

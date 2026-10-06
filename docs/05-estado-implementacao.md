@@ -28,7 +28,7 @@
 | Catálogo público | ✅ Completo |
 | PWA | ✅ Completo |
 | Segurança / RBAC | ✅ Completo |
-| Testes de integração | ✅ 205 testes (174 unitários + 31 `*IntegrationTest`) cobrindo todos os módulos críticos |
+| Testes de integração | ✅ 215 testes (182 unitários + 33 `*IntegrationTest`) cobrindo todos os módulos críticos |
 
 ### Microsserviços v5 — Migração Strangler Fig (design doc v5)
 | Serviço | Status | Porta | Checklist 11.1 |
@@ -270,7 +270,6 @@ PAGAMENTO_RECEBIDO, PEDIDO_CANCELADO, ORCAMENTO_APROVADO, ORCAMENTO_RECUSADO
 | `V16__multi_tenant.sql` | ✅ | F0.1: `lojas` + `loja_id` nas 29 tabelas de negócio e em `usuarios`; UNIQUE de `configuracao_canal`/`orcamentos_gasto` compostos |
 | `V17__categorias_produto.sql` | ✅ | F0.3: `categorias_produto` por loja; `produtos.categoria` (enum) vira `categoria_id` FK |
 | `V18__unidade_venda_sazonal.sql` | ✅ | F0.3: `produtos.unidade_venda` (default `UNIDADE`, deduzida da ficha) e `produtos.sazonal`; `fichas_tecnicas.unidade_rendimento` passa a nullable |
-
 | `V19__quantidade_decimal.sql` | ✅ | F0.3: `quantidade` de `itens_pedido`, `orcamento_itens` e `ordens_producao` INTEGER -> NUMERIC(10,3) |
 
 > **Próxima versão de migration disponível:** V20.
@@ -279,7 +278,7 @@ PAGAMENTO_RECEBIDO, PEDIDO_CANCELADO, ORCAMENTO_APROVADO, ORCAMENTO_RECUSADO
 
 ## 15. Testes
 
-### ✅ Testes — 205 (0 falhas; tabela abaixo parcial)
+### ✅ Testes — 215 (0 falhas; tabela abaixo parcial)
 
 | Classe | Testes | Cobre |
 |--------|--------|-------|
@@ -786,6 +785,9 @@ Pendentes (fora do escopo de design):
 - `Quantidades` (validação por unidade: só KG aceita fração; as demais respondem "<Unidade> só aceita quantidade inteira.") e `QuantidadeFormatter`, exposto nos templates como `@fmt`, formata em pt-BR ("1,5 kg"). Wizard, formulários, detalhes e PDFs mostram a unidade; o navegador envia ponto decimal, a vírgula é só de exibição. Receita da ordem escalada por quantidade ÷ rendimento.
 - Correção: `PedidoService.adicionarItem`/`removerItem` agora atualizam o total do pedido (bug anterior).
 - Validado em PostgreSQL 16 sobre cópia do dev (V18, 123 pedidos, 164 itens): V19 aplicada, soma das quantidades preservada (209), `ddl-auto=validate` OK. Manual (porta 8086): Bolo por Quilo R$ 40 (ficha rendimento 2) com 1,5 kg por POST do wizard via curl (JS lido, não testado em navegador) = R$ 60,00, ordem "1,5 kg" com insumo 0,8 -> 0,600 kg, PDFs de ordem/pedido/orçamento, Coxinha por Cento recusa 1,5, orçamento com os dois itens convertido em pedido (aprovado via SQL; link público `/orcamento-publico/{token}` não exercitado), `/financeiro/dashboard`, `/analytics` e `/financeiro/custo-real/<id>` 200. Os quatro seeds aplicam em banco novo V1..V19. Suíte: 174 testes (sem IT/`*IntegrationTest`) + 31 `*IntegrationTest`, 0 falhas.
-- A UI do wizard não foi testada em navegador.
+- Wizard testado em navegador em 2026-10-06 (agent-browser, app na porta 8088 sobre cópia descartável do dev): 1,5 kg de Bolo por Quilo (R$ 60,00); mesmo produto adicionado duas vezes soma as quantidades (1,5 + 0,25 = 1,75 kg, R$ 70,00); 1,5 de Cento bloqueado no navegador (campo inválido, nada adicionado); voltar do passo 3 e reenviar não duplica os campos ocultos (4 campos, não 8) e o pedido #124 foi criado com 1,75 kg + 2 cento = R$ 230,00; orçamento com 1,5 Cento mostra "Cento só aceita quantidade inteira." inline e mantém o formulário preenchido (sem 500). Não exercitado em navegador: mensagem de erro do servidor no wizard, edição de orçamento, catálogo público.
+- Pós-revisão: total do pedido/orçamento acima de 99.999.999,99 é recusado com "Total acima do máximo permitido." (`Quantidades.TOTAL_MAXIMO`; `PedidoService.criarComItens`/`adicionarItem`/`recalcularTotal`, `OrcamentoService.criar`/`atualizar`/`converter`; nada é gravado). O limite da linha (NUMERIC(12,2)) é sempre maior que o do total, então a checagem do total cobre a linha. Orçamento com quantidade inválida volta ao formulário com `erroItens`. Produto com categoria inativa continua com ela selecionada ao editar ("(inativa)"). `/catalogo?categoria=<lixo>` mostra todos os produtos.
+- **Checklist pré-deploy V17/V18 (rodar em TODO banco alvo antes de migrar):** (1) `pg_dump` completo antes (V17 remove `produtos.categoria`; não há desfazer); (2) `SELECT unidade_rendimento, count(*) FROM fichas_tecnicas GROUP BY 1` — fichas em G/L/ML viram UNIDADE e o rendimento muda de significado, exigem revisão manual; V18 nunca produz DUZIA nem CENTO (ajustar à mão). Só o banco do dev foi conferido (as 8 fichas em UN); o banco de sandbox/AWS precisa ser conferido antes do deploy.
 - Limitação conhecida: rateio de despesa fixa e ponto de equilíbrio somam quantidades de unidades de venda diferentes (kg + cento + un), distorcendo a conta quando a loja mistura unidades; usar a receita como base é item futuro.
-- Limitação conhecida: quantidade no máximo vezes o preço pode estourar `pedidos.total_pedido` NUMERIC(10,2) (erro de banco exibido na mensagem do wizard).
+- Limitações conhecidas: ranking/top produtos de analytics ordenam por `SUM(quantidade)` somando unidades de venda diferentes (junto do rateio/ponto de equilíbrio acima); `OrcamentoService.converter` copia as quantidades sem revalidar contra a unidade de venda ATUAL do produto.
+- Pendências para o F0.2: criar loja nova precisa semear as seis categorias padrão da loja; não há garantia no banco de que `produtos.categoria_id` pertence à mesma `loja_id` (só o serviço garante).
