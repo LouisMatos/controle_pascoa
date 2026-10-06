@@ -146,6 +146,8 @@ public class PedidoService {
 
             Produto produto = produtosPorId.get(produtoId);
             Quantidades.validar(qtd, produto.getUnidadeVenda());
+            BigDecimal subtotal = Quantidades.validarTotal(
+                produto.getPrecoVenda().multiply(qtd).setScale(2, RoundingMode.HALF_UP));
             ItemPedido item = ItemPedido.builder()
                 .pedido(pedido)
                 .produto(produto)
@@ -153,14 +155,14 @@ public class PedidoService {
                 .precoUnitario(produto.getPrecoVenda())
                 .build();
             itens.add(item);
-            total = total.add(produto.getPrecoVenda().multiply(qtd).setScale(2, RoundingMode.HALF_UP));
+            total = Quantidades.validarTotal(total.add(subtotal));
         }
         if (itens.isEmpty()) {
             throw new IllegalArgumentException("Informe pelo menos um produto com quantidade maior que zero.");
         }
         itemRepository.saveAll(itens);
 
-        pedido.setTotalPedido(Quantidades.validarTotal(total));
+        pedido.setTotalPedido(total);
         return pedidoRepository.save(pedido);
     }
 
