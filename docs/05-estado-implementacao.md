@@ -385,7 +385,7 @@ Implementado nesta sessão:
 | 10a | DRE simplificado | ❌ | Nova tela + `FinanceiroService` |
 | 10b | Simulador de cenários financeiros | ❌ | Cálculos hipotéticos em `BreakevenService` |
 | — | F7: FluxoCaixa caixa vs competência | ❌ | Adiado — requer toggle de UI complexo |
-| — | `estoque/saida.html` | ❌ | Template ausente |
+| — | `estoque/saida.html` | ✅ | Existe |
 
 ---
 
