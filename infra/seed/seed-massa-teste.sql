@@ -480,7 +480,7 @@ SELECT cat, round((400 + (m * 37) + (a - 2024) * 250)::numeric, 2), m, a
 FROM generate_series(2024, 2026) a
 CROSS JOIN generate_series(1, 12) m
 CROSS JOIN unnest(ARRAY['EMBALAGEM','TRANSPORTE','MARKETING','MATERIA_PRIMA','EQUIPAMENTO','SERVICO','OUTROS']) cat
-ON CONFLICT (categoria, referencia_mes, referencia_ano) DO NOTHING;
+ON CONFLICT (loja_id, categoria, referencia_mes, referencia_ano) DO NOTHING;
 
 UPDATE configuracao_financeira
 SET meta_faturamento_mensal = 60000.00,

@@ -620,7 +620,7 @@ FROM (VALUES
 ) AS v(cat, valor)
 CROSS JOIN (VALUES (date_trunc('month', CURRENT_DATE)::date),
                    ((date_trunc('month', CURRENT_DATE) - interval '1 month')::date)) AS m(dia)
-ON CONFLICT (categoria, referencia_mes, referencia_ano) DO NOTHING;
+ON CONFLICT (loja_id, categoria, referencia_mes, referencia_ano) DO NOTHING;
 
 -- ---------------------------------------------------------------------------
 -- 13. CRM (CEN-PTO pontos, CEN-NTA notas)
