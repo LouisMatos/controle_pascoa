@@ -85,7 +85,6 @@ class CustoRealServiceIntegrationTest {
         return fichaTecnicaRepository.save(FichaTecnica.builder()
                 .produto(produto)
                 .rendimento(rendimento)
-                .unidadeRendimento(Unidade.UN)
                 .build());
     }
 

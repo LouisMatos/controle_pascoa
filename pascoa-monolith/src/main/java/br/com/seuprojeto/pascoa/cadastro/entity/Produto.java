@@ -3,6 +3,8 @@ package br.com.seuprojeto.pascoa.cadastro.entity;
 import br.com.seuprojeto.pascoa.common.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -21,6 +23,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.hibernate.annotations.SQLDelete;
+import org.springframework.format.annotation.DateTimeFormat;
 
 
 import java.math.BigDecimal;
@@ -62,6 +65,16 @@ public class Produto extends BaseEntity {
     @Column(name = "preco_venda", nullable = false, precision = 10, scale = 2)
     private BigDecimal precoVenda;
 
+    @NotNull(message = "Unidade de venda é obrigatória")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "unidade_venda", nullable = false, length = 10)
+    @Builder.Default
+    private UnidadeVenda unidadeVenda = UnidadeVenda.UNIDADE;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private Boolean sazonal = false;
+
     @Column(nullable = false)
     @Builder.Default
     private Boolean ativo = true;
@@ -74,9 +87,11 @@ public class Produto extends BaseEntity {
     @Column(name = "foto", length = 500)
     private String foto;
 
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     @Column(name = "inicio_safra")
     private LocalDate inicioSafra;
 
+    @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
     @Column(name = "fim_safra")
     private LocalDate fimSafra;
 

@@ -39,7 +39,7 @@ public class ProducaoPdfService {
             }
             if (ficha != null) {
                 pdf.addInfo(info, "Rendimento da receita:",
-                    qtd(ficha.getRendimento()) + " " + ficha.getUnidadeRendimento().getSimbolo());
+                    qtd(ficha.getRendimento()) + " " + ordem.getProduto().getUnidadeVenda().getSimbolo());
             }
             pdf.add(info);
 

@@ -67,6 +67,13 @@ public class ProdutoService {
             produto.setCategoria(categoriaId == null ? null : categoriaRepository.findById(categoriaId)
                 .orElseThrow(() -> new RecursoNaoEncontradoException("Categoria não encontrada: " + categoriaId)));
         }
+        if (produto.getSazonal() == null) {
+            produto.setSazonal(false);
+        }
+        if (!produto.getSazonal()) {
+            produto.setInicioSafra(null);
+            produto.setFimSafra(null);
+        }
         if (fotoFile != null && !fotoFile.isEmpty()) {
             produto.setFoto(salvarFoto(fotoFile));
         }

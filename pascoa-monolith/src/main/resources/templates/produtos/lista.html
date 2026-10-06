@@ -56,6 +56,7 @@
                         </td>
                         <td class="text-end fw-semibold">
                             R$ <span th:text="${#numbers.formatDecimal(p.precoVenda, 1, 'POINT', 2, 'COMMA')}"></span>
+                            <small class="text-muted"> / <span th:text="${p.unidadeVenda.simbolo}"></span></small>
                         </td>
                         <td class="text-center">
                             <span th:if="${p.ativo}" class="badge bg-success">Ativo</span>

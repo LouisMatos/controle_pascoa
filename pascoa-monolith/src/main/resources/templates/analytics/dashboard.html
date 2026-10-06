@@ -11,7 +11,7 @@
             <i class="bi bi-bar-chart-line me-2 text-success" aria-hidden="true"></i>Analytics
         </h2>
         <form method="get" th:action="@{/analytics}" class="d-flex align-items-center gap-2">
-            <label class="text-muted small mb-0" for="ano">Safra:</label>
+            <label class="text-muted small mb-0" for="ano">Período:</label>
             <select name="ano" id="ano" class="form-select form-select-sm" data-autosubmit>
                 <option th:each="a : ${anos}" th:value="${a}" th:text="${a}"
                         th:selected="${a == anoSelecionado}"></option>

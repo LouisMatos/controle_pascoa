@@ -2,7 +2,6 @@ package br.com.seuprojeto.pascoa.fichaTecnica.service;
 
 import br.com.seuprojeto.pascoa.cadastro.entity.MateriaPrima;
 import br.com.seuprojeto.pascoa.cadastro.entity.Produto;
-import br.com.seuprojeto.pascoa.cadastro.entity.Unidade;
 import br.com.seuprojeto.pascoa.cadastro.repository.MateriaPrimaRepository;
 import br.com.seuprojeto.pascoa.cadastro.repository.ProdutoRepository;
 import br.com.seuprojeto.pascoa.fichaTecnica.entity.FichaTecnica;
@@ -50,16 +49,14 @@ public class FichaTecnicaService {
             return fichaRepository.save(FichaTecnica.builder()
                 .produto(produto)
                 .rendimento(BigDecimal.ONE)
-                .unidadeRendimento(Unidade.UN)
                 .build());
         });
     }
 
     @Transactional
-    public void salvarInfo(Long produtoId, BigDecimal rendimento, Unidade unidade, String observacoes) {
+    public void salvarInfo(Long produtoId, BigDecimal rendimento, String observacoes) {
         FichaTecnica ficha = buscarOuCriar(produtoId);
         ficha.setRendimento(rendimento);
-        ficha.setUnidadeRendimento(unidade);
         ficha.setObservacoes(observacoes);
         fichaRepository.save(ficha);
     }

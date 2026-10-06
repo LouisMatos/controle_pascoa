@@ -41,19 +41,14 @@
                 <div class="card-body">
                     <form th:action="@{/fichas/{id}/salvar(id=${produto.id})}" method="post">
                         <div class="mb-3">
-                            <label class="form-label fw-semibold" for="rendimento">Rendimento <span class="text-danger" aria-hidden="true">*</span></label>
+                            <label class="form-label fw-semibold" for="rendimento">Rendimento (em <span th:text="${produto.unidadeVenda.descricao}"></span>) <span class="text-danger" aria-hidden="true">*</span></label>
                             <div class="input-group">
                                 <input type="number" id="rendimento" name="rendimento" class="form-control" required inputmode="decimal"
                                        th:value="${ficha != null ? ficha.rendimento : '1'}"
-                                       min="0.001" step="0.001" placeholder="Ex: 12">
-                                <select name="unidadeRendimento" class="form-select col-w-100" aria-label="Unidade do rendimento">
-                                    <option th:each="un : ${unidades}"
-                                            th:value="${un.name()}"
-                                            th:text="${un.simbolo}"
-                                            th:selected="${ficha != null and ficha.unidadeRendimento == un}"></option>
-                                </select>
+                                       min="0.001" step="0.001" placeholder="Ex: 3">
+                                <span class="input-group-text" th:text="${produto.unidadeVenda.simbolo}"></span>
                             </div>
-                            <div class="form-text">Quantidade produzida por esta receita.</div>
+                            <div class="form-text">Quantas unidades de venda esta receita produz.</div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold" for="observacoes">Observações</label>
@@ -84,7 +79,7 @@
                         <tr>
                             <td class="ps-3 text-muted">
                                 Rendimento
-                                <span th:if="${ficha != null}" th:text="'(' + ${ficha.rendimento} + ' ' + ${ficha.unidadeRendimento.simbolo} + ')'"></span>
+                                <span th:if="${ficha != null}" th:text="'(' + ${ficha.rendimento} + ' ' + ${produto.unidadeVenda.simbolo} + ')'"></span>
                             </td>
                             <td class="text-end pe-3 fw-semibold"
                                 th:text="${ficha != null ? ficha.rendimento : '-'}"></td>

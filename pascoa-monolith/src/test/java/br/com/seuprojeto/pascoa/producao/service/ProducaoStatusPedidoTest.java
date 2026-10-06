@@ -83,7 +83,6 @@ class ProducaoStatusPedidoTest {
         FichaTecnica ficha = FichaTecnica.builder()
                 .produto(produto)
                 .rendimento(BigDecimal.ONE)
-                .unidadeRendimento(Unidade.UN)
                 .build();
         ficha.getItens().add(FichaTecnicaItem.builder()
                 .fichaTecnica(ficha)

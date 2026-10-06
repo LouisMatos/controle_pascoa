@@ -2,12 +2,9 @@ package br.com.seuprojeto.pascoa.fichaTecnica.entity;
 
 import br.com.seuprojeto.pascoa.common.entity.TenantEntity;
 import br.com.seuprojeto.pascoa.cadastro.entity.Produto;
-import br.com.seuprojeto.pascoa.cadastro.entity.Unidade;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -52,11 +49,6 @@ public class FichaTecnica extends TenantEntity {
     @DecimalMin(value = "0.001", message = "Rendimento deve ser maior que zero")
     @Column(nullable = false, precision = 10, scale = 3)
     private BigDecimal rendimento;
-
-    @NotNull(message = "Unidade do rendimento é obrigatória")
-    @Enumerated(EnumType.STRING)
-    @Column(name = "unidade_rendimento", nullable = false, length = 5)
-    private Unidade unidadeRendimento;
 
     @Size(max = 500)
     @Column(length = 500)

@@ -61,6 +61,31 @@
                         <div class="invalid-feedback" th:errors="*{precoVenda}"></div>
                     </div>
 
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold" for="unidadeVenda">Vendido por *</label>
+                        <select class="form-select" th:field="*{unidadeVenda}" required>
+                            <option th:each="un : ${unidadesVenda}" th:value="${un.name()}" th:text="${un.descricao}"></option>
+                        </select>
+                        <div class="form-text">Preço e quantidade do pedido usam esta unidade.</div>
+                    </div>
+
+                    <div class="col-md-12">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" th:field="*{sazonal}" id="sazonal">
+                            <label class="form-check-label fw-semibold" for="sazonal">Produto sazonal (vendido só em uma temporada)</label>
+                        </div>
+                        <div id="camposTemporada" class="row g-3 mt-1">
+                            <div class="col-md-3">
+                                <label class="form-label" for="inicioSafra">Início da temporada</label>
+                                <input type="date" class="form-control" th:field="*{inicioSafra}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label" for="fimSafra">Fim da temporada</label>
+                                <input type="date" class="form-control" th:field="*{fimSafra}">
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="col-md-4 d-flex align-items-end">
                         <div class="form-check mb-2">
                             <input class="form-check-input" type="checkbox"
@@ -107,6 +132,7 @@
         </div>
     </div>
 
+<script th:src="@{/js/produto-form.js}"></script>
 </div>
 </body>
 </html>

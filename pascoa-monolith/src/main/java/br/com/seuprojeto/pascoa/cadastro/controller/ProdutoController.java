@@ -2,6 +2,7 @@ package br.com.seuprojeto.pascoa.cadastro.controller;
 
 import br.com.seuprojeto.pascoa.cadastro.service.CategoriaProdutoService;
 import br.com.seuprojeto.pascoa.cadastro.entity.Produto;
+import br.com.seuprojeto.pascoa.cadastro.entity.UnidadeVenda;
 import br.com.seuprojeto.pascoa.cadastro.service.ProdutoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,7 @@ public class ProdutoController {
     public String novo(Model model) {
         model.addAttribute("produto", new Produto());
         model.addAttribute("categorias", categoriaService.listarAtivas());
+        model.addAttribute("unidadesVenda", UnidadeVenda.values());
         return "produtos/form";
     }
 
@@ -46,6 +48,7 @@ public class ProdutoController {
     public String editar(@PathVariable Long id, Model model) {
         model.addAttribute("produto", service.buscarPorId(id));
         model.addAttribute("categorias", categoriaService.listarAtivas());
+        model.addAttribute("unidadesVenda", UnidadeVenda.values());
         return "produtos/form";
     }
 
@@ -56,6 +59,7 @@ public class ProdutoController {
                          Model model, RedirectAttributes ra) {
         if (result.hasErrors()) {
             model.addAttribute("categorias", categoriaService.listarAtivas());
+            model.addAttribute("unidadesVenda", UnidadeVenda.values());
             return "produtos/form";
         }
         try {
@@ -63,6 +67,7 @@ public class ProdutoController {
             ra.addFlashAttribute("sucesso", "Produto salvo com sucesso!");
         } catch (Exception e) {
             model.addAttribute("categorias", categoriaService.listarAtivas());
+            model.addAttribute("unidadesVenda", UnidadeVenda.values());
             model.addAttribute("erroFoto", "Erro ao salvar foto: " + e.getMessage());
             return "produtos/form";
         }

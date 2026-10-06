@@ -4,7 +4,9 @@ import br.com.seuprojeto.pascoa.cadastro.entity.CategoriaProduto;
 import br.com.seuprojeto.pascoa.cadastro.entity.Produto;
 import br.com.seuprojeto.pascoa.cadastro.repository.CategoriaProdutoRepository;
 import br.com.seuprojeto.pascoa.cadastro.service.ProdutoService;
+import br.com.seuprojeto.pascoa.cadastro.entity.UnidadeVenda;
 import br.com.seuprojeto.pascoa.common.tenant.TenantContext;
+import br.com.seuprojeto.pascoa.fichaTecnica.service.FichaTecnicaService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -29,6 +31,7 @@ class CategoriaTelasTest {
     @Autowired private MockMvc mvc;
     @Autowired private CategoriaProdutoRepository categorias;
     @Autowired private ProdutoService produtoService;
+    @Autowired private FichaTecnicaService fichaService;
 
     @Test
     @WithMockUser(roles = "ADMIN")
@@ -47,5 +50,19 @@ class CategoriaTelasTest {
         mvc.perform(get("/categorias")).andExpect(status().isOk()).andExpect(content().string(containsString(nomeCategoria)));
         mvc.perform(get("/categorias/novo")).andExpect(status().isOk());
         mvc.perform(get("/catalogo")).andExpect(status().isOk()).andExpect(content().string(containsString(nomeProduto)));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void fichaTecnicaEFormDeProduto_mostramAUnidadeDeVenda() throws Exception {
+        Long id = TenantContext.calcular(1L, () -> {
+            Long produtoId = produtoService.salvar(Produto.builder().nome("Brigadeiro-" + UUID.randomUUID())
+                .precoVenda(new BigDecimal("90.00")).unidadeVenda(UnidadeVenda.CENTO).build()).getId();
+            fichaService.salvarInfo(produtoId, new BigDecimal("2"), null);
+            return produtoId;
+        });
+
+        mvc.perform(get("/fichas/{id}", id)).andExpect(status().isOk()).andExpect(content().string(containsString("Cento")));
+        mvc.perform(get("/produtos/novo")).andExpect(status().isOk()).andExpect(content().string(containsString("Vendido por")));
     }
 }

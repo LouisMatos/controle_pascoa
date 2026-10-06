@@ -64,6 +64,7 @@
                     <div class="mt-auto pt-2 d-flex justify-content-between align-items-center">
                         <span class="fw-bold text-success fs-5">
                             R$ <span th:text="${#numbers.formatDecimal(p.precoVenda, 1, 'POINT', 2, 'COMMA')}"></span>
+                            <small class="text-muted"> / <span th:text="${p.unidadeVenda.simbolo}"></span></small>
                         </span>
                         <a th:href="@{/catalogo/{id}(id=${p.id})}"
                            class="btn btn-sm btn-outline-success">

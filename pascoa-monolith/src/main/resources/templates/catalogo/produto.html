@@ -48,9 +48,10 @@
 
             <div class="display-6 fw-bold text-success mb-3">
                 R$ <span th:text="${#numbers.formatDecimal(produto.precoVenda, 1, 'POINT', 2, 'COMMA')}"></span>
+                <small class="text-muted"> / <span th:text="${produto.unidadeVenda.simbolo}"></span></small>
             </div>
 
-            <div th:if="${produto.inicioSafra != null}" class="mb-3 text-muted small">
+            <div th:if="${produto.sazonal and produto.inicioSafra != null}" class="mb-3 text-muted small">
                 <i class="bi bi-calendar-event me-1" aria-hidden="true"></i>
                 Disponível de
                 <strong th:text="${#temporals.format(produto.inicioSafra, 'dd/MM')}"></strong>

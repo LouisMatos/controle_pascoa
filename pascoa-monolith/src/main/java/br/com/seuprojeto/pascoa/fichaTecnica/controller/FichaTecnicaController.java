@@ -1,6 +1,5 @@
 package br.com.seuprojeto.pascoa.fichaTecnica.controller;
 
-import br.com.seuprojeto.pascoa.cadastro.entity.Unidade;
 import br.com.seuprojeto.pascoa.cadastro.service.MateriaPrimaService;
 import br.com.seuprojeto.pascoa.cadastro.service.ProdutoService;
 import br.com.seuprojeto.pascoa.fichaTecnica.dto.ItemFichaForm;
@@ -43,7 +42,6 @@ public class FichaTecnicaController {
 
         model.addAttribute("produto", produto);
         model.addAttribute("ficha", ficha);
-        model.addAttribute("unidades", Unidade.values());
         model.addAttribute("materiasPrimas", materiaPrimaService.listarTodas());
         model.addAttribute("itemForm", new ItemFichaForm());
         model.addAttribute("custoTotal", custoTotal);
@@ -55,11 +53,10 @@ public class FichaTecnicaController {
     @PostMapping("/{produtoId}/salvar")
     public String salvarInfo(@PathVariable Long produtoId,
                              @RequestParam BigDecimal rendimento,
-                             @RequestParam Unidade unidadeRendimento,
                              @RequestParam(required = false) String observacoes,
                              RedirectAttributes ra) {
         try {
-            fichaService.salvarInfo(produtoId, rendimento, unidadeRendimento, observacoes);
+            fichaService.salvarInfo(produtoId, rendimento, observacoes);
             ra.addFlashAttribute("sucesso", "Informações da ficha técnica salvas!");
         } catch (Exception e) {
             ra.addFlashAttribute("erro", "Erro ao salvar: " + e.getMessage());
