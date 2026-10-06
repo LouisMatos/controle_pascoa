@@ -1,6 +1,6 @@
 # Schema do Banco de Dados — Sistema Controle Páscoa
 
-> **Fonte:** Migrations V1–V17 do monólito + V1 de cada microsserviço  
+> **Fonte:** Migrations V1–V18 do monólito + V1 de cada microsserviço  
 > **Bancos:** 10 PostgreSQL (1 monólito + 9 microsserviços) | **Versionamento:** Flyway  
 > **Atualizado em:** 2026-10-05
 
@@ -128,6 +128,8 @@ configuracao_sistema — tabela singleton (id = 1 fixo)
 | `foto` | VARCHAR(500) | | Caminho relativo em `~/pascoa-uploads` |
 | `inicio_safra` | DATE | | |
 | `fim_safra` | DATE | | |
+| `unidade_venda` | VARCHAR(10) | NN, DEF `'UNIDADE'` | **V18** — enum `UnidadeVenda` (UNIDADE, DUZIA, CENTO, PACOTE, KG) |
+| `sazonal` | BOOLEAN | NN, DEF `FALSE` | **V18** — `inicio_safra`/`fim_safra` só valem se `TRUE` |
 | `excluido_em` | TIMESTAMP | | **Soft-delete** — igual ao de clientes |
 | `criado_em` | TIMESTAMP | NN | Auditoria BaseEntity |
 | `atualizado_em` | TIMESTAMP | | Auditoria BaseEntity |
@@ -173,7 +175,7 @@ Seed V17: Trufado, Recheado, Diet, Vegano, Tradicional, Especial para cada loja.
 | `id` | BIGSERIAL | PK | |
 | `produto_id` | BIGINT | NN, UQ, FK → `produtos(id)` | Relação 1:1 com produto |
 | `rendimento` | NUMERIC(10,3) | NN | Quantidade produzida pela receita |
-| `unidade_rendimento` | VARCHAR(5) | NN | Unidade do rendimento (ex: UN, KG) |
+| `unidade_rendimento` | VARCHAR(5) | | **V18** — nullable e sem uso; o rendimento é na `produtos.unidade_venda` |
 | `observacoes` | VARCHAR(500) | | |
 
 ### `fichas_tecnicas_itens`
@@ -624,10 +626,10 @@ Seed V17: Trufado, Recheado, Diet, Vegano, Tradicional, Especial para cada loja.
 
 ## 16. Guia para Novas Migrations
 
-Próxima versão disponível: **V18**
+Próxima versão disponível: **V19**
 
 ```sql
--- Arquivo: src/main/resources/db/migration/V18__descricao.sql
+-- Arquivo: src/main/resources/db/migration/V19__descricao.sql
 
 -- Adicionar coluna nullable (seguro, sem DEFAULT obrigatório)
 ALTER TABLE nome_tabela ADD COLUMN nova_coluna VARCHAR(100);
@@ -713,7 +715,7 @@ Cada microsserviço possui seu próprio banco e migration `V1__create_{servico}_
 
 | Serviço | Última migration | Próxima |
 |---------|----------------|---------|
-| pascoa-monolith | V13 | **V14** |
+| pascoa-monolith | V18 | **V19** |
 | pascoa-auth-service | V1 | **V2** |
 | pascoa-customer-service | V1 | **V2** |
 | pascoa-inventory-service | V1 | **V2** |

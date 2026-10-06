@@ -28,7 +28,7 @@
 | Catálogo público | ✅ Completo |
 | PWA | ✅ Completo |
 | Segurança / RBAC | ✅ Completo |
-| Testes de integração | ✅ 141 testes cobrindo todos os módulos críticos |
+| Testes de integração | ✅ 189 testes cobrindo todos os módulos críticos |
 
 ### Microsserviços v5 — Migração Strangler Fig (design doc v5)
 | Serviço | Status | Porta | Checklist 11.1 |
@@ -269,14 +269,15 @@ PAGAMENTO_RECEBIDO, PEDIDO_CANCELADO, ORCAMENTO_APROVADO, ORCAMENTO_RECUSADO
 | `V15__indices_performance_fluxo_caixa.sql` | ✅ | Performance: `idx_pagamento_data_pagamento` + `idx_movimentacao_estoque_tipo_data` para agregações no DB |
 | `V16__multi_tenant.sql` | ✅ | F0.1: `lojas` + `loja_id` nas 29 tabelas de negócio e em `usuarios`; UNIQUE de `configuracao_canal`/`orcamentos_gasto` compostos |
 | `V17__categorias_produto.sql` | ✅ | F0.3: `categorias_produto` por loja; `produtos.categoria` (enum) vira `categoria_id` FK |
+| `V18__unidade_venda_sazonal.sql` | ✅ | F0.3: `produtos.unidade_venda` (default `UNIDADE`, deduzida da ficha) e `produtos.sazonal`; `fichas_tecnicas.unidade_rendimento` passa a nullable |
 
-> **Próxima versão de migration disponível:** V18.
+> **Próxima versão de migration disponível:** V19.
 
 ---
 
 ## 15. Testes
 
-### ✅ Testes — 141 (0 falhas; tabela abaixo parcial) (0 falhas)
+### ✅ Testes — 189 (0 falhas; tabela abaixo parcial)
 
 | Classe | Testes | Cobre |
 |--------|--------|-------|
@@ -766,9 +767,15 @@ Pendentes (fora do escopo de design):
 
 ## 28. F0.3 — Doces e salgados
 
-**Fase A concluída** (categorias livres por loja). Fases B (unidade de venda e sazonal, V18) e C (quantidade decimal) pendentes.
+**Fases A e B concluídas** (categorias livres por loja; unidade de venda e sazonal). Fase C (quantidade decimal, V19) pendente.
 
-- Migration `V17__categorias_produto.sql` (próxima livre: V18): tabela `categorias_produto` (`loja_id`, `nome`, `ativo`, UNIQUE `(loja_id, nome)`), seis categorias iniciais por loja, `produtos.categoria_id` FK preenchido a partir do enum antigo e coluna `produtos.categoria` removida.
+- Migration `V17__categorias_produto.sql` (V18 aplicada na Fase B): tabela `categorias_produto` (`loja_id`, `nome`, `ativo`, UNIQUE `(loja_id, nome)`), seis categorias iniciais por loja, `produtos.categoria_id` FK preenchido a partir do enum antigo e coluna `produtos.categoria` removida.
 - Enum `Categoria` removido; produto referencia `CategoriaProduto`. Tela `/categorias` (listar, criar, editar, inativar/reativar); `/produtos/novo` oferece as categorias ativas + "Sem categoria"; `/catalogo?categoria=<id>` filtra.
 - Seeds em `infra/seed/` atualizados para `categoria_id`.
 - Validado em PostgreSQL 16: `ddl-auto=validate` OK sobre o banco do dev (já em V17), telas `/produtos`, `/categorias`, `/catalogo`, `/analytics` conferidas por curl; os quatro seeds aplicam sem erro em banco novo migrado do zero até V17.
+
+**Fase B** (V18):
+- Migration `V18__unidade_venda_sazonal.sql` (próxima livre: V19): `produtos.unidade_venda` (NN, DEF `UNIDADE`; deduzida da ficha: KG->KG, CX->PACOTE, demais->UNIDADE), `produtos.sazonal` (NN, DEF `FALSE`; `TRUE` onde havia `inicio_safra`/`fim_safra`) e `fichas_tecnicas.unidade_rendimento` nullable.
+- Enum `UnidadeVenda` (UNIDADE, DUZIA, CENTO, PACOTE, KG). Form do produto: select "Vendido por" e checkbox "sazonal" que mostra/oculta as datas (`static/js/produto-form.js`). Ficha técnica: rendimento na unidade de venda do produto, sem seletor de unidade; `unidade_rendimento` fica sem uso e opcional. PDF da ordem: "Rendimento da receita: N <símbolo>". "Safra" vira "Período" no rótulo de analytics.
+- Validado em PostgreSQL 16 sobre cópia do dev (já em V18): `ddl-auto=validate` OK; 8 produtos, todos UNIDADE/não sazonal (8 fichas em UN, nenhuma com datas de safra). Ramos KG/CX/G/L/ML/sem ficha/com datas exercitados em banco descartável (V1..V17 + V18 manual). Manual: produto "Coxinha" por Cento (campos de temporada ocultos/visíveis conforme o checkbox), ficha sem seletor de unidade ("Rendimento (em Cento)"), PDF da ordem com "100,000 cento".
+- Pendente (Fase C): "Quantidade: N unidade(s)" no PDF da ordem ainda é fixo.
